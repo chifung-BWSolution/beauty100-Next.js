@@ -38,7 +38,7 @@ function WhatsAppPreview({ phoneNumber, presetMessage, userPresetMessage }: { ph
   return (
     <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
       <div className="text-center py-2 bg-slate-50 border-b border-slate-100">
-        <p className="text-xs font-medium text-slate-500">📱 WhatsApp Widget 預覽</p>
+        <p className="text-sm font-medium text-slate-500">📱 WhatsApp Widget 預覽</p>
       </div>
       <div className="p-4">
         <div className="w-full max-w-[280px] mx-auto rounded-2xl shadow-lg overflow-hidden border border-slate-200">
@@ -49,7 +49,7 @@ function WhatsAppPreview({ phoneNumber, presetMessage, userPresetMessage }: { ph
             </div>
             <div className="flex-1">
               <p className="text-white font-semibold text-sm">BEAUTY 客戶服務</p>
-              <p className="text-pink-100 text-xs flex items-center gap-1">
+              <p className="text-pink-100 text-sm flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-300 inline-block"></span>
                 在線中
               </p>
@@ -62,7 +62,7 @@ function WhatsAppPreview({ phoneNumber, presetMessage, userPresetMessage }: { ph
           {/* Chat area */}
           <div className="bg-[#ece5dd] px-3 py-3 space-y-2" style={{ minHeight: '160px' }}>
             <div className="flex justify-center">
-              <span className="text-[9px] text-gray-500 bg-white/70 px-2 py-0.5 rounded-full">今天</span>
+              <span className="text-[12px] text-gray-500 bg-white/70 px-2 py-0.5 rounded-full">今天</span>
             </div>
             {/* Bot message */}
             <div className="flex items-end gap-1.5">
@@ -71,16 +71,16 @@ function WhatsAppPreview({ phoneNumber, presetMessage, userPresetMessage }: { ph
               </div>
               <div className="max-w-[75%]">
                 <div className="bg-white rounded-2xl rounded-bl-sm px-2.5 py-1.5 shadow-sm">
-                  <p className="text-gray-800 text-xs leading-relaxed">{presetMessage || '您好，請問可以如何幫助您？'}</p>
+                  <p className="text-gray-800 text-sm leading-relaxed">{presetMessage || '您好，請問可以如何幫助您？'}</p>
                 </div>
-                <p className="text-[9px] text-gray-400 mt-0.5 ml-1">客服</p>
+                <p className="text-[12px] text-gray-400 mt-0.5 ml-1">客服</p>
               </div>
             </div>
           </div>
 
           {/* Input area */}
           <div className="bg-white px-2.5 py-2 flex items-center gap-1.5 border-t border-gray-100">
-            <div className="flex-1 bg-gray-100 rounded-full px-3 py-1.5 text-[11px] text-gray-400 truncate">
+            <div className="flex-1 bg-gray-100 rounded-full px-3 py-1.5 text-[12px] text-gray-400 truncate">
               {userPresetMessage || '請輸入訊息...'}
             </div>
             <div
@@ -92,12 +92,12 @@ function WhatsAppPreview({ phoneNumber, presetMessage, userPresetMessage }: { ph
           </div>
 
           <div className="bg-white pb-1.5 px-2.5 text-center">
-            <p className="text-[9px] text-gray-400">點擊送出將開啟 WhatsApp</p>
+            <p className="text-[12px] text-gray-400">點擊送出將開啟 WhatsApp</p>
           </div>
         </div>
 
         {phoneNumber && (
-          <p className="text-center text-xs text-slate-400 mt-3">
+          <p className="text-center text-sm text-slate-400 mt-3">
             電話號碼：<span className="font-mono text-slate-600">{phoneNumber}</span>
           </p>
         )}
@@ -161,7 +161,7 @@ function WhatsAppSettingsTab() {
             </div>
             <div>
               <CardTitle className="text-base text-slate-800">WhatsApp 客服設定</CardTitle>
-              <CardDescription className="text-xs text-slate-500 mt-0.5">設定客戶點擊WhatsApp按鈕後的聯絡號碼及預設訊息</CardDescription>
+              <CardDescription className="text-sm text-slate-500 mt-0.5">設定客戶點擊WhatsApp按鈕後的聯絡號碼及預設訊息</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -253,9 +253,9 @@ function CategoryTagPanel({ categoryMeta }: { categoryMeta: typeof TAG_CATEGORIE
         <span className="text-lg">{categoryMeta.emoji}</span>
         <div className="flex-1">
           <p className="text-sm font-semibold text-slate-700">{categoryMeta.label}</p>
-          <p className="text-xs text-slate-400">Prefix: <code className="bg-white px-1 rounded border border-slate-200 text-pink-600">{categoryMeta.key}</code></p>
+          <p className="text-sm text-slate-400">Prefix: <code className="bg-white px-1 rounded border border-slate-200 text-pink-600">{categoryMeta.key}</code></p>
         </div>
-        <Badge variant="secondary" className="text-xs">{tags.length} 項</Badge>
+        <Badge variant="secondary" className="text-sm">{tags.length} 項</Badge>
       </div>
 
       {loading ? (
@@ -314,7 +314,7 @@ function SalonTagsTab() {
           </div>
           <div>
             <CardTitle className="text-base text-slate-800">美容院標籤設定</CardTitle>
-            <CardDescription className="text-xs text-slate-500 mt-0.5">管理各分類標籤，新增標籤時系統自動加入對應 prefix 儲存至資料庫</CardDescription>
+            <CardDescription className="text-sm text-slate-500 mt-0.5">管理各分類標籤，新增標籤時系統自動加入對應 prefix 儲存至資料庫</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -424,7 +424,7 @@ function ShopifySettingsTab() {
             </div>
             <div>
               <CardTitle className="text-base text-slate-800">Shopify API 連接</CardTitle>
-              <CardDescription className="text-xs text-slate-500 mt-0.5">
+              <CardDescription className="text-sm text-slate-500 mt-0.5">
                 使用 Client Credentials 向 Shopify 換取 24 小時 Token，並存入資料庫。系統每小時自動刷新一次。
               </CardDescription>
             </div>
@@ -450,16 +450,16 @@ function ShopifySettingsTab() {
                       {isTokenExpired ? 'Token 已過期' : 'Token 有效'}
                     </p>
                     <div className="mt-1 space-y-0.5">
-                      <p className="text-xs text-slate-500">
+                      <p className="text-sm text-slate-500">
                         <Clock className="w-3 h-3 inline mr-1" />
                         到期時間：{new Date(tokenInfo.expires_at).toLocaleString('zh-HK')}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-sm text-slate-500">
                         <RefreshCw className="w-3 h-3 inline mr-1" />
                         上次刷新：{new Date(tokenInfo.refreshed_at).toLocaleString('zh-HK')}
                       </p>
                       {tokenInfo.scope && (
-                        <p className="text-xs text-slate-400 truncate">
+                        <p className="text-sm text-slate-400 truncate">
                           Scope：{tokenInfo.scope}
                         </p>
                       )}
@@ -515,13 +515,13 @@ function ShopifySettingsTab() {
               {/* Recent logs */}
               {logs.length > 0 && (
                 <div className="pt-2">
-                  <p className="text-xs font-medium text-slate-500 mb-2">最近刷新記錄</p>
+                  <p className="text-sm font-medium text-slate-500 mb-2">最近刷新記錄</p>
                   <div className="space-y-1.5">
                     {logs.map(log => (
-                      <div key={log.id} className="flex items-center gap-2 text-xs text-slate-500">
+                      <div key={log.id} className="flex items-center gap-2 text-sm text-slate-500">
                         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${log.status === 'success' ? 'bg-green-400' : 'bg-red-400'}`} />
                         <span className="text-slate-400 font-mono">{new Date(log.created_at).toLocaleString('zh-HK')}</span>
-                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${log.triggered_by === 'cron' ? 'border-blue-200 text-blue-600' : 'border-pink-200 text-pink-600'}`}>
+                        <Badge variant="outline" className={`text-[14px] px-1.5 py-0 ${log.triggered_by === 'cron' ? 'border-blue-200 text-blue-600' : 'border-pink-200 text-pink-600'}`}>
                           {log.triggered_by === 'cron' ? '自動' : '手動'}
                         </Badge>
                         <span className="truncate">{log.message}</span>

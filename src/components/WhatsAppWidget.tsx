@@ -69,7 +69,7 @@ export default function WhatsAppWidget() {
             </div>
             <div className="flex-1">
               <p className="text-white font-semibold text-sm">BEAUTY 客戶服務</p>
-              <p className="text-pink-100 text-xs flex items-center gap-1">
+              <p className="text-pink-100 text-sm flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-green-300 inline-block"></span>
                 在線中
               </p>
@@ -81,7 +81,7 @@ export default function WhatsAppWidget() {
 
           <div className="flex-1 bg-[#ece5dd] overflow-y-auto px-4 py-4 space-y-3" style={{ minHeight: '260px', maxHeight: '300px' }}>
             <div className="flex justify-center">
-              <span className="text-[10px] text-gray-500 bg-white/70 px-2 py-0.5 rounded-full">今天</span>
+              <span className="text-[14px] text-gray-500 bg-white/70 px-2 py-0.5 rounded-full">今天</span>
             </div>
             <div className="flex items-end gap-2">
               <div className="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden" style={{ background: 'linear-gradient(135deg, #f9a8d4 0%, #ec4899 100%)' }}>
@@ -91,7 +91,7 @@ export default function WhatsAppWidget() {
                 <div className="bg-white rounded-2xl rounded-bl-sm px-3 py-2 shadow-sm">
                   <p className="text-gray-800 text-sm leading-relaxed">{settings.preset_message}</p>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-1 ml-1">客服</p>
+                <p className="text-[14px] text-gray-400 mt-1 ml-1">客服</p>
               </div>
             </div>
             <div ref={chatEndRef} />
@@ -116,7 +116,7 @@ export default function WhatsAppWidget() {
           </div>
 
           <div className="bg-white pb-2 px-3 text-center">
-            <p className="text-[10px] text-gray-400">點擊送出將開啟 WhatsApp</p>
+            <p className="text-[14px] text-gray-400">點擊送出將開啟 WhatsApp</p>
           </div>
         </div>
       )}

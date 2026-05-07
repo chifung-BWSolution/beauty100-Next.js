@@ -35,11 +35,11 @@ function DiffCell({ original, updated, changed }: { original: string; updated: s
     <div className={`rounded-lg p-2 text-sm ${changed ? 'bg-amber-50 border border-amber-200' : ''}`}>
       {changed ? (
         <div className="space-y-1">
-          <div className="line-through text-slate-400 text-xs">{original || <span className="italic">（空白）</span>}</div>
+          <div className="line-through text-slate-400 text-sm">{original || <span className="italic">（空白）</span>}</div>
           <div className="text-amber-800 font-medium">{updated || <span className="italic">（已刪除）</span>}</div>
         </div>
       ) : (
-        <span className="text-slate-700">{updated || <span className="text-slate-300 italic text-xs">空白</span>}</span>
+        <span className="text-slate-700">{updated || <span className="text-slate-300 italic text-sm">空白</span>}</span>
       )}
     </div>
   );
@@ -107,7 +107,7 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
           <DialogTitle className="flex items-center gap-2">
             資料更新審核
             {totalChanges > 0 && (
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-normal">
+              <span className="text-sm bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-normal">
                 {totalChanges} 處更改
               </span>
             )}
@@ -120,14 +120,14 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
           </div>
         ) : (
           <div className="space-y-5">
-            <div className="flex items-center gap-4 text-xs text-slate-500 bg-slate-50 rounded-lg p-3">
+            <div className="flex items-center gap-4 text-sm text-slate-500 bg-slate-50 rounded-lg p-3">
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-100 border border-amber-200 inline-block"></span>已更改欄位</span>
               <span className="text-slate-300">|</span>
               <span className="text-slate-400">劃線 = 原本內容，粗體 = 新內容</span>
             </div>
 
             <div className="border rounded-xl overflow-hidden">
-              <div className="grid grid-cols-3 bg-slate-100 text-xs font-semibold text-slate-500 px-4 py-2">
+              <div className="grid grid-cols-3 bg-slate-100 text-sm font-semibold text-slate-500 px-4 py-2">
                 <span>欄位</span><span>現有資料</span><span>申請更新</span>
               </div>
               <div className="divide-y">
@@ -137,8 +137,8 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
                   const changed = orig !== upd;
                   return (
                     <div key={f.key} className={`grid grid-cols-3 px-4 py-2 items-start ${changed ? 'bg-amber-50/50' : ''}`}>
-                      <span className={`text-xs font-medium pt-2 ${changed ? 'text-amber-700' : 'text-slate-500'}`}>{f.label}{changed && ' ✱'}</span>
-                      <div className="pr-2"><div className="rounded-lg p-2 text-sm text-slate-600">{orig || <span className="text-slate-300 italic text-xs">空白</span>}</div></div>
+                      <span className={`text-sm font-medium pt-2 ${changed ? 'text-amber-700' : 'text-slate-500'}`}>{f.label}{changed && ' ✱'}</span>
+                      <div className="pr-2"><div className="rounded-lg p-2 text-sm text-slate-600">{orig || <span className="text-slate-300 italic text-sm">空白</span>}</div></div>
                       <div><DiffCell original={orig} updated={upd} changed={changed} /></div>
                     </div>
                   );
@@ -148,21 +148,21 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
 
             {/* Description */}
             <div className={`rounded-xl border overflow-hidden ${descriptionChanged ? 'border-amber-200' : ''}`}>
-              <div className={`px-4 py-2 text-xs font-semibold ${descriptionChanged ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-500'}`}>
+              <div className={`px-4 py-2 text-sm font-semibold ${descriptionChanged ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-500'}`}>
                 簡介{descriptionChanged && ' ✱ 已更改'}
               </div>
               <div className="grid grid-cols-2 divide-x">
                 <div className="p-3">
-                  <p className="text-xs text-slate-400 mb-1">現有</p>
+                  <p className="text-sm text-slate-400 mb-1">現有</p>
                   {profile?.description
-                    ? <div className="text-xs text-slate-600 max-h-32 overflow-y-auto" dangerouslySetInnerHTML={{ __html: profile.description }} />
-                    : <span className="text-slate-300 italic text-xs">空白</span>}
+                    ? <div className="text-sm text-slate-600 max-h-32 overflow-y-auto" dangerouslySetInnerHTML={{ __html: profile.description }} />
+                    : <span className="text-slate-300 italic text-sm">空白</span>}
                 </div>
                 <div className={`p-3 ${descriptionChanged ? 'bg-amber-50/30' : ''}`}>
-                  <p className="text-xs text-slate-400 mb-1">申請更新</p>
+                  <p className="text-sm text-slate-400 mb-1">申請更新</p>
                   {version.description
-                    ? <div className="text-xs text-slate-700 max-h-32 overflow-y-auto" dangerouslySetInnerHTML={{ __html: version.description }} />
-                    : <span className="text-slate-300 italic text-xs">空白</span>}
+                    ? <div className="text-sm text-slate-700 max-h-32 overflow-y-auto" dangerouslySetInnerHTML={{ __html: version.description }} />
+                    : <span className="text-slate-300 italic text-sm">空白</span>}
                 </div>
               </div>
             </div>
@@ -170,18 +170,18 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
             {/* Media */}
             {(version.product_media?.length > 0 || profile?.product_media?.length > 0) && (
               <div className={`rounded-xl border overflow-hidden ${mediaChanged ? 'border-amber-200' : ''}`}>
-                <div className={`px-4 py-2 text-xs font-semibold ${mediaChanged ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-500'}`}>
+                <div className={`px-4 py-2 text-sm font-semibold ${mediaChanged ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-500'}`}>
                   產品相片{mediaChanged && ' ✱ 已更改'}
                 </div>
                 <div className="grid grid-cols-2 divide-x">
                   <div className="p-3">
-                    <p className="text-xs text-slate-400 mb-2">現有 ({profile?.product_media?.length || 0})</p>
+                    <p className="text-sm text-slate-400 mb-2">現有 ({profile?.product_media?.length || 0})</p>
                     <div className="flex gap-1.5 flex-wrap">
                       {(profile?.product_media || []).map((url: string, i: number) => <img key={i} src={url} alt="" className="w-14 h-14 object-cover rounded-lg" />)}
                     </div>
                   </div>
                   <div className={`p-3 ${mediaChanged ? 'bg-amber-50/30' : ''}`}>
-                    <p className="text-xs text-slate-400 mb-2">申請更新 ({version.product_media?.length || 0})</p>
+                    <p className="text-sm text-slate-400 mb-2">申請更新 ({version.product_media?.length || 0})</p>
                     <div className="flex gap-1.5 flex-wrap">
                       {(version.product_media || []).map((url: string, i: number) => <img key={i} src={url} alt="" className="w-14 h-14 object-cover rounded-lg" />)}
                     </div>

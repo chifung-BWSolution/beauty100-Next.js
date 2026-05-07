@@ -90,7 +90,7 @@ export default function DistrictSelect({
                 <div key={group.region}>
                   <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-1.5">
                     <span className="text-sm">{group.emoji}</span>
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{group.region}</span>
+                    <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{group.region}</span>
                   </div>
                   <div className="grid grid-cols-3 gap-0.5 p-2">
                     {group.items.map((d) => (
@@ -114,7 +114,7 @@ export default function DistrictSelect({
             {ungrouped.length > 0 && (
               <div>
                 <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">其他</span>
+                  <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">其他</span>
                 </div>
                 <div className="grid grid-cols-3 gap-0.5 p-2">
                   {ungrouped.map((d) => (

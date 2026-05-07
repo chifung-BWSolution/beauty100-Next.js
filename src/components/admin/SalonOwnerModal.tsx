@@ -35,7 +35,7 @@ export default function SalonOwnerModal({ salon, onClose }: SalonOwnerModalProps
           </div>
 
           <div className="bg-slate-50 rounded-xl p-4 space-y-3">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">負責人資料</p>
+            <p className="text-sm font-semibold text-slate-400 uppercase tracking-wide">負責人資料</p>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 text-pink-500" />
@@ -43,7 +43,7 @@ export default function SalonOwnerModal({ salon, onClose }: SalonOwnerModalProps
               <div>
                 <p className="font-medium text-slate-800">{ownerName}</p>
                 {salon.ownerEmail && ownerName !== salon.ownerEmail && (
-                  <p className="text-xs text-slate-400">{salon.ownerEmail}</p>
+                  <p className="text-sm text-slate-400">{salon.ownerEmail}</p>
                 )}
               </div>
             </div>

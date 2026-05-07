@@ -25,7 +25,7 @@ export default function OnboardingActions({ applicationCount }: Props) {
             size="sm"
             variant="outline"
             onClick={() => router.push('/application-status')}
-            className="text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-xs ml-3 whitespace-nowrap rounded-xl"
+            className="text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-sm ml-3 whitespace-nowrap rounded-xl"
           >
             查看申請
           </Button>

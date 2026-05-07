@@ -36,7 +36,7 @@ export default function AdminLogsClient({ logs }: { logs: Log[] }) {
     return matchSearch && matchAction;
   });
 
-  const uniqueActions = [...new Set(logs.map(log => log.action))].filter(Boolean);
+  const uniqueActions = Array.from(new Set(logs.map(log => log.action))).filter(Boolean);
 
   return (
     <div className="p-4 md:p-8">
@@ -103,11 +103,11 @@ export default function AdminLogsClient({ logs }: { logs: Log[] }) {
                     <TableCell className="whitespace-normal">
                       <div className="min-w-0">
                         <p className="font-medium text-slate-800 break-words">{log.user_name || log.user_email}</p>
-                        {log.user_name && <p className="text-xs text-slate-400 break-all">{log.user_email}</p>}
+                        {log.user_name && <p className="text-sm text-slate-400 break-all">{log.user_email}</p>}
                       </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${log.is_error ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-800'}`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${log.is_error ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-800'}`}>
                         {log.action}
                       </span>
                     </TableCell>
@@ -117,7 +117,7 @@ export default function AdminLogsClient({ logs }: { logs: Log[] }) {
                         <div>
                           <p>{log.details || '-'}</p>
                           {log.error_message && (
-                            <p className="text-sm mt-1 text-red-500 bg-red-50 p-2 rounded border border-red-100 font-mono text-xs break-all">
+                            <p className="text-sm mt-1 text-red-500 bg-red-50 p-2 rounded border border-red-100 font-mono text-sm break-all">
                               {log.error_message}
                             </p>
                           )}

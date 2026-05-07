@@ -112,7 +112,7 @@ export default function Sidebar({ userRole: userRoleProp, hasApprovedProfile, is
           <span className={`text-sm ${active ? 'font-semibold' : 'font-medium'}`}>{link.name}</span>
         </div>
         {link.badge && (
-          <span className="text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center"
+          <span className="text-white text-sm font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center"
             style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}>
             {link.badge}
           </span>
@@ -137,7 +137,7 @@ export default function Sidebar({ userRole: userRoleProp, hasApprovedProfile, is
             </div>
             <div>
               <h1 className="text-slate-800 font-bold text-base leading-tight tracking-tight">BEAUTY</h1>
-              <p className="text-rose-300 text-[10px] leading-none mt-0.5 font-medium">商戶入駐平台</p>
+              <p className="text-rose-300 text-[14px] leading-none mt-0.5 font-medium">商戶入駐平台</p>
             </div>
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function Sidebar({ userRole: userRoleProp, hasApprovedProfile, is
         {/* Merchant Section */}
         {(userRole !== 'marketing') && (
           <div>
-            <p className="text-rose-300 text-[10px] font-bold uppercase tracking-widest px-3 mb-2">我的美容院</p>
+            <p className="text-rose-300 text-[14px] font-bold uppercase tracking-widest px-3 mb-2">我的美容院</p>
             <div className="space-y-0.5">
               {merchantLinks.map(link => <NavLink key={link.href} link={link as any} />)}
             </div>
@@ -158,7 +158,7 @@ export default function Sidebar({ userRole: userRoleProp, hasApprovedProfile, is
         {/* Admin Section */}
         {(userRole === 'admin' || userRole === 'marketing') && (
           <div>
-            <p className="text-rose-300 text-[10px] font-bold uppercase tracking-widest px-3 mb-2">管理後台</p>
+            <p className="text-rose-300 text-[14px] font-bold uppercase tracking-widest px-3 mb-2">管理後台</p>
             <div className="space-y-0.5">
               {adminLinks.map(link => <NavLink key={link.href} link={link as any} />)}
             </div>
@@ -176,13 +176,13 @@ export default function Sidebar({ userRole: userRoleProp, hasApprovedProfile, is
               prefetch={false}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-rose-50/50 transition-all duration-200 group"
             >
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm"
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm"
                 style={{ background: 'linear-gradient(135deg, #f9a8d4, #e11d48)' }}>
                 {initials}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-slate-700 truncate leading-tight">{displayName}</p>
-                <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+                <p className="text-[12px] text-slate-400 truncate">{user.email}</p>
               </div>
               <Settings className="w-3.5 h-3.5 text-slate-300 group-hover:text-rose-400 flex-shrink-0 transition-colors" />
             </Link>

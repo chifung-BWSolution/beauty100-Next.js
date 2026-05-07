@@ -44,7 +44,7 @@ export default function OpeningHoursEditor({ formData, onChange }: OpeningHoursE
               <button
                 type="button"
                 onClick={() => onChange(key, isRest ? '' : '休息')}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors whitespace-nowrap ${
+                className={`px-2.5 py-1 rounded-md text-sm font-medium border transition-colors whitespace-nowrap ${
                   isRest
                     ? 'bg-red-100 text-red-700 border-red-300'
                     : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
@@ -56,7 +56,7 @@ export default function OpeningHoursEditor({ formData, onChange }: OpeningHoursE
               <button
                 type="button"
                 onClick={() => onChange(key, is24h ? '' : '24小時營業')}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors whitespace-nowrap ${
+                className={`px-2.5 py-1 rounded-md text-sm font-medium border transition-colors whitespace-nowrap ${
                   is24h
                     ? 'bg-green-100 text-green-700 border-green-300'
                     : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
@@ -78,7 +78,7 @@ export default function OpeningHoursEditor({ formData, onChange }: OpeningHoursE
             {!isValid && !isSpecial && value !== '' && (
               <div className="flex items-center gap-2 mt-1.5 pl-[4.5rem]">
                 <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                <span className="text-xs text-red-600">
+                <span className="text-sm text-red-600">
                   格式不正確，請輸入 HH:MM - HH:MM（例：12:00 - 22:00）
                 </span>
               </div>

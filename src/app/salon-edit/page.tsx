@@ -43,7 +43,7 @@ function VersionHistoryList({ versions, onLoad, onToggleStar, togglingStarId, ed
 
   return (
     <div className="space-y-2 py-2">
-      <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700 mb-3">
+      <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-700 mb-3">
         <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         <div>
           <p className="font-medium mb-1">版本管理說明</p>
@@ -63,7 +63,7 @@ function VersionHistoryList({ versions, onLoad, onToggleStar, togglingStarId, ed
           <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
             <div className="flex items-center gap-2 flex-wrap">
               {statusBadge(v.status)}
-              <span className="text-xs text-slate-400">{format(new Date(v.created_date || v.created_at), 'yyyy/MM/dd HH:mm')}</span>
+              <span className="text-sm text-slate-400">{format(new Date(v.created_date || v.created_at), 'yyyy/MM/dd HH:mm')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <button
@@ -75,7 +75,7 @@ function VersionHistoryList({ versions, onLoad, onToggleStar, togglingStarId, ed
                 <Star className={`w-4 h-4 ${v.is_starred ? 'fill-amber-400' : ''}`} />
               </button>
               {showLoadButton && (
-                <Button size="sm" variant="outline" onClick={() => onLoad(v)} className="text-xs h-7 px-2">
+                <Button size="sm" variant="outline" onClick={() => onLoad(v)} className="text-sm h-7 px-2">
                   <RotateCcw className="w-3 h-3 mr-1" />載入
                 </Button>
               )}
@@ -88,27 +88,27 @@ function VersionHistoryList({ versions, onLoad, onToggleStar, togglingStarId, ed
                 value={versionNameInput}
                 onChange={(e) => setVersionNameInput(e.target.value)}
                 placeholder="輸入版本名稱..."
-                className="h-7 text-xs flex-1"
+                className="h-7 text-sm flex-1"
                 onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter') onSaveVersionName(v); if (e.key === 'Escape') setEditingVersionName(null); }}
                 autoFocus
               />
-              <Button size="sm" className="h-7 px-2 text-xs" onClick={() => onSaveVersionName(v)}>儲存</Button>
-              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setEditingVersionName(null)}>取消</Button>
+              <Button size="sm" className="h-7 px-2 text-sm" onClick={() => onSaveVersionName(v)}>儲存</Button>
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-sm" onClick={() => setEditingVersionName(null)}>取消</Button>
             </div>
           ) : (
             <button
               onClick={() => { setEditingVersionName(v.id); setVersionNameInput(v.version_name || ''); }}
               className="text-sm font-medium text-slate-700 hover:text-blue-600 mb-1 block w-full text-left"
             >
-              {v.version_name || <span className="italic text-slate-400 text-xs">點擊設定版本名稱...</span>}
+              {v.version_name || <span className="italic text-slate-400 text-sm">點擊設定版本名稱...</span>}
             </button>
           )}
 
-          <p className="text-xs text-slate-500 truncate">{v.salon_name}</p>
-          {v.rejection_reason && <p className="text-xs text-red-600 mt-1">拒絕原因：{v.rejection_reason}</p>}
+          <p className="text-sm text-slate-500 truncate">{v.salon_name}</p>
+          {v.rejection_reason && <p className="text-sm text-red-600 mt-1">拒絕原因：{v.rejection_reason}</p>}
 
           {!v.is_starred && v.status !== 'draft' && v.status !== 'pending_approval' && (
-            <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
+            <p className="text-sm text-amber-600 mt-1.5 flex items-center gap-1">
               <Info className="w-3 h-3" />此版本 90 日後將自動刪除（加星標可永久保留）
             </p>
           )}
@@ -460,7 +460,7 @@ function SalonEditContent() {
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-slate-800">{profile?.salon_name}</h1>
-                <p className="text-slate-500 text-xs md:text-sm">編輯美容院資料</p>
+                <p className="text-slate-500 text-sm md:text-sm">編輯美容院資料</p>
               </div>
             </div>
           </div>
@@ -582,9 +582,9 @@ function SalonEditContent() {
                   </div>
                 )}
               </div>
-              {handleError && <p className="text-xs text-red-500 mt-1">{handleError}</p>}
+              {handleError && <p className="text-sm text-red-500 mt-1">{handleError}</p>}
               {!handleError && (
-                <p className="text-xs text-slate-400 mt-1 break-all">
+                <p className="text-sm text-slate-400 mt-1 break-all">
                   https://beauty100-magazine.com/products/
                   {formData.handle && formData.handle.trim()
                     ? encodeURIComponent(formData.handle.trim().toLowerCase().replace(/[\s\u3000]+/g, '-'))
@@ -597,12 +597,12 @@ function SalonEditContent() {
               <div>
                 <label className="block text-sm text-slate-600 mb-1.5">SEO 頁面標題</label>
                 <Input value={formData.seo_title} onChange={(e) => handleChange('seo_title', e.target.value.slice(0, 70))} maxLength={70} className="h-11" />
-                <p className="text-xs text-slate-400 mt-1">{(formData.seo_title || '').length} / 70</p>
+                <p className="text-sm text-slate-400 mt-1">{(formData.seo_title || '').length} / 70</p>
               </div>
               <div>
                 <label className="block text-sm text-slate-600 mb-1.5">SEO 頁面描述</label>
                 <Textarea value={formData.seo_description} onChange={(e) => handleChange('seo_description', e.target.value.slice(0, 160))} rows={3} maxLength={160} />
-                <p className="text-xs text-slate-400 mt-1">{(formData.seo_description || '').length} / 160</p>
+                <p className="text-sm text-slate-400 mt-1">{(formData.seo_description || '').length} / 160</p>
               </div>
             </div>
           </CardContent>
@@ -641,7 +641,7 @@ function SalonEditContent() {
             {submitting ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span className="hidden sm:inline">提交中...</span></> : <><Send className="w-4 h-4" /><span className="hidden sm:inline">提交審核</span></>}
           </Button>
         </div>
-        {pendingVersion && <p className="text-xs text-amber-600 text-right mt-2">有版本正在等待審核，請等待批准後再提交新版本。</p>}
+        {pendingVersion && <p className="text-sm text-amber-600 text-right mt-2">有版本正在等待審核，請等待批准後再提交新版本。</p>}
       </div>
 
       {/* History Dialog */}

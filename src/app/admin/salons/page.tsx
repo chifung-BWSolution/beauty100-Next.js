@@ -493,7 +493,7 @@ export default function AdminSalonsPage() {
                           <select
                             value={salon.status}
                             onChange={(e) => handleStatusChange(salon, e.target.value)}
-                            className={`text-xs mt-1 rounded border px-1.5 py-0.5 focus:outline-none cursor-pointer ${salon.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : salon.status === 'draft' ? 'bg-slate-50 text-slate-700 border-slate-200' : 'bg-red-50 text-red-700 border-red-200'}`}
+                            className={`text-sm mt-1 rounded border px-1.5 py-0.5 focus:outline-none cursor-pointer ${salon.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : salon.status === 'draft' ? 'bg-slate-50 text-slate-700 border-slate-200' : 'bg-red-50 text-red-700 border-red-200'}`}
                           >
                             <option value="active">Active</option>
                             <option value="draft">Draft</option>
@@ -546,7 +546,7 @@ export default function AdminSalonsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-slate-800 truncate">{salon.title}</p>
-                      {salon.district_name && <p className="text-xs text-purple-500">{salon.district_name}</p>}
+                      {salon.district_name && <p className="text-sm text-purple-500">{salon.district_name}</p>}
                     </div>
                     <ClaimBadge status={salon.claimStatus} />
                   </div>
@@ -672,12 +672,12 @@ export default function AdminSalonsPage() {
                     <div className="flex gap-2 mt-3">
                       {viewDetailsSalon.handle && (
                         <a href={`https://2btwx1-uz.myshopify.com/products/${viewDetailsSalon.handle}`} target="_blank" rel="noopener noreferrer">
-                          <Button variant="outline" size="sm" className="text-xs gap-1 h-7">
+                          <Button variant="outline" size="sm" className="text-sm gap-1 h-7">
                             <ExternalLink className="w-3 h-3" />Shopify 頁面
                           </Button>
                         </a>
                       )}
-                      <Button variant="outline" size="sm" className="text-xs gap-1 h-7" onClick={() => handleCopyText(numericId, 'id')}>
+                      <Button variant="outline" size="sm" className="text-sm gap-1 h-7" onClick={() => handleCopyText(numericId, 'id')}>
                         {copiedField === 'id' ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                         ID: {numericId}
                       </Button>
@@ -692,8 +692,8 @@ export default function AdminSalonsPage() {
                   <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-amber-800">{shopifyDetailError}</p>
-                    <p className="text-xs text-amber-600 mt-1">顯示嘅資料來自本地快取{cachedRawData ? '（已有快取資料）' : '（無快取資料）'}</p>
-                    <Button variant="outline" size="sm" className="mt-2 text-xs h-7" onClick={() => handleViewDetails(viewDetailsSalon)}>
+                    <p className="text-sm text-amber-600 mt-1">顯示嘅資料來自本地快取{cachedRawData ? '（已有快取資料）' : '（無快取資料）'}</p>
+                    <Button variant="outline" size="sm" className="mt-2 text-sm h-7" onClick={() => handleViewDetails(viewDetailsSalon)}>
                       <RefreshCw className="w-3 h-3 mr-1" />重試
                     </Button>
                   </div>
@@ -715,29 +715,29 @@ export default function AdminSalonsPage() {
                 </h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs mb-1 flex items-center gap-1"><User className="w-3 h-3" />聯絡人</p>
+                    <p className="text-slate-500 text-sm mb-1 flex items-center gap-1"><User className="w-3 h-3" />聯絡人</p>
                     <p className="font-medium">{contactPerson || '-'}</p>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs mb-1 flex items-center gap-1"><Phone className="w-3 h-3" />聯絡電話</p>
+                    <p className="text-slate-500 text-sm mb-1 flex items-center gap-1"><Phone className="w-3 h-3" />聯絡電話</p>
                     <p className="font-medium">{contactNumber ? (
                       <a href={`tel:${contactNumber}`} className="text-blue-600 hover:underline">{contactNumber}</a>
                     ) : '-'}</p>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs mb-1 flex items-center gap-1"><MessageCircle className="w-3 h-3" />WhatsApp</p>
+                    <p className="text-slate-500 text-sm mb-1 flex items-center gap-1"><MessageCircle className="w-3 h-3" />WhatsApp</p>
                     <p className="font-medium">{whatsappNumber ? (
                       <a href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">{whatsappNumber}</a>
                     ) : '-'}</p>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs mb-1 flex items-center gap-1"><Mail className="w-3 h-3" />電郵地址</p>
+                    <p className="text-slate-500 text-sm mb-1 flex items-center gap-1"><Mail className="w-3 h-3" />電郵地址</p>
                     <p className="font-medium truncate">{email ? (
                       <a href={`mailto:${email}`} className="text-blue-600 hover:underline">{email}</a>
                     ) : '-'}</p>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3 col-span-2">
-                    <p className="text-slate-500 text-xs mb-1 flex items-center gap-1"><Globe className="w-3 h-3" />網站</p>
+                    <p className="text-slate-500 text-sm mb-1 flex items-center gap-1"><Globe className="w-3 h-3" />網站</p>
                     <p className="font-medium break-all">{website ? (
                       <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{website}</a>
                     ) : '-'}</p>
@@ -752,17 +752,17 @@ export default function AdminSalonsPage() {
                 </h4>
                 <div className="grid grid-cols-1 gap-3 text-sm">
                   <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-slate-500 text-xs mb-1">詳細地址</p>
+                    <p className="text-slate-500 text-sm mb-1">詳細地址</p>
                     <p className="font-medium">{address || '-'}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-slate-50 rounded-lg p-3">
-                      <p className="text-slate-500 text-xs mb-1">地區</p>
+                      <p className="text-slate-500 text-sm mb-1">地區</p>
                       <p className="font-medium">{district || viewDetailsSalon.district_name || '-'}</p>
                     </div>
                     <div className="bg-slate-50 rounded-lg p-3">
-                      <p className="text-slate-500 text-xs mb-1">網址代碼</p>
-                      <p className="font-medium text-xs break-all">{viewDetailsSalon.handle || '-'}</p>
+                      <p className="text-slate-500 text-sm mb-1">網址代碼</p>
+                      <p className="font-medium text-sm break-all">{viewDetailsSalon.handle || '-'}</p>
                     </div>
                   </div>
                 </div>
@@ -788,13 +788,13 @@ export default function AdminSalonsPage() {
                     {selectedTags.length > 0 ? selectedTags.map((tag: string, idx: number) => {
                       const category = labelCategoryMap[tag];
                       return (
-                        <Badge key={idx} variant="outline" className={`text-xs ${highlightTags.includes(tag) ? 'bg-pink-50 border-pink-300 text-pink-700 font-medium' : ''}`}>
+                        <Badge key={idx} variant="outline" className={`text-sm ${highlightTags.includes(tag) ? 'bg-pink-50 border-pink-300 text-pink-700 font-medium' : ''}`}>
                           {highlightTags.includes(tag) && '⭐ '}{tag}
                           {category && <span className="text-slate-400 ml-1">({category})</span>}
                         </Badge>
                       );
                     }) : (viewDetailsSalon.tags || '').split(',').filter(Boolean).map((tag: string, idx: number) => (
-                      <Badge key={idx} variant="outline" className="text-xs">{tag.trim()}</Badge>
+                      <Badge key={idx} variant="outline" className="text-sm">{tag.trim()}</Badge>
                     ))}
                   </div>
                 </div>
@@ -809,8 +809,8 @@ export default function AdminSalonsPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                     {Object.entries(DAY_LABELS).map(([key, label]) => (
                       <div key={key} className={`rounded-lg p-2.5 ${openingHours[key] ? 'bg-emerald-50 border border-emerald-100' : 'bg-slate-50'}`}>
-                        <p className="text-slate-500 text-xs mb-0.5">{label}</p>
-                        <p className={`font-medium text-xs ${openingHours[key] ? 'text-emerald-700' : 'text-slate-400'}`}>{openingHours[key] || '未設定'}</p>
+                        <p className="text-slate-500 text-sm mb-0.5">{label}</p>
+                        <p className={`font-medium text-sm ${openingHours[key] ? 'text-emerald-700' : 'text-slate-400'}`}>{openingHours[key] || '未設定'}</p>
                       </div>
                     ))}
                   </div>
@@ -825,11 +825,11 @@ export default function AdminSalonsPage() {
                   </h4>
                   <div className="grid grid-cols-1 gap-3 text-sm bg-blue-50/50 p-4 rounded-lg">
                     <div>
-                      <p className="text-slate-500 mb-0.5 text-xs">SEO 頁面標題</p>
+                      <p className="text-slate-500 mb-0.5 text-sm">SEO 頁面標題</p>
                       <p className="font-medium">{seoTitle || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 mb-0.5 text-xs">SEO 頁面描述</p>
+                      <p className="text-slate-500 mb-0.5 text-sm">SEO 頁面描述</p>
                       <p className="font-medium text-sm">{seoDescription || '-'}</p>
                     </div>
                   </div>
@@ -842,7 +842,7 @@ export default function AdminSalonsPage() {
                   <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <ImageIcon className="w-4 h-4 text-pink-500" />美容院頁面媒體 ({images.length})
                     {!shopifyDetailData && cachedRawData && (
-                      <Badge variant="outline" className="text-[10px] ml-1 text-amber-600 border-amber-200 bg-amber-50">快取</Badge>
+                      <Badge variant="outline" className="text-[14px] ml-1 text-amber-600 border-amber-200 bg-amber-50">快取</Badge>
                     )}
                   </h4>
                   <div className="grid grid-cols-4 gap-2">
@@ -872,8 +872,8 @@ export default function AdminSalonsPage() {
                     {shopifyMetafields.map((mf: any, idx: number) => (
                       <div key={idx} className="bg-purple-50/50 rounded-lg p-3 border border-purple-100">
                         <div className="flex items-center justify-between">
-                          <p className="text-purple-600 text-xs font-mono">{mf.namespace}.{mf.key}</p>
-                          <Badge variant="outline" className="text-[10px] text-purple-500 border-purple-200">{mf.type}</Badge>
+                          <p className="text-purple-600 text-sm font-mono">{mf.namespace}.{mf.key}</p>
+                          <Badge variant="outline" className="text-[14px] text-purple-500 border-purple-200">{mf.type}</Badge>
                         </div>
                         <p className="font-medium mt-1 text-sm break-all">{typeof mf.value === 'string' && mf.value.length > 200 ? mf.value.slice(0, 200) + '...' : String(mf.value)}</p>
                       </div>
@@ -890,11 +890,11 @@ export default function AdminSalonsPage() {
                   </h4>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="bg-slate-50 rounded-lg p-3">
-                      <p className="text-slate-500 text-xs mb-1">擁有者名稱</p>
+                      <p className="text-slate-500 text-sm mb-1">擁有者名稱</p>
                       <p className="font-medium">{viewDetailsSalon.ownerName || '-'}</p>
                     </div>
                     <div className="bg-slate-50 rounded-lg p-3">
-                      <p className="text-slate-500 text-xs mb-1">擁有者電郵</p>
+                      <p className="text-slate-500 text-sm mb-1">擁有者電郵</p>
                       <p className="font-medium text-sm truncate">{viewDetailsSalon.ownerEmail || '-'}</p>
                     </div>
                   </div>
@@ -903,19 +903,19 @@ export default function AdminSalonsPage() {
 
               {/* Shopify 數據來源 + 建立時間 */}
               <div className="p-6 bg-slate-50/50">
-                <div className="flex items-center justify-between text-xs text-slate-400">
+                <div className="flex items-center justify-between text-sm text-slate-400">
                   <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       建立時間：{new Date(viewDetailsSalon.created_at).toLocaleString('zh-HK')}
                     </span>
                     {shopifyDetailData && !shopifyDetailError && (
-                      <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-200 bg-emerald-50">
+                      <Badge variant="outline" className="text-[14px] text-emerald-600 border-emerald-200 bg-emerald-50">
                         ✓ Shopify API 已連線
                       </Badge>
                     )}
                     {shopifyDetailError && cachedRawData && (
-                      <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200 bg-amber-50">
+                      <Badge variant="outline" className="text-[14px] text-amber-600 border-amber-200 bg-amber-50">
                         ⚠ 使用本地快取資料
                       </Badge>
                     )}

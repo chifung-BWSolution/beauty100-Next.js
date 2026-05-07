@@ -139,7 +139,7 @@ export default function MerchantSignupForm({
       <div className="p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            <label className="block text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
               您的姓名 <span className="text-rose-400">*</span>
             </label>
             <Input
@@ -153,7 +153,7 @@ export default function MerchantSignupForm({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 美容院名稱 <span className="text-rose-400">*</span>
               </label>
               <Input
@@ -166,7 +166,7 @@ export default function MerchantSignupForm({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">聯絡人</label>
+              <label className="block text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">聯絡人</label>
               <Input
                 value={formData.contact_person}
                 onChange={(e) => handleChange('contact_person', e.target.value)}
@@ -175,7 +175,7 @@ export default function MerchantSignupForm({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 聯絡電話 <span className="text-rose-400">*</span>
               </label>
               <Input
@@ -187,7 +187,7 @@ export default function MerchantSignupForm({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 WhatsApp 號碼 <span className="text-rose-400">*</span>
               </label>
               <Input
@@ -199,7 +199,7 @@ export default function MerchantSignupForm({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 電郵地址 <span className="text-rose-400">*</span>
               </label>
               <Input
@@ -212,7 +212,7 @@ export default function MerchantSignupForm({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">地區</label>
+              <label className="block text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">地區</label>
               {initialDistricts.length > 0 ? (
                 <DistrictSelect
                   districts={initialDistricts}
@@ -230,7 +230,7 @@ export default function MerchantSignupForm({
               )}
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">網站（選填）</label>
+              <label className="block text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">網站（選填）</label>
               <Input
                 value={formData.website}
                 onChange={(e) => handleChange('website', e.target.value)}
@@ -243,7 +243,7 @@ export default function MerchantSignupForm({
           <div className="pt-2">
             <div className="flex items-center gap-2 mb-4">
               <div className="h-px flex-1 bg-rose-100" />
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2">文件及相片</span>
+              <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider px-2">文件及相片</span>
               <div className="h-px flex-1 bg-rose-100" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

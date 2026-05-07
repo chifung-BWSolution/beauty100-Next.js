@@ -45,7 +45,7 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
       ]);
       const profileIds = (profiles || []).map((p: any) => String(p.shopify_product_id));
       const applicationIds = (applications || []).filter((a: any) => a.shopify_product_id).map((a: any) => String(a.shopify_product_id));
-      return [...new Set([...profileIds, ...applicationIds])];
+      return Array.from(new Set([...profileIds, ...applicationIds]));
     } catch {
       return [];
     }
@@ -179,12 +179,12 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-slate-800 text-sm truncate">{salon.title}</p>
                     {salon.district_name && (
-                      <p className="text-xs text-purple-500 mt-0.5">{salon.district_name}</p>
+                      <p className="text-sm text-purple-500 mt-0.5">{salon.district_name}</p>
                     )}
                   </div>
                   {selectedSalon?.id === salon.id && (
                     <div className="w-5 h-5 rounded-full bg-rose-500 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-xs">✓</span>
+                      <span className="text-white text-sm">✓</span>
                     </div>
                   )}
                 </div>
@@ -226,7 +226,7 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
             <div className="sticky bottom-4 flex justify-center">
               <div className="bg-white rounded-2xl shadow-xl border border-rose-100 px-6 py-4 flex items-center gap-4 max-w-md w-full">
                 <div className="flex-1">
-                  <p className="text-xs text-slate-400 mb-0.5">已選擇</p>
+                  <p className="text-sm text-slate-400 mb-0.5">已選擇</p>
                   <p className="font-semibold text-slate-800 truncate">{selectedSalon.title}</p>
                 </div>
                 <Button

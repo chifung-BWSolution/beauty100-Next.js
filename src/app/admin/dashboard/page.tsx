@@ -297,7 +297,7 @@ export default function AdminDashboardPage() {
           <TabsTrigger value="applications">入駐申請</TabsTrigger>
           <TabsTrigger value="edits">
             資料更新申請
-            {stats.pendingEdits > 0 && <Badge className="ml-2 bg-fuchsia-600 text-white border-0 h-5 px-1.5 text-xs">{stats.pendingEdits}</Badge>}
+            {stats.pendingEdits > 0 && <Badge className="ml-2 bg-fuchsia-600 text-white border-0 h-5 px-1.5 text-sm">{stats.pendingEdits}</Badge>}
           </TabsTrigger>
         </TabsList>
 
@@ -334,7 +334,7 @@ export default function AdminDashboardPage() {
                             </div>
                             <div className="min-w-0">
                               <p className="font-medium text-slate-800 break-words">{app.salon_name}</p>
-                              <p className="text-xs text-slate-400 break-all">{users[app.created_by] || app.email}</p>
+                              <p className="text-sm text-slate-400 break-all">{users[app.created_by] || app.email}</p>
                             </div>
                           </div>
                         </TableCell>
@@ -371,7 +371,7 @@ export default function AdminDashboardPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-slate-800 truncate">{app.salon_name}</p>
-                          <p className="text-xs text-slate-400 truncate">{users[app.created_by] || app.email}</p>
+                          <p className="text-sm text-slate-400 truncate">{users[app.created_by] || app.email}</p>
                         </div>
                         <Badge className={app.application_type === 'claim' ? 'bg-purple-100 text-purple-700 border-0' : 'bg-pink-100 text-pink-700 border-0'}>
                           {app.application_type === 'claim' ? '認領' : '新增'}
@@ -379,7 +379,7 @@ export default function AdminDashboardPage() {
                       </div>
                       <div className="space-y-2 text-sm mb-3">
                         <div className="flex justify-between"><span className="text-slate-500">地區</span><span className="font-medium">{app.district || '-'}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">日期</span><span className="text-xs text-slate-500">{format(new Date(app.created_date), 'MM/dd')}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500">日期</span><span className="text-sm text-slate-500">{format(new Date(app.created_date), 'MM/dd')}</span></div>
                       </div>
                       <Button variant="ghost" size="sm" onClick={() => { setSelectedApp(app); setShowDetailModal(true); }} className="w-full text-pink-600 hover:bg-pink-50">
                         <Eye className="w-4 h-4 mr-1" />查看詳情
@@ -413,7 +413,7 @@ export default function AdminDashboardPage() {
                       <TableRow key={v.id} className="hover:bg-slate-50/50">
                         <TableCell className="whitespace-normal">
                           <p className="font-medium text-slate-800 break-words">{v.salon_name}</p>
-                          <p className="text-xs text-slate-400 break-all">{users[v.created_by] || '-'}</p>
+                          <p className="text-sm text-slate-400 break-all">{users[v.created_by] || '-'}</p>
                         </TableCell>
                         <TableCell className="text-slate-500 text-sm whitespace-normal">{format(new Date(v.created_date), 'MM/dd/yyyy HH:mm')}</TableCell>
                         <TableCell className="text-right whitespace-normal">
@@ -437,7 +437,7 @@ export default function AdminDashboardPage() {
                   <Card key={v.id} className="border shadow-sm">
                     <CardContent className="p-4">
                       <p className="font-medium text-slate-800 mb-1">{v.salon_name}</p>
-                      <p className="text-xs text-slate-400 mb-3">{users[v.created_by] || '-'}</p>
+                      <p className="text-sm text-slate-400 mb-3">{users[v.created_by] || '-'}</p>
                       <div className="text-sm text-slate-500 mb-3">{format(new Date(v.created_date), 'MM/dd HH:mm')}</div>
                       <Button variant="ghost" size="sm" onClick={() => { setSelectedVersion(v); setShowVersionModal(true); }} className="w-full text-pink-600 hover:bg-pink-50">
                         <Eye className="w-4 h-4 mr-1" />審核更新
@@ -470,13 +470,13 @@ export default function AdminDashboardPage() {
             <div>
               <h3 className="font-semibold text-slate-800 mb-3">美容院資料</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3"><Store className="w-5 h-5 text-slate-400" /><div><p className="text-xs text-slate-400">美容院名稱</p><p className="font-medium">{selectedApp.salon_name}</p></div></div>
-                <div className="flex items-center gap-3"><Store className="w-5 h-5 text-slate-400" /><div><p className="text-xs text-slate-400">聯絡人</p><p className="font-medium">{selectedApp.contact_person || '-'}</p></div></div>
-                <div className="flex items-center gap-3"><MapPin className="w-5 h-5 text-slate-400" /><div><p className="text-xs text-slate-400">地區</p><p className="font-medium">{selectedApp.district || '-'}</p></div></div>
-                <div className="flex items-center gap-3"><Phone className="w-5 h-5 text-slate-400" /><div><p className="text-xs text-slate-400">聯絡電話</p><p className="font-medium">{selectedApp.contact_number}</p></div></div>
-                <div className="flex items-center gap-3"><Mail className="w-5 h-5 text-slate-400" /><div><p className="text-xs text-slate-400">電郵地址</p><p className="font-medium">{selectedApp.email}</p></div></div>
+                <div className="flex items-center gap-3"><Store className="w-5 h-5 text-slate-400" /><div><p className="text-sm text-slate-400">美容院名稱</p><p className="font-medium">{selectedApp.salon_name}</p></div></div>
+                <div className="flex items-center gap-3"><Store className="w-5 h-5 text-slate-400" /><div><p className="text-sm text-slate-400">聯絡人</p><p className="font-medium">{selectedApp.contact_person || '-'}</p></div></div>
+                <div className="flex items-center gap-3"><MapPin className="w-5 h-5 text-slate-400" /><div><p className="text-sm text-slate-400">地區</p><p className="font-medium">{selectedApp.district || '-'}</p></div></div>
+                <div className="flex items-center gap-3"><Phone className="w-5 h-5 text-slate-400" /><div><p className="text-sm text-slate-400">聯絡電話</p><p className="font-medium">{selectedApp.contact_number}</p></div></div>
+                <div className="flex items-center gap-3"><Mail className="w-5 h-5 text-slate-400" /><div><p className="text-sm text-slate-400">電郵地址</p><p className="font-medium">{selectedApp.email}</p></div></div>
                 {selectedApp.website && (
-                  <div className="flex items-center gap-3"><Globe className="w-5 h-5 text-slate-400" /><div><p className="text-xs text-slate-400">網站</p><a href={selectedApp.website} target="_blank" rel="noopener noreferrer" className="font-medium text-fuchsia-600 hover:underline flex items-center gap-1">{selectedApp.website}<ExternalLink className="w-3 h-3" /></a></div></div>
+                  <div className="flex items-center gap-3"><Globe className="w-5 h-5 text-slate-400" /><div><p className="text-sm text-slate-400">網站</p><a href={selectedApp.website} target="_blank" rel="noopener noreferrer" className="font-medium text-fuchsia-600 hover:underline flex items-center gap-1">{selectedApp.website}<ExternalLink className="w-3 h-3" /></a></div></div>
                 )}
               </div>
             </div>
@@ -486,7 +486,7 @@ export default function AdminDashboardPage() {
                 <div className="space-y-3">
                   {Array.isArray(selectedApp.selected_tags) && selectedApp.selected_tags.length > 0 ? (
                     <div>
-                      <p className="text-xs text-slate-400 mb-2">已選標籤（按類別）</p>
+                      <p className="text-sm text-slate-400 mb-2">已選標籤（按類別）</p>
                       {(() => {
                         const grouped: Record<string, string[]> = {};
                         selectedApp.selected_tags.forEach((label: string) => {
@@ -496,9 +496,9 @@ export default function AdminDashboardPage() {
                         });
                         return Object.entries(grouped).map(([cat, labels]) => (
                           <div key={cat} className="mb-2">
-                            <span className="text-xs font-medium text-slate-500 mr-2">{cat}：</span>
+                            <span className="text-sm font-medium text-slate-500 mr-2">{cat}：</span>
                             <span className="inline-flex flex-wrap gap-1">
-                              {(labels as string[]).map(l => <Badge key={l} variant="secondary" className="text-xs bg-pink-50 text-pink-700 border border-pink-200">{l}</Badge>)}
+                              {(labels as string[]).map(l => <Badge key={l} variant="secondary" className="text-sm bg-pink-50 text-pink-700 border border-pink-200">{l}</Badge>)}
                             </span>
                           </div>
                         ));
@@ -506,19 +506,19 @@ export default function AdminDashboardPage() {
                     </div>
                   ) : selectedApp.tags ? (
                     <div>
-                      <p className="text-xs text-slate-400 mb-2">標籤 (舊格式)</p>
+                      <p className="text-sm text-slate-400 mb-2">標籤 (舊格式)</p>
                       <div className="flex flex-wrap gap-1">
                         {selectedApp.tags.split(',').map((t: string) => t.trim()).filter(Boolean).map((t: string) => (
-                          <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
+                          <Badge key={t} variant="secondary" className="text-sm">{t}</Badge>
                         ))}
                       </div>
                     </div>
                   ) : null}
                   {Array.isArray(selectedApp.highlight_tags) && selectedApp.highlight_tags.length > 0 && (
                     <div>
-                      <p className="text-xs text-slate-400 mb-2">⭐ Highlight 服務</p>
+                      <p className="text-sm text-slate-400 mb-2">⭐ Highlight 服務</p>
                       <div className="flex flex-wrap gap-1">
-                        {selectedApp.highlight_tags.map((t: string) => <Badge key={t} className="text-xs bg-amber-50 text-amber-700 border border-amber-300">{t}</Badge>)}
+                        {selectedApp.highlight_tags.map((t: string) => <Badge key={t} className="text-sm bg-amber-50 text-amber-700 border border-amber-300">{t}</Badge>)}
                       </div>
                     </div>
                   )}
@@ -534,7 +534,7 @@ export default function AdminDashboardPage() {
                       <div className="aspect-square bg-slate-100 rounded-lg flex items-center justify-center mb-2 overflow-hidden">
                         {selectedApp[key].match(/\.(jpg|jpeg|png|webp)$/i) ? <img src={selectedApp[key]} alt={label} className="w-full h-full object-cover" /> : <FileText className="w-8 h-8 text-slate-400" />}
                       </div>
-                      <p className="text-xs text-slate-500 text-center">{label}</p>
+                      <p className="text-sm text-slate-500 text-center">{label}</p>
                     </div>
                   </a>
                 ))}

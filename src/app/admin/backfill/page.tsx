@@ -393,15 +393,17 @@ export default function BackfillPage() {
       .select("*")
       .eq("id", "current")
       .single()
-      .then(({ data }) => {
-        if (cancelled || !mountedRef.current) return;
-        if (data) {
-          setProgress(data);
-          if (data.status === "running") startPolling();
-          // Show stalled batch_done status so Resume button appears
-        }
-      })
-      .catch(() => {});
+      .then(
+        ({ data }) => {
+          if (cancelled || !mountedRef.current) return;
+          if (data) {
+            setProgress(data);
+            if (data.status === "running") startPolling();
+            // Show stalled batch_done status so Resume button appears
+          }
+        },
+        () => {} // catch error
+      );
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -547,7 +549,7 @@ export default function BackfillPage() {
                       style={{ width: `${progress.total_profiles > 0 ? (progress.processed / progress.total_profiles) * 100 : 0}%` }}
                     />
                   </div>
-                  <div className="grid grid-cols-4 gap-2 text-xs">
+                  <div className="grid grid-cols-4 gap-2 text-sm">
                     <div className="bg-blue-100 p-2 rounded text-center">
                       <p className="text-blue-800 font-bold">{progress.processed}</p>
                       <p className="text-blue-600">已處理</p>
@@ -565,9 +567,9 @@ export default function BackfillPage() {
                       <p className="text-red-600">API 錯誤</p>
                     </div>
                   </div>
-                  {progress.current_salon && <p className="text-xs text-blue-500">📍 等待下一批... ({progress.processed}/{progress.total_profiles})</p>}
+                  {progress.current_salon && <p className="text-sm text-blue-500">📍 等待下一批... ({progress.processed}/{progress.total_profiles})</p>}
                   {progress.started_at && (
-                    <p className="text-xs text-blue-400">
+                    <p className="text-sm text-blue-400">
                       開始: {new Date(progress.started_at).toLocaleString("zh-HK")}
                       {" • "}已用時: {elapsedSeconds >= 60 ? `${Math.floor(elapsedSeconds / 60)}分${elapsedSeconds % 60}秒` : `${elapsedSeconds}秒`}
                       {backfilling && <span className="ml-2 inline-block animate-pulse">🔄 處理中...</span>}
@@ -589,7 +591,7 @@ export default function BackfillPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-gray-900 text-gray-100 p-3 rounded-lg text-xs font-mono max-h-60 overflow-y-auto space-y-0.5">
+              <div className="bg-gray-900 text-gray-100 p-3 rounded-lg text-sm font-mono max-h-60 overflow-y-auto space-y-0.5">
                 {batchLog.map((line, i) => (
                   <div key={i} className={
                     line.startsWith("✅") ? "text-green-400" :
@@ -614,7 +616,7 @@ export default function BackfillPage() {
               <CardTitle className="text-sm text-red-700">⚠️ {allErrors.length} 個錯誤</CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="bg-red-100 p-2 rounded text-xs max-h-40 overflow-y-auto whitespace-pre-wrap">
+              <pre className="bg-red-100 p-2 rounded text-sm max-h-40 overflow-y-auto whitespace-pre-wrap">
                 {allErrors.join("\n")}
               </pre>
             </CardContent>
@@ -633,7 +635,7 @@ export default function BackfillPage() {
             <CardContent className="space-y-3">
               {discoveredKeys.all_metafield_keys && (
                 <div>
-                  <p className="text-xs font-bold text-teal-800 mb-2">
+                  <p className="text-sm font-bold text-teal-800 mb-2">
                     搵到嘅 metafield keys（頻率）：
                   </p>
                   <div className="bg-white p-3 rounded border border-teal-200 space-y-1">
@@ -642,8 +644,8 @@ export default function BackfillPage() {
                       .map(([key, count]) => {
                         const isMapped = discoveredKeys.mapped_keys?.includes(key);
                         return (
-                          <div key={key} className="text-xs flex items-center gap-2">
-                            <Badge variant={isMapped ? "default" : "secondary"} className="text-[10px] font-mono">
+                          <div key={key} className="text-sm flex items-center gap-2">
+                            <Badge variant={isMapped ? "default" : "secondary"} className="text-[14px] font-mono">
                               {key}
                             </Badge>
                             <span className="text-gray-500">× {count as number}</span>
@@ -657,8 +659,8 @@ export default function BackfillPage() {
               )}
               {discoveredKeys.sample_values && (
                 <div>
-                  <p className="text-xs font-bold text-teal-800 mb-1">Sample values (未映射嘅 key):</p>
-                  <pre className="bg-white p-2 rounded text-xs overflow-x-auto whitespace-pre-wrap border border-teal-200 max-h-40 overflow-y-auto">
+                  <p className="text-sm font-bold text-teal-800 mb-1">Sample values (未映射嘅 key):</p>
+                  <pre className="bg-white p-2 rounded text-sm overflow-x-auto whitespace-pre-wrap border border-teal-200 max-h-40 overflow-y-auto">
                     {JSON.stringify(discoveredKeys.sample_values, null, 2)}
                   </pre>
                 </div>
@@ -683,27 +685,27 @@ export default function BackfillPage() {
                   <h3 className="font-bold text-sm mb-2 text-purple-900">
                     #{idx + 1} {s.salon_name} (ID: {s.numeric_id})
                   </h3>
-                  <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                    <div>Product: <Badge variant={s.product_fetched ? "default" : "destructive"} className="text-[10px]">{s.product_fetched ? "✓" : "✗"}</Badge></div>
-                    <div>Metafields: <Badge variant={s.metafields_count > 0 ? "default" : "destructive"} className="text-[10px]">{s.metafields_count} 個</Badge></div>
+                  <div className="grid grid-cols-2 gap-2 text-sm mb-2">
+                    <div>Product: <Badge variant={s.product_fetched ? "default" : "destructive"} className="text-[14px]">{s.product_fetched ? "✓" : "✗"}</Badge></div>
+                    <div>Metafields: <Badge variant={s.metafields_count > 0 ? "default" : "destructive"} className="text-[14px]">{s.metafields_count} 個</Badge></div>
                     {s.product_error && <div className="col-span-2 text-red-600">{s.product_error}</div>}
                     {s.metafields_error && <div className="col-span-2 text-red-600">{s.metafields_error}</div>}
                   </div>
                   {s.body_html_present && (
                     <div className="mb-2 bg-yellow-50 p-2 rounded border border-yellow-300">
-                      <p className="text-[10px] font-bold text-yellow-800">body_html ✓</p>
-                      <pre className="text-[10px] max-h-20 overflow-y-auto whitespace-pre-wrap">{s.body_html_sample}</pre>
+                      <p className="text-[14px] font-bold text-yellow-800">body_html ✓</p>
+                      <pre className="text-[14px] max-h-20 overflow-y-auto whitespace-pre-wrap">{s.body_html_sample}</pre>
                     </div>
                   )}
                   {s.metafields_list?.length > 0 && (
                     <div className="mb-2">
-                      <p className="text-[10px] font-bold text-blue-700">Metafields ({s.metafields_list.length}):</p>
+                      <p className="text-[14px] font-bold text-blue-700">Metafields ({s.metafields_list.length}):</p>
                       <div className="bg-blue-50 p-2 rounded space-y-0.5">
                         {s.metafields_list.map((mf: any, mi: number) => (
-                          <div key={mi} className="text-[10px] flex gap-1 items-start">
-                            <Badge variant="outline" className="shrink-0 text-[9px]">{mf.key}</Badge>
+                          <div key={mi} className="text-[14px] flex gap-1 items-start">
+                            <Badge variant="outline" className="shrink-0 text-[12px]">{mf.key}</Badge>
                             <span className="text-gray-400">→</span>
-                            <Badge variant={mf.maps_to !== "(unmapped)" ? "default" : "secondary"} className="shrink-0 text-[9px]">{mf.maps_to}</Badge>
+                            <Badge variant={mf.maps_to !== "(unmapped)" ? "default" : "secondary"} className="shrink-0 text-[12px]">{mf.maps_to}</Badge>
                             <span className="text-gray-600 truncate">{mf.value}</span>
                           </div>
                         ))}
@@ -712,14 +714,14 @@ export default function BackfillPage() {
                   )}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <p className="text-[10px] font-bold text-green-700">Extracted:</p>
-                      <pre className="bg-green-50 p-1 rounded text-[10px] overflow-x-auto whitespace-pre-wrap max-h-28 overflow-y-auto">
+                      <p className="text-[14px] font-bold text-green-700">Extracted:</p>
+                      <pre className="bg-green-50 p-1 rounded text-[14px] overflow-x-auto whitespace-pre-wrap max-h-28 overflow-y-auto">
                         {JSON.stringify(s.extracted_fields, null, 2)}
                       </pre>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-orange-700">目前 Profile:</p>
-                      <pre className="bg-orange-50 p-1 rounded text-[10px] overflow-x-auto whitespace-pre-wrap max-h-28 overflow-y-auto border border-orange-200">
+                      <p className="text-[14px] font-bold text-orange-700">目前 Profile:</p>
+                      <pre className="bg-orange-50 p-1 rounded text-[14px] overflow-x-auto whitespace-pre-wrap max-h-28 overflow-y-auto border border-orange-200">
                         {JSON.stringify(s.current_profile, null, 2)}
                       </pre>
                     </div>
@@ -784,10 +786,10 @@ export default function BackfillPage() {
                             const pct = getEmptyPct(empty, analysis.total_profiles);
                             return (
                               <tr key={col} className="border-b hover:bg-gray-50">
-                                <td className="py-1.5 pr-4 font-mono text-xs">{col}</td>
+                                <td className="py-1.5 pr-4 font-mono text-sm">{col}</td>
                                 <td className="text-right py-1.5 px-4 text-red-600">{empty}</td>
                                 <td className="text-right py-1.5 px-4">
-                                  <Badge variant={badgeVariant(pct) as any} className="text-[10px]">{pct}%</Badge>
+                                  <Badge variant={badgeVariant(pct) as any} className="text-[14px]">{pct}%</Badge>
                                 </td>
                                 <td className="text-right py-1.5 px-4 text-green-600">{analysis.total_profiles - empty}</td>
                                 <td className="py-1.5 pl-4">
@@ -826,7 +828,7 @@ export default function BackfillPage() {
                           .sort(([, a], [, b]) => b.canFill - a.canFill)
                           .map(([col, info]) => (
                             <tr key={col} className="border-b hover:bg-gray-50">
-                              <td className="py-1.5 pr-4 font-mono text-xs">{col}</td>
+                              <td className="py-1.5 pr-4 font-mono text-sm">{col}</td>
                               <td className="text-right py-1.5 px-4">{info.available}</td>
                               <td className="text-right py-1.5 px-4">
                                 {info.canFill > 0 ? (
@@ -905,38 +907,38 @@ export default function BackfillPage() {
                 {/* Summary */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="bg-blue-50 rounded-lg p-3">
-                    <p className="text-xs text-blue-600 font-medium">Total Profiles</p>
+                    <p className="text-sm text-blue-600 font-medium">Total Profiles</p>
                     <p className="text-xl font-bold text-blue-900">{diagnoseData.total_profiles}</p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-3">
-                    <p className="text-xs text-green-600 font-medium">有值 (Currently Has Value)</p>
+                    <p className="text-sm text-green-600 font-medium">有值 (Currently Has Value)</p>
                     <p className="text-xl font-bold text-green-900">{diagnoseData.currently_has_value}</p>
                   </div>
                   <div className="bg-red-50 rounded-lg p-3">
-                    <p className="text-xs text-red-600 font-medium">缺失 (Missing)</p>
+                    <p className="text-sm text-red-600 font-medium">缺失 (Missing)</p>
                     <p className="text-xl font-bold text-red-900">{diagnoseData.currently_missing}</p>
                   </div>
                   <div className="bg-purple-50 rounded-lg p-3">
-                    <p className="text-xs text-purple-600 font-medium">Shopify 有值 (可補)</p>
+                    <p className="text-sm text-purple-600 font-medium">Shopify 有值 (可補)</p>
                     <p className="text-xl font-bold text-purple-900">{diagnoseData.shopify_has_data_for_missing}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-600 font-medium">Scanned</p>
+                    <p className="text-sm text-gray-600 font-medium">Scanned</p>
                     <p className="text-lg font-bold">{diagnoseData.scanned_missing}</p>
                   </div>
                   <div className="bg-yellow-50 rounded-lg p-3">
-                    <p className="text-xs text-yellow-700 font-medium">Shopify 都冇</p>
+                    <p className="text-sm text-yellow-700 font-medium">Shopify 都冇</p>
                     <p className="text-lg font-bold text-yellow-900">{diagnoseData.shopify_also_empty}</p>
                   </div>
                   <div className="bg-orange-50 rounded-lg p-3">
-                    <p className="text-xs text-orange-600 font-medium">404 (Product 唔存在)</p>
+                    <p className="text-sm text-orange-600 font-medium">404 (Product 唔存在)</p>
                     <p className="text-lg font-bold text-orange-900">{diagnoseData.product_not_found_404}</p>
                   </div>
                   <div className="bg-red-50 rounded-lg p-3">
-                    <p className="text-xs text-red-600 font-medium">API Errors</p>
+                    <p className="text-sm text-red-600 font-medium">API Errors</p>
                     <p className="text-lg font-bold text-red-900">{diagnoseData.api_errors}</p>
                   </div>
                 </div>
@@ -965,7 +967,7 @@ export default function BackfillPage() {
                   <div>
                     <h4 className="text-sm font-medium mb-2">Sample Results (最多 20 個)</h4>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-xs">
+                      <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b bg-gray-50">
                             <th className="text-left py-2 px-2">Salon</th>
@@ -983,11 +985,11 @@ export default function BackfillPage() {
                               <td className="py-1.5 px-2 font-mono">{r.numeric_id}</td>
                               <td className="py-1.5 px-2 text-center">
                                 {r.error ? (
-                                  <Badge variant="destructive" className="text-[10px]">{r.error.substring(0, 20)}</Badge>
+                                  <Badge variant="destructive" className="text-[14px]">{r.error.substring(0, 20)}</Badge>
                                 ) : r.shopify_has_value ? (
-                                  <Badge className="text-[10px] bg-green-500">✓ 有</Badge>
+                                  <Badge className="text-[14px] bg-green-500">✓ 有</Badge>
                                 ) : (
-                                  <Badge variant="secondary" className="text-[10px]">✗ 冇</Badge>
+                                  <Badge variant="secondary" className="text-[14px]">✗ 冇</Badge>
                                 )}
                               </td>
                               <td className="py-1.5 px-2 max-w-[200px] truncate" title={r.extracted_value || ''}>{r.extracted_value || '-'}</td>
@@ -995,10 +997,10 @@ export default function BackfillPage() {
                               <td className="py-1.5 px-2 max-w-[250px]">
                                 <div className="flex flex-wrap gap-0.5">
                                   {r.all_metafield_keys?.slice(0, 8).map((k: string) => (
-                                    <span key={k} className="bg-gray-100 text-gray-600 text-[9px] px-1 rounded">{k}</span>
+                                    <span key={k} className="bg-gray-100 text-gray-600 text-[12px] px-1 rounded">{k}</span>
                                   ))}
                                   {r.all_metafield_keys?.length > 8 && (
-                                    <span className="text-gray-400 text-[9px]">+{r.all_metafield_keys.length - 8}</span>
+                                    <span className="text-gray-400 text-[12px]">+{r.all_metafield_keys.length - 8}</span>
                                   )}
                                 </div>
                               </td>

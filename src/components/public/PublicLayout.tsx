@@ -6,7 +6,7 @@ import PublicFooter from '@/components/public/PublicFooter';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 40%, #fdf4ff 100%)' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#fafafa' }}>
       <PublicNavbar />
       <main className="flex-1">
         {children}

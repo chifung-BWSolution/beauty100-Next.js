@@ -41,7 +41,7 @@ export default function ContentPageTemplate({
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 max-w-7xl mx-auto">
+        <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 max-w-[1280px] mx-auto">
           <Badge className={`bg-${accentColor}-500 text-white border-0 mb-3`}>
             {subtitle}
           </Badge>
@@ -51,7 +51,7 @@ export default function ContentPageTemplate({
       </div>
 
       {/* Articles Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {articles.map((article, i) => (
             <div
@@ -78,7 +78,7 @@ export default function ContentPageTemplate({
                 <h3 className="font-bold text-slate-800 text-base mb-2 line-clamp-2 group-hover:text-rose-600 transition-colors">
                   {article.title}
                 </h3>
-                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">
+                <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed mb-3">
                   {article.description}
                 </p>
                 <div className="flex items-center justify-between">
@@ -88,7 +88,7 @@ export default function ContentPageTemplate({
                       {article.date}
                     </span>
                   )}
-                  <span className="flex items-center gap-1 text-xs text-rose-500 font-medium group-hover:gap-2 transition-all">
+                  <span className="flex items-center gap-1 text-sm text-rose-500 font-medium group-hover:gap-2 transition-all">
                     閱讀更多 <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 </div>

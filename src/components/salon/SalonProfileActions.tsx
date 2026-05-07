@@ -115,16 +115,16 @@ export default function SalonProfileActions({ profiles }: Props) {
                 <p className="text-sm text-slate-400 truncate mt-0.5">{profile.district || profile.address || '-'}</p>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   {profile.shopify_sync_pending && (
-                    <Badge className="bg-amber-100 text-amber-700 border-0 text-xs rounded-full px-2.5">等待審核</Badge>
+                    <Badge className="bg-amber-100 text-amber-700 border-0 text-sm rounded-full px-2.5">等待審核</Badge>
                   )}
                   {!profile.shopify_sync_pending && profile.shopify_synced && (
-                    <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs rounded-full px-2.5">已同步</Badge>
+                    <Badge className="bg-emerald-100 text-emerald-700 border-0 text-sm rounded-full px-2.5">已同步</Badge>
                   )}
                   {urlInfo.status === 'active' && (
-                    <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs rounded-full px-2.5">上架中</Badge>
+                    <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-200 text-sm rounded-full px-2.5">上架中</Badge>
                   )}
                   {urlInfo.status === 'draft' && (
-                    <Badge className="bg-slate-50 text-slate-500 border border-slate-200 text-xs rounded-full px-2.5">草稿</Badge>
+                    <Badge className="bg-slate-50 text-slate-500 border border-slate-200 text-sm rounded-full px-2.5">草稿</Badge>
                   )}
                 </div>
               </div>

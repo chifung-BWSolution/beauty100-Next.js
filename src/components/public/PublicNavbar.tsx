@@ -3,228 +3,149 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sparkles, Menu, X, ChevronDown, Store } from 'lucide-react';
+import Image from 'next/image';
+import { Menu, X, Store } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: '首頁', href: '/' },
   { label: '找美容院', href: '/explore-salons' },
-  {
-    label: '美容專題',
-    href: '#',
-    children: [
-      { label: '焦點話題', href: '/topics' },
-      { label: '娛樂圈', href: '/entertainment' },
-      { label: 'KOL實錄', href: '/kol' },
-    ],
-  },
-  {
-    label: '美容知識',
-    href: '#',
-    children: [
-      { label: '面部護理', href: '/facial-care' },
-      { label: '回復青春', href: '/anti-aging' },
-      { label: '身材管理', href: '/body-shaping' },
-      { label: '化妝護膚', href: '/skincare' },
-      { label: '飲食健康', href: '/healthy-diet' },
-      { label: '身體保養', href: '/body-care' },
-    ],
-  },
+  { label: '焦點話題', href: '/topics' },
+  { label: '娛樂圈', href: '/entertainment' },
+  { label: '面部護理', href: '/facial-care' },
+  { label: '回復青春', href: '/anti-aging' },
+  { label: '身體保養', href: '/body-care' },
+  { label: '化妝護膚', href: '/skincare' },
+  { label: '飲食健康', href: '/healthy-diet' },
+  { label: 'KOL實錄', href: '/kol' },
   { label: '聯絡我們', href: '/contact' },
 ];
 
 export default function PublicNavbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
     return pathname.startsWith(href);
   };
 
-  const isParentActive = (item: typeof NAV_ITEMS[0]) => {
-    if (item.children) {
-      return item.children.some(c => pathname.startsWith(c.href));
-    }
-    return isActive(item.href);
-  };
-
   return (
     <header
       className="sticky top-0 z-50"
       style={{
-        background: 'rgba(255,255,255,0.88)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(251,207,232,0.4)',
+        background: 'rgba(255,255,255,0.92)',
+        backdropFilter: 'blur(24px)',
+        borderBottom: '1px solid rgba(251,207,232,0.35)',
       }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-[60px]">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md"
-              style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}
-            >
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <span className="text-lg font-bold text-slate-800 tracking-tight">BEAUTY</span>
-              <p className="text-[9px] text-rose-400 -mt-1 leading-none">香港美容資訊平台</p>
-            </div>
+          <Link href="/" className="shrink-0">
+            <Image
+              src="/images/beauty-100_logo.png"
+              alt="Beauty 100 Magazine"
+              width={160}
+              height={40}
+              className="h-[38px] w-auto object-contain"
+              priority
+            />
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          {/* Desktop Nav — all items visible, no dropdowns */}
+          <nav className="hidden xl:flex items-center gap-0">
             {NAV_ITEMS.map((item) => (
-              <div
-                key={item.label}
-                className="relative"
-                onMouseEnter={() => item.children && setOpenDropdown(item.label)}
-                onMouseLeave={() => setOpenDropdown(null)}
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`group relative px-[10px] py-1.5 text-[14px] leading-tight rounded-md transition-all duration-200 whitespace-nowrap ${
+                  isActive(item.href)
+                    ? 'text-rose-600 font-semibold'
+                    : 'text-slate-500 hover:text-rose-600'
+                }`}
               >
-                {item.children ? (
-                  <button
-                    className={`flex items-center gap-1 px-3 py-2 text-sm rounded-lg transition-colors ${
-                      isParentActive(item)
-                        ? 'text-rose-600 font-semibold bg-rose-50'
-                        : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50/50'
-                    }`}
-                  >
-                    {item.label}
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${openDropdown === item.label ? 'rotate-180' : ''}`} />
-                  </button>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className={`px-3 py-2 text-sm rounded-lg transition-colors block ${
-                      isActive(item.href)
-                        ? 'text-rose-600 font-semibold bg-rose-50'
-                        : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50/50'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                )}
-
-                {/* Dropdown */}
-                {item.children && openDropdown === item.label && (
-                  <div
-                    className="absolute top-full left-0 mt-1 w-44 rounded-xl overflow-hidden shadow-xl z-50"
-                    style={{
-                      background: 'rgba(255,255,255,0.97)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(251,207,232,0.3)',
-                    }}
-                  >
-                    <div className="py-1.5">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          className={`block px-4 py-2.5 text-sm transition-colors ${
-                            isActive(child.href)
-                              ? 'text-rose-600 font-medium bg-rose-50'
-                              : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50/50'
-                          }`}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+                {item.label}
+                {/* Active underline indicator */}
+                <span
+                  className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] rounded-full transition-all duration-200 ${
+                    isActive(item.href)
+                      ? 'w-5 opacity-100'
+                      : 'w-0 opacity-0 group-hover:w-3 group-hover:opacity-60'
+                  }`}
+                  style={{ background: 'linear-gradient(90deg, #f472b6, #e11d48)' }}
+                />
+              </Link>
             ))}
           </nav>
 
-          {/* Right side */}
-          <div className="flex items-center gap-3">
+          {/* Right side: Merchant Login CTA + Hamburger */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {/* Merchant Login — standalone CTA button */}
             <Link
               href="/login"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-rose-500 hover:text-rose-600 transition-colors px-3 py-2 rounded-lg hover:bg-rose-50/50"
+              className="hidden sm:flex items-center gap-1.5 text-[14px] font-semibold text-white px-4 py-[7px] rounded-full transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, #f472b6, #e11d48)',
+                boxShadow: '0 2px 8px rgba(228,29,72,0.2)',
+              }}
             >
-              <Store className="w-4 h-4" />
+              <Store className="w-3.5 h-3.5" />
               商戶登入
             </Link>
 
-            {/* Mobile Hamburger */}
+            {/* Mobile Hamburger — xl breakpoint to match nav */}
             <button
-              className="lg:hidden text-slate-600 hover:text-rose-500 transition-colors p-1"
+              className="xl:hidden text-slate-600 hover:text-rose-500 transition-colors p-1.5 rounded-lg hover:bg-rose-50/60"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div
-          className="lg:hidden border-t border-rose-100/50 max-h-[calc(100vh-4rem)] overflow-y-auto"
-          style={{ background: 'rgba(255,255,255,0.97)' }}
-        >
-          <div className="px-4 py-3 space-y-1">
-            {NAV_ITEMS.map((item) => (
-              <div key={item.label}>
-                {item.children ? (
-                  <>
-                    <button
-                      onClick={() => setMobileExpanded(mobileExpanded === item.label ? null : item.label)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-lg transition-colors ${
-                        isParentActive(item) ? 'text-rose-600 font-semibold bg-rose-50' : 'text-slate-600'
-                      }`}
-                    >
-                      {item.label}
-                      <ChevronDown className={`w-4 h-4 transition-transform ${mobileExpanded === item.label ? 'rotate-180' : ''}`} />
-                    </button>
-                    {mobileExpanded === item.label && (
-                      <div className="ml-3 space-y-0.5 pb-1">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`block px-3 py-2 text-sm rounded-lg transition-colors ${
-                              isActive(child.href)
-                                ? 'text-rose-600 font-medium bg-rose-50'
-                                : 'text-slate-500 hover:text-rose-600 hover:bg-rose-50/50'
-                            }`}
-                          >
-                            {child.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <Link
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`block px-3 py-2.5 text-sm rounded-lg transition-colors ${
-                      isActive(item.href) ? 'text-rose-600 font-semibold bg-rose-50' : 'text-slate-600'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                )}
-              </div>
-            ))}
-            <div className="pt-2 border-t border-rose-100/50">
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-rose-500 rounded-lg hover:bg-rose-50/50"
-              >
-                <Store className="w-4 h-4" />
-                商戶登入
-              </Link>
-            </div>
+      {/* Mobile / Tablet Menu */}
+      <div
+        className={`xl:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          mobileMenuOpen ? 'max-h-[calc(100vh-60px)] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+        style={{
+          background: 'rgba(255,255,255,0.98)',
+          borderTop: mobileMenuOpen ? '1px solid rgba(251,207,232,0.3)' : 'none',
+        }}
+      >
+        <div className="px-4 py-3 space-y-0.5 max-h-[calc(100vh-4rem)] overflow-y-auto">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-3 py-2.5 text-sm rounded-lg transition-all duration-150 ${
+                isActive(item.href)
+                  ? 'text-rose-600 font-semibold bg-rose-50'
+                  : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50/50'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+          {/* Mobile merchant login */}
+          <div className="pt-2 mt-2 border-t border-rose-100/50">
+            <Link
+              href="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold text-white rounded-full transition-all"
+              style={{
+                background: 'linear-gradient(135deg, #f472b6, #e11d48)',
+              }}
+            >
+              <Store className="w-4 h-4" />
+              商戶登入
+            </Link>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }

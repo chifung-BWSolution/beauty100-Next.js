@@ -111,7 +111,7 @@ export default function FileUpload({
                 <span className="text-sm text-slate-400"> 或拖放文件</span>
               </div>
               {description && (
-                <span className="text-xs text-slate-400">{description}</span>
+                <span className="text-sm text-slate-400">{description}</span>
               )}
               <input
                 type="file"

@@ -14,7 +14,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const noSidebarPaths = ['/login', '/staff-login', '/explore-salons', '/topics', '/entertainment', '/kol', '/facial-care', '/anti-aging', '/body-shaping', '/skincare', '/healthy-diet', '/body-care', '/contact'];
-  const hideSidebar = noSidebarPaths.includes(pathname) || pathname === '/' || pathname.startsWith('/admin/settings');
+  const noSidebarPrefixes = ['/topics/', '/admin/settings', '/kol/'];
+  const hideSidebar = noSidebarPaths.includes(pathname) || pathname === '/' || noSidebarPrefixes.some((p) => pathname.startsWith(p));
 
   useEffect(() => {
     if (!user?.id) return;
@@ -67,7 +68,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="ml-3 flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm"
               style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}>
-              <span className="text-white text-[10px] font-bold">B</span>
+              <span className="text-white text-[14px] font-bold">B</span>
             </div>
             <span className="font-bold text-slate-700 text-sm tracking-tight">BEAUTY</span>
           </div>

@@ -146,14 +146,14 @@ export default function UserLoginPage() {
             {tab === TABS.login && (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">電郵地址</label>
+                  <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">電郵地址</label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
                     <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="h-12 pl-10 rounded-xl border-rose-100 bg-rose-50/40 text-sm focus:border-rose-300" autoComplete="email" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">密碼</label>
+                  <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">密碼</label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
                     <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="請輸入密碼" required className="h-12 pl-10 pr-11 rounded-xl border-rose-100 bg-rose-50/40 text-sm focus:border-rose-300" autoComplete="current-password" />
@@ -185,7 +185,7 @@ export default function UserLoginPage() {
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-slate-800">{item.label}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+                          <p className="text-sm text-slate-500 mt-0.5">{item.desc}</p>
                         </div>
                         <ChevronRight className="w-4 h-4 text-slate-300" />
                       </button>
@@ -197,25 +197,25 @@ export default function UserLoginPage() {
                       <button type="button" onClick={() => setSelectedRole('')} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500">
                         <ArrowLeft className="w-4 h-4" />
                       </button>
-                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${selectedRole === 'merchant' ? 'bg-rose-100 text-rose-600' : 'bg-fuchsia-100 text-fuchsia-600'}`}>
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${selectedRole === 'merchant' ? 'bg-rose-100 text-rose-600' : 'bg-fuchsia-100 text-fuchsia-600'}`}>
                         {selectedRole === 'merchant' ? <Store className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
                         {selectedRole === 'merchant' ? '美容院商家' : 'KOL / 推廣大使'}
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">姓名 <span className="text-rose-400">*</span></label>
+                      <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">姓名 <span className="text-rose-400">*</span></label>
                       <div className="relative"><User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" /><Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="請輸入您的全名" required className="h-12 pl-10 rounded-xl border-rose-100 bg-rose-50/40 text-sm" /></div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">電郵地址 <span className="text-rose-400">*</span></label>
+                      <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">電郵地址 <span className="text-rose-400">*</span></label>
                       <div className="relative"><Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" /><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="h-12 pl-10 rounded-xl border-rose-100 bg-rose-50/40 text-sm" /></div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">密碼 <span className="text-rose-400">*</span></label>
+                      <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">密碼 <span className="text-rose-400">*</span></label>
                       <div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" /><Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="最少 6 個字元" required className="h-12 pl-10 pr-11 rounded-xl border-rose-100 bg-rose-50/40 text-sm" /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-rose-300">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">確認密碼 <span className="text-rose-400">*</span></label>
+                      <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">確認密碼 <span className="text-rose-400">*</span></label>
                       <div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" /><Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="再次輸入密碼" required className="h-12 pl-10 rounded-xl border-rose-100 bg-rose-50/40 text-sm" /></div>
                     </div>
                     {error && <div className="bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3">{error}</div>}
@@ -229,7 +229,7 @@ export default function UserLoginPage() {
             )}
 
             <div className="mt-6 pt-5 border-t border-rose-50 text-center">
-              <p className="text-xs text-slate-400">
+              <p className="text-sm text-slate-400">
                 員工請使用{' '}
                 <Link href="/staff-login" prefetch={false} className="text-rose-500 hover:text-rose-600 font-semibold">員工登入</Link>
               </p>

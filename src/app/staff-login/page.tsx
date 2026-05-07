@@ -106,7 +106,7 @@ export default function StaffLoginPage() {
             </form>
 
             <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-              <p className="text-xs text-slate-400">
+              <p className="text-sm text-slate-400">
                 如非員工，請使用{' '}
                 <a href="/login" className="text-pink-600 hover:underline font-medium">商戶 / KOL 登入</a>
               </p>

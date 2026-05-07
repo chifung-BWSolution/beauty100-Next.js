@@ -69,7 +69,7 @@ export default function ApplicationList({ applications }: Props) {
                 <StatusBadge status={application.status} />
               </div>
               <h3 className="font-bold text-slate-800 text-base mb-1 line-clamp-2">{application.salon_name}</h3>
-              <p className="text-xs text-slate-400 mb-4">
+              <p className="text-sm text-slate-400 mb-4">
                 {format(new Date(application.created_date), 'yyyy年MM月dd日')}
               </p>
               <p className="text-sm text-slate-500 mb-4">{statusInfo.title}</p>
@@ -79,8 +79,8 @@ export default function ApplicationList({ applications }: Props) {
                   className="mb-4 p-3 rounded-2xl border border-red-100"
                   style={{ background: 'linear-gradient(135deg, #fff1f2, #ffe4e6)' }}
                 >
-                  <p className="text-xs font-semibold text-red-600 mb-1">拒絕原因：</p>
-                  <p className="text-xs text-red-500">{application.rejection_reason}</p>
+                  <p className="text-sm font-semibold text-red-600 mb-1">拒絕原因：</p>
+                  <p className="text-sm text-red-500">{application.rejection_reason}</p>
                 </div>
               )}
 

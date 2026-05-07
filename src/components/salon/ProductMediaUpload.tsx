@@ -127,7 +127,7 @@ export default function ProductMediaUpload({ mediaList, onChange }: ProductMedia
             <>
               <Upload className="w-8 h-8 text-slate-400" />
               <p className="text-sm font-medium text-slate-700">點擊或拖拽上傳圖片</p>
-              <p className="text-xs text-slate-500">支持 JPG, PNG 等格式，自動壓縮至 1MB 以下</p>
+              <p className="text-sm text-slate-500">支持 JPG, PNG 等格式，自動壓縮至 1MB 以下</p>
             </>
           )}
         </label>

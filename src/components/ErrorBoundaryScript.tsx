@@ -18,6 +18,7 @@ export default function ErrorBoundaryScript() {
         event.colno === 0
       ) {
         event.preventDefault();
+        event.stopImmediatePropagation();
         return true;
       }
     };
@@ -29,16 +30,17 @@ export default function ErrorBoundaryScript() {
         event.reason.message === 'Failed to fetch'
       ) {
         event.preventDefault();
-        console.warn('Suppressed unhandled fetch rejection');
+        event.stopImmediatePropagation();
       }
     };
 
-    window.addEventListener('error', handler);
-    window.addEventListener('unhandledrejection', rejectionHandler);
+    // Use capture phase to intercept before other handlers
+    window.addEventListener('error', handler, true);
+    window.addEventListener('unhandledrejection', rejectionHandler, true);
 
     return () => {
-      window.removeEventListener('error', handler);
-      window.removeEventListener('unhandledrejection', rejectionHandler);
+      window.removeEventListener('error', handler, true);
+      window.removeEventListener('unhandledrejection', rejectionHandler, true);
     };
   }, []);
 

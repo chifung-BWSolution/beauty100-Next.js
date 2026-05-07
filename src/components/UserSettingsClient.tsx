@@ -126,7 +126,7 @@ export default function UserSettingsClient({ displayName: initialName, email, ro
               {initials}
             </div>
             {role && (
-              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${roleBg(role)}`}>
+              <span className={`text-sm font-medium px-2.5 py-1 rounded-full ${roleBg(role)}`}>
                 {roleLabel(role)}
               </span>
             )}
@@ -139,13 +139,13 @@ export default function UserSettingsClient({ displayName: initialName, email, ro
             {!editingName ? (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-stone-400 mb-0.5">顯示名稱</p>
+                  <p className="text-sm text-stone-400 mb-0.5">顯示名稱</p>
                   <p className="text-sm font-medium text-slate-700">{currentDisplayName}</p>
                 </div>
                 <button
                   type="button"
                   onClick={handleEditName}
-                  className="flex items-center gap-1.5 text-xs font-medium text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg"
+                  className="flex items-center gap-1.5 text-sm font-medium text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg"
                 >
                   <Pencil className="w-3 h-3" />更改名稱
                 </button>
@@ -153,7 +153,7 @@ export default function UserSettingsClient({ displayName: initialName, email, ro
             ) : (
               <form onSubmit={handleSaveName} className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="display-name" className="text-xs text-stone-500 font-medium">顯示名稱</Label>
+                  <Label htmlFor="display-name" className="text-sm text-stone-500 font-medium">顯示名稱</Label>
                   <Input
                     id="display-name"
                     type="text"
@@ -204,7 +204,7 @@ export default function UserSettingsClient({ displayName: initialName, email, ro
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-700">更改密碼</p>
-            <p className="text-xs text-stone-400">為帳號設定新的安全密碼</p>
+            <p className="text-sm text-stone-400">為帳號設定新的安全密碼</p>
           </div>
         </div>
         <div className="px-6 py-5">
@@ -215,7 +215,7 @@ export default function UserSettingsClient({ displayName: initialName, email, ro
               { id: 'confirm-password', label: '確認新密碼', value: confirmPassword, onChange: setConfirmPassword, show: showConfirmPw, toggleShow: () => setShowConfirmPw(!showConfirmPw), autoComplete: 'new-password', placeholder: '再次輸入新密碼' },
             ].map((field) => (
               <div key={field.id} className="space-y-1.5">
-                <Label htmlFor={field.id} className="text-xs text-stone-500 font-medium">{field.label}</Label>
+                <Label htmlFor={field.id} className="text-sm text-stone-500 font-medium">{field.label}</Label>
                 <div className="relative">
                   <Input
                     id={field.id}

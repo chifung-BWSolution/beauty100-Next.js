@@ -89,7 +89,7 @@ export default function TagSelector({ selectedTags = [], highlightTags = [], onC
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
+      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-700">
         <Star className="w-3.5 h-3.5 mt-0.5 shrink-0 fill-amber-400 text-amber-400" />
         <div>
           <p className="font-medium mb-0.5">服務類型 Highlight 標籤（最多選 {MAX_HIGHLIGHTS} 個）</p>
@@ -104,7 +104,7 @@ export default function TagSelector({ selectedTags = [], highlightTags = [], onC
             <div className="flex items-center gap-2 mb-2.5">
               <span className="text-sm font-semibold text-slate-700">{category}</span>
               {isHighlightCategory && (
-                <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="text-sm bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <Star className="w-3 h-3 fill-amber-400 text-amber-400" />可設 Highlight
                 </span>
               )}
@@ -158,22 +158,22 @@ export default function TagSelector({ selectedTags = [], highlightTags = [], onC
         <div className="pt-3 border-t space-y-2">
           {highlightTags.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-amber-700 mb-1.5 flex items-center gap-1">
+              <p className="text-sm font-medium text-amber-700 mb-1.5 flex items-center gap-1">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 Highlight 標籤：{highlightTags.length} / {MAX_HIGHLIGHTS}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {highlightTags.map(t => (
-                  <Badge key={t} className="bg-amber-100 text-amber-700 border-0 text-xs">{t}</Badge>
+                  <Badge key={t} className="bg-amber-100 text-amber-700 border-0 text-sm">{t}</Badge>
                 ))}
               </div>
             </div>
           )}
           <div>
-            <p className="text-xs font-medium text-slate-500 mb-1.5">所有已選標籤：{selectedTags.length} 個</p>
+            <p className="text-sm font-medium text-slate-500 mb-1.5">所有已選標籤：{selectedTags.length} 個</p>
             <div className="flex flex-wrap gap-1.5">
               {selectedTags.map(t => (
-                <Badge key={t} className={`border-0 text-xs ${highlightTags.includes(t) ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}`}>{t}</Badge>
+                <Badge key={t} className={`border-0 text-sm ${highlightTags.includes(t) ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}`}>{t}</Badge>
               ))}
             </div>
           </div>

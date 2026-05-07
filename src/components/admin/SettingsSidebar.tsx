@@ -56,14 +56,14 @@ export default function SettingsSidebar({ activeTab, onTabChange }: SettingsSide
           </div>
           <div>
             <h2 className="text-slate-800 font-bold text-base leading-tight tracking-tight">系統設定</h2>
-            <p className="text-rose-300 text-[10px] leading-none mt-0.5 font-medium">Settings</p>
+            <p className="text-rose-300 text-[14px] leading-none mt-0.5 font-medium">Settings</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-2 space-y-0.5">
-        <p className="text-rose-300 text-[10px] font-bold uppercase tracking-widest px-3 mb-2">設定項目</p>
+        <p className="text-rose-300 text-[14px] font-bold uppercase tracking-widest px-3 mb-2">設定項目</p>
         {settingsTabs.map(tab => {
           const active = activeTab === tab.key;
           const Icon = tab.icon;
