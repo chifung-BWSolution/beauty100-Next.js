@@ -122,7 +122,7 @@ function safeParseJson(value: any): any {
 function extractTextFromRichText(data: any): string[] {
   if (data && typeof data === 'object' && data.type === 'root' && Array.isArray(data.children)) {
     const texts: string[] = [];
-    function extractFromNode(node: any) {
+    const extractFromNode = (node: any) {
       if (typeof node === 'string') {
         texts.push(node);
         return;

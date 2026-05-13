@@ -519,6 +519,54 @@ export default function SuggestSalonUpdatePage() {
                   </div>
                 )}
 
+                {/* Photo upload section */}
+                {(selectedReason === 'upload_photo' || selectedReason === 'update_info' || selectedReason === 'new_opening') && (
+                  <div className="space-y-3 border-t pt-4">
+                    <h3 className="text-sm font-semibold text-slate-600">
+                      <Camera className="inline w-4 h-4 mr-1" />
+                      上載相片
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
+                      {uploadedPhotos.map((url, idx) => (
+                        <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 group">
+                          <img src={url} alt={`上傳相片 ${idx + 1}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setUploadedPhotos(prev => prev.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                      <label className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-pink-400 hover:bg-pink-50 transition-colors">
+                        {photoUploading ? (
+                          <Loader2 className="w-6 h-6 text-pink-400 animate-spin" />
+                        ) : (
+                          <>
+                            <Upload className="w-5 h-5 text-slate-400" />
+                            <span className="text-[10px] text-slate-400 mt-1">上載相片</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={photoUploading}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handlePhotoUpload(file);
+                              e.target.value = '';
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                    <p className="text-xs text-slate-400">支援 JPG、PNG 格式，可上載多張相片</p>
+                  </div>
+                )}
+
                 {/* Note */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">
