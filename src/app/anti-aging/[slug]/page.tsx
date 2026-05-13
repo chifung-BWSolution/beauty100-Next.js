@@ -1,18 +1,40 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import PublicLayout from '@/components/public/PublicLayout';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import PublicLayout from "@/components/public/PublicLayout";
+import { Badge } from "@/components/ui/badge";
 import {
-  Clock, Eye, Share2, Bookmark, Link2, ChevronRight,
-  ArrowRight, Flame, Star, TrendingUp, Tag, User,
-  Calendar, RefreshCw, MessageCircle, ThumbsUp, ArrowLeft,
-  X, ChevronLeft, ZoomIn, ImageIcon,
-} from 'lucide-react';
-import { HorizontalBannerAd, InContentAd, PromotionalBlock, SidebarAdUnit } from '@/components/ads/AdComponents';
-import { supabase } from '@/lib/supabase';
+  Clock,
+  Eye,
+  Share2,
+  Bookmark,
+  Link2,
+  ChevronRight,
+  ArrowRight,
+  Flame,
+  Star,
+  TrendingUp,
+  Tag,
+  User,
+  Calendar,
+  RefreshCw,
+  MessageCircle,
+  ThumbsUp,
+  ArrowLeft,
+  X,
+  ChevronLeft,
+  ZoomIn,
+  ImageIcon,
+} from "lucide-react";
+import {
+  HorizontalBannerAd,
+  InContentAd,
+  PromotionalBlock,
+  SidebarAdUnit,
+} from "@/components/ads/AdComponents";
+import { supabase } from "@/lib/supabase";
 
 /* ═══════════════════════════════════════════════════════════════
    TYPES & DATA
@@ -46,13 +68,13 @@ interface GalleryImage {
 }
 
 type ContentBlock =
-  | { type: 'paragraph'; text: string }
-  | { type: 'heading'; text: string }
-  | { type: 'bold-paragraph'; text: string }
-  | { type: 'image'; src: string; caption?: string }
-  | { type: 'gallery'; images: GalleryImage[] }
-  | { type: 'quote'; text: string; author?: string }
-  | { type: 'list'; ordered?: boolean; items: string[] };
+  | { type: "paragraph"; text: string }
+  | { type: "heading"; text: string }
+  | { type: "bold-paragraph"; text: string }
+  | { type: "image"; src: string; caption?: string }
+  | { type: "gallery"; images: GalleryImage[] }
+  | { type: "quote"; text: string; author?: string }
+  | { type: "list"; ordered?: boolean; items: string[] };
 
 interface RelatedArticle {
   slug: string;
@@ -63,8 +85,10 @@ interface RelatedArticle {
   views: string;
 }
 
-const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80';
-const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80';
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80";
+const FALLBACK_AVATAR =
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80";
 
 /* Category theme for 回復青春 */
 interface CategoryTheme {
@@ -87,22 +111,23 @@ interface CategoryTheme {
 }
 
 const ANTI_AGING_THEME: CategoryTheme = {
-  badgeClass: 'bg-purple-500 text-white border-0',
-  badgeHoverClass: 'hover:bg-purple-600',
-  headerBg: 'linear-gradient(135deg, #faf5ff 0%, #f5f3ff 30%, #ede9fe 70%, #faf5ff 100%)',
-  accentGradient: 'linear-gradient(180deg, #c084fc, #7c3aed)',
-  iconColorClass: 'text-purple-500',
-  hoverTextClass: 'hover:text-purple-500',
-  tagBgClass: 'bg-purple-50',
-  tagTextClass: 'text-purple-500',
-  tagHoverBgClass: 'hover:bg-purple-100',
-  linkTextClass: 'text-purple-500',
-  linkHoverClass: 'hover:text-purple-600',
-  promoFromClass: 'from-purple-50 via-violet-50 to-fuchsia-50',
-  promoBorderClass: 'border-purple-100/50',
-  promoBtnBgClass: 'bg-purple-100',
-  promoBtnHoverBgClass: 'hover:bg-purple-200',
-  promoBtnTextClass: 'text-purple-600 hover:text-purple-700',
+  badgeClass: "bg-purple-500 text-white border-0",
+  badgeHoverClass: "hover:bg-purple-600",
+  headerBg:
+    "linear-gradient(135deg, #faf5ff 0%, #f5f3ff 30%, #ede9fe 70%, #faf5ff 100%)",
+  accentGradient: "linear-gradient(180deg, #c084fc, #7c3aed)",
+  iconColorClass: "text-purple-500",
+  hoverTextClass: "hover:text-purple-500",
+  tagBgClass: "bg-purple-50",
+  tagTextClass: "text-purple-500",
+  tagHoverBgClass: "hover:bg-purple-100",
+  linkTextClass: "text-purple-500",
+  linkHoverClass: "hover:text-purple-600",
+  promoFromClass: "from-purple-50 via-violet-50 to-fuchsia-50",
+  promoBorderClass: "border-purple-100/50",
+  promoBtnBgClass: "bg-purple-100",
+  promoBtnHoverBgClass: "hover:bg-purple-200",
+  promoBtnTextClass: "text-purple-600 hover:text-purple-700",
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -111,7 +136,7 @@ const ANTI_AGING_THEME: CategoryTheme = {
 
 function safeParseJson(value: any): any {
   if (!value) return null;
-  if (typeof value !== 'string') return value;
+  if (typeof value !== "string") return value;
   try {
     return JSON.parse(value);
   } catch {
@@ -120,17 +145,22 @@ function safeParseJson(value: any): any {
 }
 
 function extractTextFromRichText(data: any): string[] {
-  if (data && typeof data === 'object' && data.type === 'root' && Array.isArray(data.children)) {
+  if (
+    data &&
+    typeof data === "object" &&
+    data.type === "root" &&
+    Array.isArray(data.children)
+  ) {
     const texts: string[] = [];
-    const extractFromNode = (node: any) {
-      if (typeof node === 'string') {
+    const extractFromNode = (node: any) => {
+      if (typeof node === "string") {
         texts.push(node);
         return;
       }
-      if (node?.type === 'paragraph' || node?.type === 'heading') {
+      if (node?.type === "paragraph" || node?.type === "heading") {
         const text = extractChildrenText(node.children);
         if (text) texts.push(text);
-      } else if (node?.type === 'list') {
+      } else if (node?.type === "list") {
         if (Array.isArray(node.children)) {
           node.children.forEach((li: any) => {
             const text = extractChildrenText(li.children);
@@ -140,15 +170,17 @@ function extractTextFromRichText(data: any): string[] {
       } else if (Array.isArray(node?.children)) {
         node.children.forEach(extractFromNode);
       }
-    }
+    };
     function extractChildrenText(children: any[]): string {
-      if (!Array.isArray(children)) return '';
-      return children.map((child: any) => {
-        if (typeof child === 'string') return child;
-        if (child?.type === 'text' && child?.value) return child.value;
-        if (child?.children) return extractChildrenText(child.children);
-        return '';
-      }).join('');
+      if (!Array.isArray(children)) return "";
+      return children
+        .map((child: any) => {
+          if (typeof child === "string") return child;
+          if (child?.type === "text" && child?.value) return child.value;
+          if (child?.children) return extractChildrenText(child.children);
+          return "";
+        })
+        .join("");
     }
     data.children.forEach(extractFromNode);
     return texts.filter(Boolean);
@@ -164,15 +196,16 @@ function buildContentBlocks(record: any): ContentBlock[] {
       const introData = safeParseJson(record.intro);
       if (Array.isArray(introData)) {
         introData.forEach((p: string) => {
-          if (typeof p === 'string' && p.trim()) blocks.push({ type: 'paragraph', text: p });
+          if (typeof p === "string" && p.trim())
+            blocks.push({ type: "paragraph", text: p });
         });
-      } else if (typeof introData === 'string' && introData.trim()) {
-        blocks.push({ type: 'paragraph', text: introData });
-      } else if (introData?.text && typeof introData.text === 'string') {
-        blocks.push({ type: 'paragraph', text: introData.text });
-      } else if (introData?.type === 'root') {
+      } else if (typeof introData === "string" && introData.trim()) {
+        blocks.push({ type: "paragraph", text: introData });
+      } else if (introData?.text && typeof introData.text === "string") {
+        blocks.push({ type: "paragraph", text: introData.text });
+      } else if (introData?.type === "root") {
         const texts = extractTextFromRichText(introData);
-        texts.forEach((t) => blocks.push({ type: 'paragraph', text: t }));
+        texts.forEach((t) => blocks.push({ type: "paragraph", text: t }));
       }
     }
 
@@ -182,93 +215,114 @@ function buildContentBlocks(record: any): ContentBlock[] {
       const images = record[`section_${i}_images`];
 
       if (title) {
-        blocks.push({ type: 'heading', text: title });
+        blocks.push({ type: "heading", text: title });
       }
 
       if (content) {
         const contentData = safeParseJson(content);
         if (Array.isArray(contentData)) {
           contentData.forEach((p: string) => {
-            if (typeof p === 'string' && p.trim()) blocks.push({ type: 'paragraph', text: p });
+            if (typeof p === "string" && p.trim())
+              blocks.push({ type: "paragraph", text: p });
           });
-        } else if (typeof contentData === 'string' && contentData.trim()) {
-          blocks.push({ type: 'paragraph', text: contentData });
-        } else if (contentData?.text && typeof contentData.text === 'string') {
-          blocks.push({ type: 'paragraph', text: contentData.text });
-        } else if (contentData?.type === 'root') {
+        } else if (typeof contentData === "string" && contentData.trim()) {
+          blocks.push({ type: "paragraph", text: contentData });
+        } else if (contentData?.text && typeof contentData.text === "string") {
+          blocks.push({ type: "paragraph", text: contentData.text });
+        } else if (contentData?.type === "root") {
           const texts = extractTextFromRichText(contentData);
-          texts.forEach((t) => blocks.push({ type: 'paragraph', text: t }));
+          texts.forEach((t) => blocks.push({ type: "paragraph", text: t }));
         }
       }
 
       if (images && Array.isArray(images) && images.length > 0) {
         if (images.length === 1) {
-          blocks.push({ type: 'image', src: images[0], caption: title || '' });
+          blocks.push({ type: "image", src: images[0], caption: title || "" });
         } else {
           blocks.push({
-            type: 'gallery',
+            type: "gallery",
             images: images.map((src: string, idx: number) => ({
               src,
-              alt: `${title || '圖片'} ${idx + 1}`,
-              caption: '',
+              alt: `${title || "圖片"} ${idx + 1}`,
+              caption: "",
             })),
           });
         }
       }
     }
   } catch (err) {
-    console.error('Error building content blocks:', err);
+    console.error("Error building content blocks:", err);
   }
 
   return blocks;
 }
 
 function mapSupabaseToArticle(record: any): ArticleData {
-  const publishedAt = record.published_at ? new Date(record.published_at) : null;
+  const publishedAt = record.published_at
+    ? new Date(record.published_at)
+    : null;
   const publishDate = publishedAt
-    ? publishedAt.toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric' })
-    : '';
+    ? publishedAt.toLocaleDateString("zh-HK", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
   const publishTime = publishedAt
-    ? publishedAt.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' })
-    : '';
+    ? publishedAt.toLocaleTimeString("zh-HK", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
 
   const body = buildContentBlocks(record);
   const wordCount = body
-    .filter((b) => b.type === 'paragraph' || b.type === 'bold-paragraph')
+    .filter((b) => b.type === "paragraph" || b.type === "bold-paragraph")
     .reduce((acc, b) => acc + ((b as any).text?.length || 0), 0);
   const readTime = `${Math.max(1, Math.ceil(wordCount / 400))} 分鐘`;
 
   return {
-    slug: record.handle || '',
-    title: record.title || '文章',
-    description: record.seo_description || '',
+    slug: record.handle || "",
+    title: record.title || "文章",
+    description: record.seo_description || "",
     heroImage: record.cover_image_url || FALLBACK_IMAGE,
-    heroCaption: record.cover_image_alt || '',
-    category: '回復青春',
-    categorySlug: 'anti-aging',
-    tag: record.tags?.[0] || '美容',
-    tags: Array.isArray(record.tags) ? record.tags.map((t: string) => t?.trim()).filter(Boolean) : [],
-    author: record.author || '編輯部',
+    heroCaption: record.cover_image_alt || "",
+    category: "回復青春",
+    categorySlug: "anti-aging",
+    tag: record.tags?.[0] || "美容",
+    tags: Array.isArray(record.tags)
+      ? record.tags.map((t: string) => t?.trim()).filter(Boolean)
+      : [],
+    author: record.author || "編輯部",
     authorAvatar: FALLBACK_AVATAR,
     publishDate,
     publishTime,
     views: `${Math.floor(Math.random() * 15 + 5)}K`,
     readTime,
-    body: body.length > 0 ? body : [{ type: 'paragraph', text: record.seo_description || '暫無內容。' }],
+    body:
+      body.length > 0
+        ? body
+        : [{ type: "paragraph", text: record.seo_description || "暫無內容。" }],
   };
 }
 
 function mapSupabaseToRelated(record: any): RelatedArticle {
-  const publishedAt = record.published_at ? new Date(record.published_at) : null;
+  const publishedAt = record.published_at
+    ? new Date(record.published_at)
+    : null;
   const date = publishedAt
-    ? publishedAt.toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric' })
-    : '';
+    ? publishedAt.toLocaleDateString("zh-HK", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
 
   return {
-    slug: record.handle || '',
-    title: record.title || '',
+    slug: record.handle || "",
+    title: record.title || "",
     image: record.cover_image_url || FALLBACK_IMAGE,
-    tag: record.tags?.[0] || '美容',
+    tag: record.tags?.[0] || "美容",
     date,
     views: `${Math.floor(Math.random() * 15 + 5)}K`,
   };
@@ -300,15 +354,15 @@ function LightboxViewer({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight') goNext();
-      if (e.key === 'ArrowLeft') goPrev();
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") goNext();
+      if (e.key === "ArrowLeft") goPrev();
     };
-    document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
     };
   }, [onClose, goNext, goPrev]);
 
@@ -374,8 +428,8 @@ function LightboxViewer({
                       onClick={() => setCurrentIndex(i)}
                       className={`relative rounded-lg overflow-hidden aspect-square transition-all ${
                         i === currentIndex
-                          ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-black/60 opacity-100'
-                          : 'opacity-50 hover:opacity-80'
+                          ? "ring-2 ring-purple-400 ring-offset-2 ring-offset-black/60 opacity-100"
+                          : "opacity-50 hover:opacity-80"
                       }`}
                     >
                       <img
@@ -405,9 +459,15 @@ function ImageGallery({ images }: { images: GalleryImage[] }) {
 
   useEffect(() => {
     if (thumbnailStripRef.current) {
-      const activeThumb = thumbnailStripRef.current.children[selectedIndex] as HTMLElement;
+      const activeThumb = thumbnailStripRef.current.children[
+        selectedIndex
+      ] as HTMLElement;
       if (activeThumb) {
-        activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        activeThumb.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
       }
     }
   }, [selectedIndex]);
@@ -417,7 +477,12 @@ function ImageGallery({ images }: { images: GalleryImage[] }) {
     return (
       <figure className="my-6">
         <div className="rounded-xl overflow-hidden">
-          <img src={img.src} alt={img.alt} className="w-full h-auto object-cover" loading="lazy" />
+          <img
+            src={img.src}
+            alt={img.alt}
+            className="w-full h-auto object-cover"
+            loading="lazy"
+          />
         </div>
         {img.caption && (
           <figcaption className="text-[12px] text-slate-400 mt-2 text-center leading-relaxed">
@@ -473,8 +538,8 @@ function ImageGallery({ images }: { images: GalleryImage[] }) {
               onClick={() => setSelectedIndex(i)}
               className={`relative shrink-0 w-[72px] h-[54px] sm:w-20 sm:h-[60px] rounded-lg overflow-hidden transition-all duration-200 ${
                 i === selectedIndex
-                  ? 'ring-2 ring-purple-400 ring-offset-1 ring-offset-white opacity-100 shadow-md'
-                  : 'opacity-60 hover:opacity-90 border border-slate-200'
+                  ? "ring-2 ring-purple-400 ring-offset-1 ring-offset-white opacity-100 shadow-md"
+                  : "opacity-60 hover:opacity-90 border border-slate-200"
               }`}
               aria-label={img.alt || `圖片 ${i + 1}`}
             >
@@ -507,98 +572,116 @@ function ImageGallery({ images }: { images: GalleryImage[] }) {
    ARTICLE BODY RENDERER
    ═══════════════════════════════════════════════════════════════ */
 
-function ArticleBody({ blocks, theme }: { blocks: ContentBlock[]; theme: CategoryTheme }) {
+function ArticleBody({
+  blocks,
+  theme,
+}: {
+  blocks: ContentBlock[];
+  theme: CategoryTheme;
+}) {
   const midPoint = Math.floor(blocks.length / 2);
   return (
     <div className="article-body space-y-5">
       {blocks.map((block, idx) => {
         const rendered = (() => {
-        switch (block.type) {
-          case 'paragraph':
-            return (
-              <p key={idx} className="text-[15px] sm:text-base leading-[1.85] text-slate-700">
-                {block.text}
-              </p>
-            );
-          case 'bold-paragraph':
-            return (
-              <p key={idx} className={`text-[15px] sm:text-base leading-[1.85] text-slate-800 font-medium ${theme.tagBgClass}/50 border-l-3 pl-4 py-3 rounded-r-lg`} style={{ borderLeftColor: '#7c3aed' }}>
-                {block.text}
-              </p>
-            );
-          case 'heading':
-            return (
-              <h2
-                key={idx}
-                className="text-lg sm:text-xl font-bold text-slate-900 pt-4 pb-1 leading-snug"
-              >
-                <span
-                  className="inline-block w-1 h-5 rounded-full mr-2.5 align-middle"
-                  style={{ background: theme.accentGradient }}
-                />
-                {block.text}
-              </h2>
-            );
-          case 'image':
-            return (
-              <figure key={idx} className="my-6">
-                <div className="rounded-xl overflow-hidden">
-                  <img
-                    src={block.src}
-                    alt={block.caption || ''}
-                    className="w-full h-auto object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                {block.caption && (
-                  <figcaption className="text-[12px] text-slate-400 mt-2 text-center leading-relaxed">
-                    {block.caption}
-                  </figcaption>
-                )}
-              </figure>
-            );
-          case 'gallery':
-            return <ImageGallery key={idx} images={block.images} />;
-          case 'quote':
-            return (
-              <blockquote
-                key={idx}
-                className="relative my-6 pl-5 pr-4 py-4 rounded-xl"
-                style={{ background: theme.headerBg }}
-              >
-                <div
-                  className="absolute left-0 top-4 bottom-4 w-1 rounded-full"
-                  style={{ background: theme.accentGradient }}
-                />
-                <p className="text-[15px] sm:text-base leading-[1.8] text-slate-700 italic">
-                  「{block.text}」
+          switch (block.type) {
+            case "paragraph":
+              return (
+                <p
+                  key={idx}
+                  className="text-[15px] sm:text-base leading-[1.85] text-slate-700"
+                >
+                  {block.text}
                 </p>
-                {block.author && (
-                  <cite className={`block mt-2 text-[14px] ${theme.linkTextClass} font-medium not-italic`}>
-                    — {block.author}
-                  </cite>
-                )}
-              </blockquote>
-            );
-          case 'list':
-            const ListTag = block.ordered ? 'ol' : 'ul';
-            return (
-              <ListTag
-                key={idx}
-                className={`space-y-2 pl-5 ${
-                  block.ordered ? 'list-decimal' : 'list-disc'
-                } marker:${theme.tagTextClass}`}
-              >
-                {block.items.map((item, i) => (
-                  <li key={i} className="text-[15px] sm:text-base leading-[1.8] text-slate-700 pl-1">
-                    {item}
-                  </li>
-                ))}
-              </ListTag>
-            );
-          default:
-            return null;
-        }
+              );
+            case "bold-paragraph":
+              return (
+                <p
+                  key={idx}
+                  className={`text-[15px] sm:text-base leading-[1.85] text-slate-800 font-medium ${theme.tagBgClass}/50 border-l-3 pl-4 py-3 rounded-r-lg`}
+                  style={{ borderLeftColor: "#7c3aed" }}
+                >
+                  {block.text}
+                </p>
+              );
+            case "heading":
+              return (
+                <h2
+                  key={idx}
+                  className="text-lg sm:text-xl font-bold text-slate-900 pt-4 pb-1 leading-snug"
+                >
+                  <span
+                    className="inline-block w-1 h-5 rounded-full mr-2.5 align-middle"
+                    style={{ background: theme.accentGradient }}
+                  />
+                  {block.text}
+                </h2>
+              );
+            case "image":
+              return (
+                <figure key={idx} className="my-6">
+                  <div className="rounded-xl overflow-hidden">
+                    <img
+                      src={block.src}
+                      alt={block.caption || ""}
+                      className="w-full h-auto object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  {block.caption && (
+                    <figcaption className="text-[12px] text-slate-400 mt-2 text-center leading-relaxed">
+                      {block.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              );
+            case "gallery":
+              return <ImageGallery key={idx} images={block.images} />;
+            case "quote":
+              return (
+                <blockquote
+                  key={idx}
+                  className="relative my-6 pl-5 pr-4 py-4 rounded-xl"
+                  style={{ background: theme.headerBg }}
+                >
+                  <div
+                    className="absolute left-0 top-4 bottom-4 w-1 rounded-full"
+                    style={{ background: theme.accentGradient }}
+                  />
+                  <p className="text-[15px] sm:text-base leading-[1.8] text-slate-700 italic">
+                    「{block.text}」
+                  </p>
+                  {block.author && (
+                    <cite
+                      className={`block mt-2 text-[14px] ${theme.linkTextClass} font-medium not-italic`}
+                    >
+                      — {block.author}
+                    </cite>
+                  )}
+                </blockquote>
+              );
+            case "list":
+              const ListTag = block.ordered ? "ol" : "ul";
+              return (
+                <ListTag
+                  key={idx}
+                  className={`space-y-2 pl-5 ${
+                    block.ordered ? "list-decimal" : "list-disc"
+                  } marker:${theme.tagTextClass}`}
+                >
+                  {block.items.map((item, i) => (
+                    <li
+                      key={i}
+                      className="text-[15px] sm:text-base leading-[1.8] text-slate-700 pl-1"
+                    >
+                      {item}
+                    </li>
+                  ))}
+                </ListTag>
+              );
+            default:
+              return null;
+          }
         })();
         return (
           <React.Fragment key={idx}>
@@ -615,7 +698,13 @@ function ArticleBody({ blocks, theme }: { blocks: ContentBlock[]; theme: Categor
    SUB-COMPONENTS
    ═══════════════════════════════════════════════════════════════ */
 
-function ArticleToolbar({ onCopyLink, theme }: { onCopyLink: () => void; theme: CategoryTheme }) {
+function ArticleToolbar({
+  onCopyLink,
+  theme,
+}: {
+  onCopyLink: () => void;
+  theme: CategoryTheme;
+}) {
   const [copied, setCopied] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
@@ -633,7 +722,7 @@ function ArticleToolbar({ onCopyLink, theme }: { onCopyLink: () => void; theme: 
         title="複製連結"
       >
         <Link2 className="w-3.5 h-3.5" />
-        {copied ? '已複製' : '複製連結'}
+        {copied ? "已複製" : "複製連結"}
       </button>
       <button
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium text-slate-500 ${theme.hoverTextClass} hover:${theme.tagBgClass} transition-all border border-slate-200 hover:border-current`}
@@ -651,14 +740,22 @@ function ArticleToolbar({ onCopyLink, theme }: { onCopyLink: () => void; theme: 
         }`}
         title="收藏"
       >
-        <Bookmark className={`w-3.5 h-3.5 ${bookmarked ? 'fill-current' : ''}`} />
-        {bookmarked ? '已收藏' : '收藏'}
+        <Bookmark
+          className={`w-3.5 h-3.5 ${bookmarked ? "fill-current" : ""}`}
+        />
+        {bookmarked ? "已收藏" : "收藏"}
       </button>
     </div>
   );
 }
 
-function RelatedArticleCard({ article, theme }: { article: RelatedArticle; theme: CategoryTheme }) {
+function RelatedArticleCard({
+  article,
+  theme,
+}: {
+  article: RelatedArticle;
+  theme: CategoryTheme;
+}) {
   return (
     <Link
       href={`/anti-aging/${encodeURIComponent(article.slug)}`}
@@ -678,7 +775,9 @@ function RelatedArticleCard({ article, theme }: { article: RelatedArticle; theme
         </div>
       </div>
       <div className="p-3.5">
-        <h3 className={`font-bold text-slate-800 text-[14px] mb-2 line-clamp-2 group-hover:${theme.tagTextClass} transition-colors leading-snug`}>
+        <h3
+          className={`font-bold text-slate-800 text-[14px] mb-2 line-clamp-2 group-hover:${theme.tagTextClass} transition-colors leading-snug`}
+        >
           {article.title}
         </h3>
         <div className="flex items-center justify-between">
@@ -696,7 +795,13 @@ function RelatedArticleCard({ article, theme }: { article: RelatedArticle; theme
   );
 }
 
-function HotTopicCard({ article, theme }: { article: RelatedArticle; theme: CategoryTheme }) {
+function HotTopicCard({
+  article,
+  theme,
+}: {
+  article: RelatedArticle;
+  theme: CategoryTheme;
+}) {
   return (
     <Link
       href={`/anti-aging/${encodeURIComponent(article.slug)}`}
@@ -709,10 +814,14 @@ function HotTopicCard({ article, theme }: { article: RelatedArticle; theme: Cate
         loading="lazy"
       />
       <div className="flex flex-col justify-center min-w-0">
-        <Badge className={`${theme.tagBgClass} ${theme.tagTextClass} border-0 text-[12px] w-fit mb-1`}>
+        <Badge
+          className={`${theme.tagBgClass} ${theme.tagTextClass} border-0 text-[12px] w-fit mb-1`}
+        >
           {article.tag}
         </Badge>
-        <h4 className={`text-[14px] font-semibold text-slate-700 line-clamp-2 group-hover:${theme.tagTextClass} transition-colors leading-snug`}>
+        <h4
+          className={`text-[14px] font-semibold text-slate-700 line-clamp-2 group-hover:${theme.tagTextClass} transition-colors leading-snug`}
+        >
           {article.title}
         </h4>
         <span className="flex items-center gap-1 text-[14px] text-slate-400 mt-1">
@@ -756,7 +865,7 @@ function SidebarSection({
 
 export default function AntiAgingArticlePage() {
   const params = useParams();
-  const slug = typeof params.slug === 'string' ? params.slug : '';
+  const slug = typeof params.slug === "string" ? params.slug : "";
   const [article, setArticle] = useState<ArticleData | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<RelatedArticle[]>([]);
   const [hotTopics, setHotTopics] = useState<RelatedArticle[]>([]);
@@ -775,52 +884,52 @@ export default function AntiAgingArticlePage() {
 
       try {
         const decodedSlug = decodeURIComponent(slug);
-        
+
         let { data, error } = await supabase
-          .from('blog_articles')
-          .select('*')
-          .eq('handle', decodedSlug)
-          .eq('status', 'active')
+          .from("blog_articles")
+          .select("*")
+          .eq("handle", decodedSlug)
+          .eq("status", "active")
           .maybeSingle();
 
         if (error) {
-          console.error('Error fetching article:', error);
+          console.error("Error fetching article:", error);
         }
 
         if (!data && decodedSlug.trim() !== decodedSlug) {
           const trimResult = await supabase
-            .from('blog_articles')
-            .select('*')
-            .eq('handle', decodedSlug.trim())
-            .eq('status', 'active')
+            .from("blog_articles")
+            .select("*")
+            .eq("handle", decodedSlug.trim())
+            .eq("status", "active")
             .maybeSingle();
           if (trimResult.data) data = trimResult.data;
         }
 
         if (!data) {
           const ilikeResult = await supabase
-            .from('blog_articles')
-            .select('*')
-            .ilike('handle', decodedSlug)
-            .eq('status', 'active')
+            .from("blog_articles")
+            .select("*")
+            .ilike("handle", decodedSlug)
+            .eq("status", "active")
             .maybeSingle();
           if (ilikeResult.data) data = ilikeResult.data;
         }
 
         if (!data) {
           const noStatusResult = await supabase
-            .from('blog_articles')
-            .select('*')
-            .eq('handle', decodedSlug)
+            .from("blog_articles")
+            .select("*")
+            .eq("handle", decodedSlug)
             .maybeSingle();
           if (noStatusResult.data) data = noStatusResult.data;
         }
 
         if (!data) {
           const likeResult = await supabase
-            .from('blog_articles')
-            .select('*')
-            .like('handle', `%${decodedSlug}%`)
+            .from("blog_articles")
+            .select("*")
+            .like("handle", `%${decodedSlug}%`)
             .limit(1)
             .maybeSingle();
           if (likeResult.data) data = likeResult.data;
@@ -828,15 +937,20 @@ export default function AntiAgingArticlePage() {
 
         if (!data && slug !== decodedSlug) {
           const rawResult = await supabase
-            .from('blog_articles')
-            .select('*')
-            .eq('handle', slug)
+            .from("blog_articles")
+            .select("*")
+            .eq("handle", slug)
             .maybeSingle();
           if (rawResult.data) data = rawResult.data;
         }
 
         if (!data) {
-          console.warn('Article not found for slug:', slug, 'decoded:', decodedSlug);
+          console.warn(
+            "Article not found for slug:",
+            slug,
+            "decoded:",
+            decodedSlug,
+          );
           setLoading(false);
           return;
         }
@@ -846,39 +960,45 @@ export default function AntiAgingArticlePage() {
 
         // Fetch related articles (same category = anti-aging)
         const { data: relatedData } = await supabase
-          .from('blog_articles')
-          .select('handle, title, cover_image_url, tags, published_at, category')
-          .eq('status', 'active')
-          .eq('category', 'anti-aging')
-          .neq('handle', slug)
-          .order('published_at', { ascending: false })
+          .from("blog_articles")
+          .select(
+            "handle, title, cover_image_url, tags, published_at, category",
+          )
+          .eq("status", "active")
+          .eq("category", "anti-aging")
+          .neq("handle", slug)
+          .order("published_at", { ascending: false })
           .limit(8);
 
         if (relatedData && relatedData.length > 0) {
           const seen = new Set<string>();
           const uniqueRelated = relatedData.filter((item) => {
-            const key = item.title?.trim().toLowerCase() || '';
+            const key = item.title?.trim().toLowerCase() || "";
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
           });
-          setRelatedArticles(uniqueRelated.slice(0, 4).map(mapSupabaseToRelated));
+          setRelatedArticles(
+            uniqueRelated.slice(0, 4).map(mapSupabaseToRelated),
+          );
         }
 
         // Fetch hot topics (latest articles from other categories)
         const { data: hotData } = await supabase
-          .from('blog_articles')
-          .select('handle, title, cover_image_url, tags, published_at, category')
-          .eq('status', 'active')
-          .neq('handle', slug)
-          .neq('category', 'anti-aging')
-          .order('published_at', { ascending: false })
+          .from("blog_articles")
+          .select(
+            "handle, title, cover_image_url, tags, published_at, category",
+          )
+          .eq("status", "active")
+          .neq("handle", slug)
+          .neq("category", "anti-aging")
+          .order("published_at", { ascending: false })
           .limit(8);
 
         if (hotData && hotData.length > 0) {
           const seenHot = new Set<string>();
           const uniqueHot = hotData.filter((item) => {
-            const key = item.title?.trim().toLowerCase() || '';
+            const key = item.title?.trim().toLowerCase() || "";
             if (seenHot.has(key)) return false;
             seenHot.add(key);
             return true;
@@ -886,16 +1006,18 @@ export default function AntiAgingArticlePage() {
           setHotTopics(uniqueHot.slice(0, 4).map(mapSupabaseToRelated));
         } else {
           const { data: fallbackHot } = await supabase
-            .from('blog_articles')
-            .select('handle, title, cover_image_url, tags, published_at, category')
-            .eq('status', 'active')
-            .neq('handle', slug)
-            .order('published_at', { ascending: false })
+            .from("blog_articles")
+            .select(
+              "handle, title, cover_image_url, tags, published_at, category",
+            )
+            .eq("status", "active")
+            .neq("handle", slug)
+            .order("published_at", { ascending: false })
             .limit(8);
           if (fallbackHot) {
             const seenFb = new Set<string>();
             const uniqueFb = fallbackHot.filter((item) => {
-              const key = item.title?.trim().toLowerCase() || '';
+              const key = item.title?.trim().toLowerCase() || "";
               if (seenFb.has(key)) return false;
               seenFb.add(key);
               return true;
@@ -906,31 +1028,33 @@ export default function AntiAgingArticlePage() {
 
         // Sidebar trending (latest anti-aging articles)
         const { data: trendingData } = await supabase
-          .from('blog_articles')
-          .select('handle, title, cover_image_url, tags, published_at')
-          .eq('status', 'active')
-          .eq('category', 'anti-aging')
-          .neq('handle', slug)
-          .order('published_at', { ascending: false })
+          .from("blog_articles")
+          .select("handle, title, cover_image_url, tags, published_at")
+          .eq("status", "active")
+          .eq("category", "anti-aging")
+          .neq("handle", slug)
+          .order("published_at", { ascending: false })
           .limit(10);
 
         if (trendingData) {
           const seenTrending = new Set<string>();
           const uniqueTrending = trendingData.filter((item) => {
-            const key = item.title?.trim().toLowerCase() || '';
+            const key = item.title?.trim().toLowerCase() || "";
             if (seenTrending.has(key)) return false;
             seenTrending.add(key);
             return true;
           });
-          setSidebarTrending(uniqueTrending.slice(0, 5).map(mapSupabaseToRelated));
+          setSidebarTrending(
+            uniqueTrending.slice(0, 5).map(mapSupabaseToRelated),
+          );
         }
 
         // Extract popular tags from anti-aging articles
         const { data: allArticles } = await supabase
-          .from('blog_articles')
-          .select('tags')
-          .eq('status', 'active')
-          .eq('category', 'anti-aging');
+          .from("blog_articles")
+          .select("tags")
+          .eq("status", "active")
+          .eq("category", "anti-aging");
 
         if (allArticles) {
           const tagCounts: Record<string, number> = {};
@@ -951,7 +1075,7 @@ export default function AntiAgingArticlePage() {
           setPopularTags(sortedTags);
         }
       } catch (err) {
-        console.error('Error:', err);
+        console.error("Error:", err);
       } finally {
         setLoading(false);
       }
@@ -960,7 +1084,7 @@ export default function AntiAgingArticlePage() {
   }, [slug]);
 
   const handleCopyLink = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       navigator.clipboard.writeText(window.location.href).catch(() => {});
     }
   };
@@ -973,7 +1097,9 @@ export default function AntiAgingArticlePage() {
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-purple-50">
               <Clock className="w-7 h-7 text-purple-300 animate-pulse" />
             </div>
-            <h3 className="text-base font-semibold text-slate-700 mb-1">載入中...</h3>
+            <h3 className="text-base font-semibold text-slate-700 mb-1">
+              載入中...
+            </h3>
           </div>
         </div>
       </PublicLayout>
@@ -988,8 +1114,12 @@ export default function AntiAgingArticlePage() {
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-slate-50">
               <ImageIcon className="w-7 h-7 text-slate-300" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-700 mb-2">找不到文章</h3>
-            <p className="text-sm text-slate-400 mb-4">此文章可能已被移除或不存在。</p>
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">
+              找不到文章
+            </h3>
+            <p className="text-sm text-slate-400 mb-4">
+              此文章可能已被移除或不存在。
+            </p>
             <div className="flex flex-col gap-3 items-center">
               <button
                 onClick={() => window.location.reload()}
@@ -998,7 +1128,10 @@ export default function AntiAgingArticlePage() {
                 <RefreshCw className="w-4 h-4" />
                 重新載入
               </button>
-              <Link href="/anti-aging" className="inline-flex items-center gap-1.5 text-purple-500 font-medium hover:text-purple-600">
+              <Link
+                href="/anti-aging"
+                className="inline-flex items-center gap-1.5 text-purple-500 font-medium hover:text-purple-600"
+              >
                 <ArrowLeft className="w-4 h-4" />
                 返回回復青春
               </Link>
@@ -1019,20 +1152,32 @@ export default function AntiAgingArticlePage() {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-[14px] text-slate-400 mb-4">
-            <Link href="/" className={`${theme.hoverTextClass} transition-colors`}>
+            <Link
+              href="/"
+              className={`${theme.hoverTextClass} transition-colors`}
+            >
               首頁
             </Link>
             <ChevronRight className="w-3 h-3" />
-            <Link href="/anti-aging" className={`${theme.hoverTextClass} transition-colors`}>
+            <Link
+              href="/anti-aging"
+              className={`${theme.hoverTextClass} transition-colors`}
+            >
               回復青春
             </Link>
             <ChevronRight className="w-3 h-3" />
-            <span className={`${theme.linkTextClass} font-medium`}>{article.title.length > 20 ? article.title.substring(0, 20) + '...' : article.title}</span>
+            <span className={`${theme.linkTextClass} font-medium`}>
+              {article.title.length > 20
+                ? article.title.substring(0, 20) + "..."
+                : article.title}
+            </span>
           </nav>
 
           {/* Category tag */}
           <Link href="/anti-aging">
-            <Badge className={`${theme.badgeClass} text-[12px] shadow-sm mb-3 ${theme.badgeHoverClass} transition-colors cursor-pointer`}>
+            <Badge
+              className={`${theme.badgeClass} text-[12px] shadow-sm mb-3 ${theme.badgeHoverClass} transition-colors cursor-pointer`}
+            >
               回復青春
             </Badge>
           </Link>
@@ -1050,7 +1195,9 @@ export default function AntiAgingArticlePage() {
                 alt={article.author}
                 className="w-6 h-6 rounded-full object-cover border border-slate-200"
               />
-              <span className="font-medium text-slate-600">{article.author}</span>
+              <span className="font-medium text-slate-600">
+                {article.author}
+              </span>
             </div>
             <span className="hidden sm:inline text-slate-200">|</span>
             <span className="flex items-center gap-1">
@@ -1125,15 +1272,17 @@ export default function AntiAgingArticlePage() {
               {/* Tags */}
               <div className="flex flex-wrap items-center gap-2 mb-6">
                 <Tag className="w-3.5 h-3.5 text-slate-400" />
-                {article.tags.length > 0 ? article.tags.map((t) => (
-                  <Link
-                    key={t}
-                    href={`/topics/tag/${encodeURIComponent(t)}`}
-                    className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
-                  >
-                    {t}
-                  </Link>
-                )) : (
+                {article.tags.length > 0 ? (
+                  article.tags.map((t) => (
+                    <Link
+                      key={t}
+                      href={`/topics/tag/${encodeURIComponent(t)}`}
+                      className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
+                    >
+                      {t}
+                    </Link>
+                  ))
+                ) : (
                   <Link
                     href="/anti-aging"
                     className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
@@ -1160,73 +1309,88 @@ export default function AntiAgingArticlePage() {
 
             {/* ═══════════ 8. RELATED ARTICLES ═══════════ */}
             {relatedArticles.length > 0 && (
-            <section className="mt-10">
-              <div className={`mb-8 relative rounded-2xl overflow-hidden bg-gradient-to-r ${theme.promoFromClass} border ${theme.promoBorderClass} p-5`}>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div>
-                    <p className={`text-[14px] ${theme.linkTextClass} font-semibold mb-0.5`}>精選推薦</p>
-                    <h4 className="text-sm font-bold text-slate-700">探索更多回復青春專題文章</h4>
-                    <p className="text-[12px] text-slate-500 mt-0.5">由編輯團隊嚴選嘅深度分析同專家觀點</p>
+              <section className="mt-10">
+                <div
+                  className={`mb-8 relative rounded-2xl overflow-hidden bg-gradient-to-r ${theme.promoFromClass} border ${theme.promoBorderClass} p-5`}
+                >
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                      <p
+                        className={`text-[14px] ${theme.linkTextClass} font-semibold mb-0.5`}
+                      >
+                        精選推薦
+                      </p>
+                      <h4 className="text-sm font-bold text-slate-700">
+                        探索更多回復青春專題文章
+                      </h4>
+                      <p className="text-[12px] text-slate-500 mt-0.5">
+                        由編輯團隊嚴選嘅深度分析同專家觀點
+                      </p>
+                    </div>
+                    <Link
+                      href="/anti-aging"
+                      className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold ${theme.promoBtnTextClass} ${theme.promoBtnBgClass} ${theme.promoBtnHoverBgClass} px-4 py-2 rounded-full transition-colors`}
+                    >
+                      瀏覽更多
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
                   </div>
-                  <Link href="/anti-aging" className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold ${theme.promoBtnTextClass} ${theme.promoBtnBgClass} ${theme.promoBtnHoverBgClass} px-4 py-2 rounded-full transition-colors`}>
-                    瀏覽更多
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
+                  <span className="absolute top-1.5 right-2.5 text-[7px] text-slate-300 uppercase tracking-wider">
+                    廣告
+                  </span>
                 </div>
-                <span className="absolute top-1.5 right-2.5 text-[7px] text-slate-300 uppercase tracking-wider">廣告</span>
-              </div>
 
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5">
-                <span
-                  className="w-1 h-5 rounded-full"
-                  style={{ background: theme.accentGradient }}
-                />
-                相關文章
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {relatedArticles.map((ra, i) => (
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5">
+                  <span
+                    className="w-1 h-5 rounded-full"
+                    style={{ background: theme.accentGradient }}
+                  />
+                  相關文章
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {relatedArticles.map((ra, i) => (
                     <RelatedArticleCard key={i} article={ra} theme={theme} />
                   ))}
-              </div>
-            </section>
+                </div>
+              </section>
             )}
 
             {/* ═══════════ 9. HOT TOPICS ═══════════ */}
             {hotTopics.length > 0 && (
-            <section className="mt-10">
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5">
-                <span
-                  className="w-1 h-5 rounded-full"
-                  style={{ background: theme.accentGradient }}
-                />
-                <Flame className={`w-4 h-4 ${theme.iconColorClass}`} />
-                熱門焦點
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {hotTopics.map((ht, i) => (
-                  <HotTopicCard key={i} article={ht} theme={theme} />
-                ))}
-              </div>
-            </section>
+              <section className="mt-10">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5">
+                  <span
+                    className="w-1 h-5 rounded-full"
+                    style={{ background: theme.accentGradient }}
+                  />
+                  <Flame className={`w-4 h-4 ${theme.iconColorClass}`} />
+                  熱門焦點
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {hotTopics.map((ht, i) => (
+                    <HotTopicCard key={i} article={ht} theme={theme} />
+                  ))}
+                </div>
+              </section>
             )}
 
             {/* ── Extended reading (mobile only) ── */}
             {relatedArticles.length > 0 && (
-            <section className="mt-10 lg:hidden">
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
-                <span
-                  className="w-1 h-5 rounded-full"
-                  style={{ background: theme.accentGradient }}
-                />
-                <TrendingUp className={`w-4 h-4 ${theme.iconColorClass}`} />
-                延伸閱讀
-              </h2>
-              <div className="space-y-3">
-                {relatedArticles.map((ra, i) => (
-                  <HotTopicCard key={i} article={ra} theme={theme} />
-                ))}
-              </div>
-            </section>
+              <section className="mt-10 lg:hidden">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                  <span
+                    className="w-1 h-5 rounded-full"
+                    style={{ background: theme.accentGradient }}
+                  />
+                  <TrendingUp className={`w-4 h-4 ${theme.iconColorClass}`} />
+                  延伸閱讀
+                </h2>
+                <div className="space-y-3">
+                  {relatedArticles.map((ra, i) => (
+                    <HotTopicCard key={i} article={ra} theme={theme} />
+                  ))}
+                </div>
+              </section>
             )}
           </article>
 
@@ -1241,11 +1405,15 @@ export default function AntiAgingArticlePage() {
                     href={`/anti-aging/${encodeURIComponent(sa.slug)}`}
                     className={`group flex items-start gap-3 hover:${theme.tagBgClass}/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors`}
                   >
-                    <span className={`text-lg font-bold ${theme.tagTextClass}/40 shrink-0 w-6 text-right leading-tight`}>
-                      {String(i + 1).padStart(2, '0')}
+                    <span
+                      className={`text-lg font-bold ${theme.tagTextClass}/40 shrink-0 w-6 text-right leading-tight`}
+                    >
+                      {String(i + 1).padStart(2, "0")}
                     </span>
                     <div className="min-w-0">
-                      <h4 className={`text-[14px] font-medium text-slate-700 line-clamp-2 group-hover:${theme.tagTextClass} transition-colors leading-snug`}>
+                      <h4
+                        className={`text-[14px] font-medium text-slate-700 line-clamp-2 group-hover:${theme.tagTextClass} transition-colors leading-snug`}
+                      >
                         {sa.title}
                       </h4>
                       <span className="text-[14px] text-slate-400 flex items-center gap-1 mt-0.5">
@@ -1260,72 +1428,82 @@ export default function AntiAgingArticlePage() {
 
             {/* 編輯推薦 */}
             {relatedArticles.length > 0 && (
-            <SidebarSection title="編輯推薦" icon={Star} theme={theme}>
-              <div className="space-y-2.5">
-                {relatedArticles.slice(0, 4).map((pick, i) => (
-                  <Link
-                    key={i}
-                    href={`/anti-aging/${encodeURIComponent(pick.slug)}`}
-                    className={`group flex items-center gap-2.5 hover:${theme.tagBgClass}/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors`}
-                  >
-                    <Bookmark className={`w-3.5 h-3.5 ${theme.iconColorClass}/60 shrink-0`} />
-                    <div className="min-w-0">
-                      <h4 className={`text-[14px] font-medium text-slate-700 line-clamp-1 group-hover:${theme.tagTextClass} transition-colors`}>
-                        {pick.title}
-                      </h4>
-                      <span className={`text-[12px] ${theme.tagTextClass} font-medium`}>
-                        {pick.tag}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </SidebarSection>
+              <SidebarSection title="編輯推薦" icon={Star} theme={theme}>
+                <div className="space-y-2.5">
+                  {relatedArticles.slice(0, 4).map((pick, i) => (
+                    <Link
+                      key={i}
+                      href={`/anti-aging/${encodeURIComponent(pick.slug)}`}
+                      className={`group flex items-center gap-2.5 hover:${theme.tagBgClass}/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors`}
+                    >
+                      <Bookmark
+                        className={`w-3.5 h-3.5 ${theme.iconColorClass}/60 shrink-0`}
+                      />
+                      <div className="min-w-0">
+                        <h4
+                          className={`text-[14px] font-medium text-slate-700 line-clamp-1 group-hover:${theme.tagTextClass} transition-colors`}
+                        >
+                          {pick.title}
+                        </h4>
+                        <span
+                          className={`text-[12px] ${theme.tagTextClass} font-medium`}
+                        >
+                          {pick.tag}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </SidebarSection>
             )}
 
             {/* 最新更新 */}
             {sidebarTrending.length > 0 && (
-            <SidebarSection title="最新更新" icon={TrendingUp} theme={theme}>
-              <div className="space-y-2.5">
-                {sidebarTrending.slice(0, 4).map((sa, i) => (
-                  <Link
-                    key={i}
-                    href={`/anti-aging/${encodeURIComponent(sa.slug)}`}
-                    className={`group flex gap-3 items-start hover:${theme.tagBgClass}/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors`}
-                  >
-                    <img
-                      src={sa.image || FALLBACK_IMAGE}
-                      alt={sa.title}
-                      className="w-14 h-10 rounded-md object-cover shrink-0"
-                      loading="lazy"
-                    />
-                    <div className="min-w-0">
-                      <h4 className={`text-[12px] font-medium text-slate-700 line-clamp-2 group-hover:${theme.tagTextClass} transition-colors leading-snug`}>
-                        {sa.title}
-                      </h4>
-                      <span className="text-[12px] text-slate-400">{sa.date}</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </SidebarSection>
+              <SidebarSection title="最新更新" icon={TrendingUp} theme={theme}>
+                <div className="space-y-2.5">
+                  {sidebarTrending.slice(0, 4).map((sa, i) => (
+                    <Link
+                      key={i}
+                      href={`/anti-aging/${encodeURIComponent(sa.slug)}`}
+                      className={`group flex gap-3 items-start hover:${theme.tagBgClass}/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors`}
+                    >
+                      <img
+                        src={sa.image || FALLBACK_IMAGE}
+                        alt={sa.title}
+                        className="w-14 h-10 rounded-md object-cover shrink-0"
+                        loading="lazy"
+                      />
+                      <div className="min-w-0">
+                        <h4
+                          className={`text-[12px] font-medium text-slate-700 line-clamp-2 group-hover:${theme.tagTextClass} transition-colors leading-snug`}
+                        >
+                          {sa.title}
+                        </h4>
+                        <span className="text-[12px] text-slate-400">
+                          {sa.date}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </SidebarSection>
             )}
 
             {/* 熱門標籤 */}
             {popularTags.length > 0 && (
-            <SidebarSection title="熱門標籤" icon={Tag} theme={theme}>
-              <div className="flex flex-wrap gap-1.5">
-                {popularTags.map((tag) => (
-                  <Link
-                    key={tag}
-                    href={`/topics/tag/${encodeURIComponent(tag)}`}
-                    className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
-                  >
-                    {tag}
-                  </Link>
-                ))}
-              </div>
-            </SidebarSection>
+              <SidebarSection title="熱門標籤" icon={Tag} theme={theme}>
+                <div className="flex flex-wrap gap-1.5">
+                  {popularTags.map((tag) => (
+                    <Link
+                      key={tag}
+                      href={`/topics/tag/${encodeURIComponent(tag)}`}
+                      className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
+                    >
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
+              </SidebarSection>
             )}
 
             {/* Sidebar Ad Unit */}
@@ -1338,94 +1516,106 @@ export default function AntiAgingArticlePage() {
       <div className="lg:hidden max-w-[1280px] mx-auto px-4 sm:px-6 pb-10 space-y-6">
         {/* 熱門標籤 */}
         {popularTags.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-100/80 shadow-sm p-4">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
-            <span
-              className="w-1 h-4 rounded-full"
-              style={{ background: theme.accentGradient }}
-            />
-            <Tag className={`w-3.5 h-3.5 ${theme.iconColorClass}`} />
-            熱門標籤
-          </h3>
-          <div className="flex flex-wrap gap-1.5">
-            {popularTags.map((tag) => (
-              <Link
-                key={tag}
-                href={`/topics/tag/${encodeURIComponent(tag)}`}
-                className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
-              >
-                {tag}
-              </Link>
-            ))}
+          <div className="bg-white rounded-xl border border-slate-100/80 shadow-sm p-4">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
+              <span
+                className="w-1 h-4 rounded-full"
+                style={{ background: theme.accentGradient }}
+              />
+              <Tag className={`w-3.5 h-3.5 ${theme.iconColorClass}`} />
+              熱門標籤
+            </h3>
+            <div className="flex flex-wrap gap-1.5">
+              {popularTags.map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/topics/tag/${encodeURIComponent(tag)}`}
+                  className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
         )}
 
         {/* 編輯推薦 */}
         {relatedArticles.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-100/80 shadow-sm p-4">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
-            <span
-              className="w-1 h-4 rounded-full"
-              style={{ background: theme.accentGradient }}
-            />
-            <Star className={`w-3.5 h-3.5 ${theme.iconColorClass}`} />
-            編輯推薦
-          </h3>
-          <div className="space-y-2">
-            {relatedArticles.slice(0, 4).map((pick, i) => (
-              <Link
-                key={i}
-                href={`/anti-aging/${encodeURIComponent(pick.slug)}`}
-                className="group flex items-center gap-2.5 py-1.5"
-              >
-                <Bookmark className={`w-3.5 h-3.5 ${theme.iconColorClass}/60 shrink-0`} />
-                <div>
-                  <h4 className={`text-[14px] font-medium text-slate-700 group-hover:${theme.tagTextClass} transition-colors`}>
-                    {pick.title}
-                  </h4>
-                  <span className={`text-[12px] ${theme.tagTextClass} font-medium`}>{pick.tag}</span>
-                </div>
-              </Link>
-            ))}
+          <div className="bg-white rounded-xl border border-slate-100/80 shadow-sm p-4">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
+              <span
+                className="w-1 h-4 rounded-full"
+                style={{ background: theme.accentGradient }}
+              />
+              <Star className={`w-3.5 h-3.5 ${theme.iconColorClass}`} />
+              編輯推薦
+            </h3>
+            <div className="space-y-2">
+              {relatedArticles.slice(0, 4).map((pick, i) => (
+                <Link
+                  key={i}
+                  href={`/anti-aging/${encodeURIComponent(pick.slug)}`}
+                  className="group flex items-center gap-2.5 py-1.5"
+                >
+                  <Bookmark
+                    className={`w-3.5 h-3.5 ${theme.iconColorClass}/60 shrink-0`}
+                  />
+                  <div>
+                    <h4
+                      className={`text-[14px] font-medium text-slate-700 group-hover:${theme.tagTextClass} transition-colors`}
+                    >
+                      {pick.title}
+                    </h4>
+                    <span
+                      className={`text-[12px] ${theme.tagTextClass} font-medium`}
+                    >
+                      {pick.tag}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
         )}
 
         {/* 熱門文章 */}
         {sidebarTrending.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-100/80 shadow-sm p-4">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
-            <span
-              className="w-1 h-4 rounded-full"
-              style={{ background: theme.accentGradient }}
-            />
-            <Flame className={`w-3.5 h-3.5 ${theme.iconColorClass}`} />
-            熱門文章
-          </h3>
-          <div className="space-y-2.5">
-            {sidebarTrending.map((sa, i) => (
-              <Link
-                key={i}
-                href={`/anti-aging/${encodeURIComponent(sa.slug)}`}
-                className="group flex items-start gap-3 py-1"
-              >
-                <span className={`text-base font-bold ${theme.tagTextClass}/40 shrink-0 w-5 text-right leading-tight`}>
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <div>
-                  <h4 className={`text-[14px] font-medium text-slate-700 group-hover:${theme.tagTextClass} transition-colors leading-snug`}>
-                    {sa.title}
-                  </h4>
-                  <span className="text-[14px] text-slate-400 flex items-center gap-1 mt-0.5">
-                    <Eye className="w-2.5 h-2.5" />
-                    {sa.views} 瀏覽
+          <div className="bg-white rounded-xl border border-slate-100/80 shadow-sm p-4">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
+              <span
+                className="w-1 h-4 rounded-full"
+                style={{ background: theme.accentGradient }}
+              />
+              <Flame className={`w-3.5 h-3.5 ${theme.iconColorClass}`} />
+              熱門文章
+            </h3>
+            <div className="space-y-2.5">
+              {sidebarTrending.map((sa, i) => (
+                <Link
+                  key={i}
+                  href={`/anti-aging/${encodeURIComponent(sa.slug)}`}
+                  className="group flex items-start gap-3 py-1"
+                >
+                  <span
+                    className={`text-base font-bold ${theme.tagTextClass}/40 shrink-0 w-5 text-right leading-tight`}
+                  >
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                </div>
-              </Link>
-            ))}
+                  <div>
+                    <h4
+                      className={`text-[14px] font-medium text-slate-700 group-hover:${theme.tagTextClass} transition-colors leading-snug`}
+                    >
+                      {sa.title}
+                    </h4>
+                    <span className="text-[14px] text-slate-400 flex items-center gap-1 mt-0.5">
+                      <Eye className="w-2.5 h-2.5" />
+                      {sa.views} 瀏覽
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
         )}
       </div>
     </PublicLayout>
