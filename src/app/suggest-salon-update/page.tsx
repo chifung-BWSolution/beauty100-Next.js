@@ -10,8 +10,9 @@ import { supabase } from '@/lib/supabase';
 import {
   Sparkles, Lock, Wrench, RotateCcw, PenLine, Camera,
   ArrowLeft, Send, CheckCircle2, Search, Store, Loader2,
-  Calendar, User, Phone, Mail, MessageSquare, X,
+  Calendar, User, Phone, Mail, MessageSquare, X, Upload, Image as ImageIcon,
 } from 'lucide-react';
+import { uploadFile } from '@/api/supabaseApi';
 
 const CHANGE_REASONS = [
   { key: 'new_opening', label: '新美容院開張', emoji: '🆕', icon: Sparkles, color: 'from-emerald-50 to-teal-50', border: 'border-emerald-200', text: 'text-emerald-700', description: '報告新開業的美容院' },
@@ -51,6 +52,10 @@ export default function SuggestSalonUpdatePage() {
     is_shop_owner: false,
     event_date: '',
   });
+
+  // Photo uploads for upload_photo reason
+  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+  const [photoUploading, setPhotoUploading] = useState(false);
 
   // Simple math captcha
   const [captchaA] = useState(() => Math.floor(Math.random() * 10) + 1);
@@ -97,6 +102,20 @@ export default function SuggestSalonUpdatePage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [salonSearch, searchSalons, selectedSalon]);
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!file) return;
+    setPhotoUploading(true);
+    try {
+      const { file_url } = await uploadFile({ file });
+      setUploadedPhotos(prev => [...prev, file_url]);
+    } catch (error) {
+      console.error('Photo upload failed:', error);
+      alert('相片上傳失敗，請重試');
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
   const handleSelectSalon = async (salon: any) => {
     setSelectedSalon(salon);
@@ -198,6 +217,11 @@ export default function SuggestSalonUpdatePage() {
       if (formData.email) payload.email = formData.email;
       if (formData.website) payload.website = formData.website;
       if (formData.description) payload.description = formData.description;
+
+      // Add uploaded photos
+      if (uploadedPhotos.length > 0) {
+        payload.product_media = uploadedPhotos;
+      }
 
       if (dateField && formData.event_date) {
         payload[dateField] = new Date(formData.event_date).toISOString();
@@ -491,15 +515,6 @@ export default function SuggestSalonUpdatePage() {
                           onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
                         />
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-slate-500 mb-1">美容院簡介</label>
-                      <Textarea
-                        placeholder="簡單描述..."
-                        value={formData.description}
-                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                        rows={3}
-                      />
                     </div>
                   </div>
                 )}
