@@ -152,7 +152,18 @@ function extractTextFromRichText(data: any): string[] {
     Array.isArray(data.children)
   ) {
     const texts: string[] = [];
-    const extractFromNode = (node: any) => {
+    const extractChildrenText = (children: any[]): string => {
+      if (!Array.isArray(children)) return "";
+      return children
+        .map((child: any) => {
+          if (typeof child === "string") return child;
+          if (child?.type === "text" && child?.value) return child.value;
+          if (child?.children) return extractChildrenText(child.children);
+          return "";
+        })
+        .join("");
+    };
+    const extractFromNode = (node: any): void => {
       if (typeof node === "string") {
         texts.push(node);
         return;
@@ -171,17 +182,6 @@ function extractTextFromRichText(data: any): string[] {
         node.children.forEach(extractFromNode);
       }
     };
-    function extractChildrenText(children: any[]): string {
-      if (!Array.isArray(children)) return "";
-      return children
-        .map((child: any) => {
-          if (typeof child === "string") return child;
-          if (child?.type === "text" && child?.value) return child.value;
-          if (child?.children) return extractChildrenText(child.children);
-          return "";
-        })
-        .join("");
-    }
     data.children.forEach(extractFromNode);
     return texts.filter(Boolean);
   }
