@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Sparkles, Shield, Eye, EyeOff, LogIn } from 'lucide-react';
+import { Sparkles, Shield, Eye, EyeOff, LogIn, Home } from 'lucide-react';
+import Link from 'next/link';
 
 export default function StaffLoginPage() {
   const router = useRouter();
@@ -66,6 +67,10 @@ export default function StaffLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-rose-400 hover:text-rose-600 font-medium mb-6 transition-colors">
+          <Home className="w-4 h-4" />
+          返回主頁
+        </Link>
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-400 rounded-2xl shadow-lg mb-4">
             <Sparkles className="w-8 h-8 text-white" />
@@ -108,7 +113,7 @@ export default function StaffLoginPage() {
             <div className="mt-6 pt-4 border-t border-slate-100 text-center">
               <p className="text-sm text-slate-400">
                 如非員工，請使用{' '}
-                <a href="/login" className="text-pink-600 hover:underline font-medium">商戶 / KOL 登入</a>
+                <a href="/login" className="text-pink-600 hover:underline font-medium">商戶登入</a>
               </p>
             </div>
           </CardContent>

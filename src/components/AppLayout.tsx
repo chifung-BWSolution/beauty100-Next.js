@@ -13,9 +13,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [hasApprovedProfile, setHasApprovedProfile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const noSidebarPaths = ['/login', '/staff-login', '/explore-salons', '/topics', '/entertainment', '/kol', '/facial-care', '/anti-aging', '/body-shaping', '/skincare', '/healthy-diet', '/body-care', '/contact'];
-  const noSidebarPrefixes = ['/topics/', '/admin/settings', '/kol/'];
-  const hideSidebar = noSidebarPaths.includes(pathname) || pathname === '/' || noSidebarPrefixes.some((p) => pathname.startsWith(p));
+  const noSidebarPaths = ['/login', '/staff-login', '/member-login', '/explore-salons', '/topics', '/entertainment', '/kol', '/facial-care', '/anti-aging', '/body-shaping', '/skincare', '/healthy-diet', '/body-care', '/contact', '/suggest-salon-update'];
+  const noSidebarPrefixes = ['/topics/', '/admin/settings', '/kol/', '/entertainment/', '/facial-care/', '/anti-aging/', '/body-care/', '/skincare/', '/healthy-diet/', '/salon/'];
+  
+  // Hide sidebar for member role users - they should not see merchant sidebar
+  const userRole = (user as any)?.role || (user as any)?.user_metadata?.role;
+  const isMember = userRole === 'member';
+  
+  const hideSidebar = isMember || noSidebarPaths.includes(pathname) || pathname === '/' || noSidebarPrefixes.some((p) => pathname.startsWith(p));
 
   useEffect(() => {
     if (!user?.id) return;

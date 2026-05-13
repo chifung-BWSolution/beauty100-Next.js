@@ -12,6 +12,7 @@ import {
   X, ChevronLeft, ZoomIn, ImageIcon,
 } from 'lucide-react';
 import { HorizontalBannerAd, InContentAd, PromotionalBlock, SidebarAdUnit } from '@/components/ads/AdComponents';
+import { supabase } from '@/lib/supabase';
 
 /* ═══════════════════════════════════════════════════════════════
    TYPES & DATA
@@ -26,6 +27,7 @@ interface ArticleData {
   category: string;
   categorySlug: string;
   tag: string;
+  tags: string[];
   author: string;
   authorAvatar: string;
   publishDate: string;
@@ -59,390 +61,452 @@ interface RelatedArticle {
   tag: string;
   date: string;
   views: string;
+  category?: string;
 }
 
-/* ── Sample article data (keyed by slug) ── */
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80';
+const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80';
 
-const ARTICLES_DB: Record<string, ArticleData> = {
-  'celebrity-anti-aging-secrets': {
-    slug: 'celebrity-anti-aging-secrets',
-    title: '女星逆齡保養術：40歲皮膚如少女的秘密',
-    description: '揭開多位凍齡女星的護膚秘訣，從日常習慣到專業療程全面解析，讓你也能擁有明星般的肌膚。',
-    heroImage: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=1200&q=80',
-    heroCaption: '多位女星保持年輕肌膚的秘密武器，從日常護膚到專業療程一次公開。',
-    category: '娛樂焦點',
-    categorySlug: '娛樂焦點',
-    tag: '明星護膚',
-    author: '林美欣',
-    authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80',
-    publishDate: '2025年4月2日',
-    publishTime: '14:30',
-    updatedDate: '2025年4月3日',
-    updatedTime: '09:15',
-    views: '15.2K',
-    readTime: '8 分鐘',
-    body: [
-      {
-        type: 'paragraph',
-        text: '在娛樂圈中，總有一些女星能夠完美抵抗歲月的痕跡，40歲看起來依然像少女一般。她們的秘密是什麼？今天我們將深入探討多位凍齡女星的護膚心得，從基礎護理到進階療程，為你一一揭開神秘面紗。',
-      },
-      {
-        type: 'heading',
-        text: '一、基礎護膚：從清潔開始的黃金法則',
-      },
-      {
-        type: 'paragraph',
-        text: '幾乎所有凍齡女星都強調一個共同點：徹底清潔是美肌的基石。鄭秀文曾在訪問中提到，她每晚都會進行雙重清潔——先用卸妝油溶解彩妝，再用溫和的潔面乳深層清潔。這個步驟看似簡單，卻是很多人容易忽略的。',
-      },
-      {
-        type: 'quote',
-        text: '護膚最重要的不是用多貴的產品，而是每天堅持做好基礎清潔和保濕。十年如一日，皮膚自然會回報你。',
-        author: '鄭秀文',
-      },
-      {
-        type: 'paragraph',
-        text: '除了清潔之外，保濕也是不可或缺的一環。多位女星都會在清潔後立即塗上精華液和面霜，鎖住水分。有些還會在上妝前敷一片保濕面膜，讓妝容更加服貼持久。',
-      },
-      {
-        type: 'heading',
-        text: '二、專業療程：科技助力逆齡',
-      },
-      {
-        type: 'paragraph',
-        text: '隨著醫美技術日益進步，不少女星也開始借助專業療程來維持年輕外觀。其中最受歡迎的包括 HIFU 超聲刀、皮秒激光以及水光針等。這些療程各有特點，適合不同的肌膚需求。',
-      },
-      {
-        type: 'gallery',
-        images: [
-          {
-            src: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=900&q=80',
-            alt: '專業醫美療程',
-            caption: '專業醫美療程成為不少女星維持年輕肌膚的秘密武器。',
-          },
-          {
-            src: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&q=80',
-            alt: '皮膚科專家諮詢',
-            caption: '定期諮詢皮膚科專家，制定個人化的護膚方案是凍齡的關鍵。',
-          },
-          {
-            src: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=900&q=80',
-            alt: '日常護膚品',
-            caption: '選擇適合自己膚質的護膚品，堅持使用才能看到效果。',
-          },
-          {
-            src: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=900&q=80',
-            alt: '面部護理療程',
-            caption: '面部護理療程幫助深層清潔和補充營養，提升肌膚光澤度。',
-          },
-          {
-            src: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=900&q=80',
-            alt: '保濕精華液',
-            caption: '保濕精華液是凍齡女星們公認的每日必備護膚品。',
-          },
-          {
-            src: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=900&q=80',
-            alt: '健康飲食與美容',
-            caption: '由內至外的美容理念越來越受到重視，健康飲食是基礎。',
-          },
-        ],
-      },
-      {
-        type: 'list',
-        ordered: false,
-        items: [
-          'HIFU 超聲刀：透過聚焦超聲波能量，刺激深層膠原蛋白再生，達到提拉緊緻效果',
-          '皮秒激光：以極短脈衝時間擊碎色素，有效改善色斑、暗沉等問題',
-          '水光針：將透明質酸直接注入真皮層，即時補充水分，改善膚質',
-          '射頻緊膚：利用射頻能量加熱真皮層，促進膠原蛋白收縮和新生',
-        ],
-      },
-      {
-        type: 'heading',
-        text: '三、飲食與生活習慣的重要性',
-      },
-      {
-        type: 'paragraph',
-        text: '美麗不僅僅靠外在護理，內在調養同樣重要。多位凍齡女星都有嚴格的飲食習慣：多吃蔬果、少糖少鹽、充足飲水。張曼玉更是出名的健康飲食倡導者，她每天堅持喝至少兩公升水，並且盡量避免加工食品。',
-      },
-      {
-        type: 'bold-paragraph',
-        text: '研究顯示，充足的睡眠、適量的運動和健康的飲食習慣，對皮膚狀態的影響甚至超過昂貴的護膚品。這也是為什麼越來越多美容專家開始強調「由內至外」的護膚理念。',
-      },
-      {
-        type: 'heading',
-        text: '四、心態決定一切',
-      },
-      {
-        type: 'paragraph',
-        text: '最後也是最重要的一點——保持年輕的心態。壓力是皮膚老化的催化劑，而積極樂觀的心態則能讓人散發由內而外的光彩。許多凍齡女星都有自己的減壓方式，無論是瑜伽冥想、戶外運動還是閱讀寫作，都能有效緩解壓力，讓身心保持平衡。',
-      },
-      {
-        type: 'quote',
-        text: '真正的美麗來自內心的平靜和對生活的熱愛。年齡只是一個數字，重要的是你如何看待自己。',
-        author: '張曼玉',
-      },
-      {
-        type: 'paragraph',
-        text: '無論你現在幾歲，開始認真對待自己的肌膚永遠不會太遲。找到適合自己的護膚方式，堅持下去，你也能擁有令人羨慕的凍齡美肌。',
-      },
-    ],
+/* Category slug (English) → Chinese label mapping */
+const CATEGORY_SLUG_TO_LABEL: Record<string, string> = {
+  'facial-care': '面部護理',
+  'anti-aging': '回復青春',
+  'skincare': '化妝護膚',
+  'healthy-diet': '飲食健康',
+  'body-care': '身體保養',
+  'body-shaping': '身體塑形',
+  'trending-topics': '焦點話題',
+  'entertainment': '娛樂圈',
+};
+
+/* Category → Route mapping (supports both Chinese labels and English slugs) */
+const CATEGORY_ROUTE_MAP: Record<string, { label: string; href: string }> = {
+  '面部護理': { label: '面部護理', href: '/facial-care' },
+  '回復青春': { label: '回復青春', href: '/anti-aging' },
+  '化妝護膚': { label: '化妝護膚', href: '/skincare' },
+  '飲食健康': { label: '飲食健康', href: '/healthy-diet' },
+  '身體保養': { label: '身體保養', href: '/body-care' },
+  '身體塑形': { label: '身體塑形', href: '/body-shaping' },
+  '焦點話題': { label: '焦點話題', href: '/topics' },
+  '娛樂': { label: '娛樂', href: '/entertainment' },
+  '娛樂圈': { label: '娛樂圈', href: '/entertainment' },
+  // English slug keys
+  'facial-care': { label: '面部護理', href: '/facial-care' },
+  'anti-aging': { label: '回復青春', href: '/anti-aging' },
+  'skincare': { label: '化妝護膚', href: '/skincare' },
+  'healthy-diet': { label: '飲食健康', href: '/healthy-diet' },
+  'body-care': { label: '身體保養', href: '/body-care' },
+  'body-shaping': { label: '身體塑形', href: '/body-shaping' },
+  'trending-topics': { label: '焦點話題', href: '/topics' },
+  'entertainment': { label: '娛樂圈', href: '/entertainment' },
+};
+
+function getCategoryRoute(category: string): { label: string; href: string } {
+  if (CATEGORY_ROUTE_MAP[category]) return CATEGORY_ROUTE_MAP[category];
+  // Try resolving via slug-to-label mapping
+  const chineseLabel = CATEGORY_SLUG_TO_LABEL[category];
+  if (chineseLabel && CATEGORY_ROUTE_MAP[chineseLabel]) return CATEGORY_ROUTE_MAP[chineseLabel];
+  // Fallback: construct route from slug if it looks like a valid slug
+  if (category && /^[a-z\-]+$/.test(category)) {
+    return { label: CATEGORY_SLUG_TO_LABEL[category] || category, href: `/${category}` };
+  }
+  return CATEGORY_ROUTE_MAP[category] || { label: category || '焦點話題', href: '/topics' };
+}
+
+/** Resolve English category slug to Traditional Chinese display label */
+function getCategoryLabel(category: string): string {
+  return CATEGORY_SLUG_TO_LABEL[category] || CATEGORY_ROUTE_MAP[category]?.label || category || '焦點話題';
+}
+
+/* Category → Theme mapping for article detail header */
+interface CategoryTheme {
+  badgeClass: string;
+  badgeHoverClass: string;
+  headerBg: string;
+  accentGradient: string;
+  iconColorClass: string;
+  hoverTextClass: string;
+  tagBgClass: string;
+  tagTextClass: string;
+  tagHoverBgClass: string;
+  linkTextClass: string;
+  linkHoverClass: string;
+  promoFromClass: string;
+  promoBorderClass: string;
+  promoBtnBgClass: string;
+  promoBtnHoverBgClass: string;
+  promoBtnTextClass: string;
+}
+
+const CATEGORY_THEME_MAP: Record<string, CategoryTheme> = {
+  '焦點話題': {
+    badgeClass: 'bg-rose-500 text-white border-0',
+    badgeHoverClass: 'hover:bg-rose-600',
+    headerBg: 'linear-gradient(135deg, #fdf2f8 0%, #fff1f2 30%, #fefce8 70%, #fdf2f8 100%)',
+    accentGradient: 'linear-gradient(180deg, #f472b6, #e11d48)',
+    iconColorClass: 'text-rose-500',
+    hoverTextClass: 'hover:text-rose-500',
+    tagBgClass: 'bg-rose-50',
+    tagTextClass: 'text-rose-500',
+    tagHoverBgClass: 'hover:bg-rose-100',
+    linkTextClass: 'text-rose-500',
+    linkHoverClass: 'hover:text-rose-600',
+    promoFromClass: 'from-rose-50 via-pink-50 to-fuchsia-50',
+    promoBorderClass: 'border-rose-100/50',
+    promoBtnBgClass: 'bg-rose-100',
+    promoBtnHoverBgClass: 'hover:bg-rose-200',
+    promoBtnTextClass: 'text-rose-600 hover:text-rose-700',
   },
-  'hifu-vs-thermage': {
-    slug: 'hifu-vs-thermage',
-    title: 'HIFU vs Thermage：最新技術全面比較',
-    description: '兩大拉提療程全面比較，從原理到效果逐一分析，幫你揀啱最適合自己嘅療程。',
-    heroImage: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1200&q=80',
-    heroCaption: '了解兩大熱門拉提療程的差異，做出最適合自己的選擇。',
-    category: '輕醫美話題',
-    categorySlug: '輕醫美話題',
-    tag: '療程比較',
-    author: '陳雅琳',
-    authorAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80',
-    publishDate: '2025年3月28日',
-    publishTime: '10:00',
-    views: '14.1K',
-    readTime: '10 分鐘',
-    body: [
-      {
-        type: 'paragraph',
-        text: '在香港醫美市場中，HIFU（高強度聚焦超聲波）和 Thermage（射頻緊膚）是兩大最受歡迎的非入侵性拉提療程。兩者都聲稱能有效對抗肌膚鬆弛和皺紋，但它們的原理、效果和適用人群都有所不同。今天我們邀請了多位皮膚科專家，為你作出最全面的比較分析。',
-      },
-      {
-        type: 'heading',
-        text: '一、基本原理的差異',
-      },
-      {
-        type: 'paragraph',
-        text: 'HIFU 利用高強度聚焦超聲波，將能量精準傳送到皮膚的深層（SMAS 筋膜層），透過熱凝固效應刺激膠原蛋白再生。而 Thermage 則使用單極射頻技術，以容量式加熱的方式均勻加熱真皮層及皮下組織。',
-      },
-      {
-        type: 'list',
-        ordered: true,
-        items: [
-          'HIFU：聚焦超聲波技術，能深達4.5mm SMAS層',
-          'Thermage：單極射頻技術，均勻加熱3-4mm深度',
-          'HIFU 屬於「點狀」加熱，Thermage 屬於「面狀」加熱',
-          '兩者都能刺激膠原蛋白新生，但作用方式不同',
-        ],
-      },
-      {
-        type: 'heading',
-        text: '二、效果與適用範圍',
-      },
-      {
-        type: 'paragraph',
-        text: '一般來說，HIFU 更擅長處理面部輪廓的提拉和收緊，特別是下頜線和雙下巴的改善。而 Thermage 則在整體緊緻和膚質改善方面表現更佳，尤其是眼周細紋和皮膚鬆弛。',
-      },
-      {
-        type: 'quote',
-        text: '沒有所謂最好的療程，只有最適合你的療程。選擇前最重要是了解自己的肌膚狀態和需求。',
-        author: '皮膚科專家 Dr. Wong',
-      },
-      {
-        type: 'heading',
-        text: '三、療程體驗與恢復期',
-      },
-      {
-        type: 'paragraph',
-        text: '在舒適度方面，新一代的 Thermage FLX 已經大幅提升了療程體驗，配備了智能舒適脈衝系統。而 HIFU 在治療過程中可能會有較明顯的刺痛感，但隨著技術改進，最新版本已經有所改善。兩者的恢復期都很短，基本上不影響日常生活。',
-      },
-      {
-        type: 'gallery',
-        images: [
-          {
-            src: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&q=80',
-            alt: 'HIFU 超聲刀療程',
-            caption: '現代醫美療程的恢復期越來越短，大部分人可以即日恢復正常活動。',
-          },
-          {
-            src: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=900&q=80',
-            alt: 'Thermage 射頻緊膚',
-            caption: 'Thermage FLX 新一代智能舒適脈衝系統大幅提升療程體驗。',
-          },
-          {
-            src: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=900&q=80',
-            alt: '療程前後對比',
-            caption: '兩種療程都能刺激膠原蛋白新生，但作用方式和適用範圍各有不同。',
-          },
-        ],
-      },
-      {
-        type: 'heading',
-        text: '四、如何選擇適合自己的療程？',
-      },
-      {
-        type: 'paragraph',
-        text: '選擇哪種療程取決於你的主要訴求：如果你想改善面部輪廓、提拉下垂，HIFU 可能更適合你；如果你追求整體緊緻和膚質改善，Thermage 可能是更好的選擇。當然，最理想的做法是諮詢專業的醫美醫生，根據你的具體情況制定個性化的治療方案。',
-      },
-      {
-        type: 'bold-paragraph',
-        text: '建議大家在選擇療程前，務必到正規的醫美診所進行諮詢，了解自己的肌膚狀態，再決定最適合的方案。切勿盲目追求潮流，選擇不適合自己的療程。',
-      },
-    ],
+  '娛樂': {
+    badgeClass: 'bg-fuchsia-500 text-white border-0',
+    badgeHoverClass: 'hover:bg-fuchsia-600',
+    headerBg: 'linear-gradient(135deg, #fdf4ff 0%, #fdf2f8 30%, #fef9c3 70%, #fdf4ff 100%)',
+    accentGradient: 'linear-gradient(180deg, #e879f9, #a21caf)',
+    iconColorClass: 'text-fuchsia-500',
+    hoverTextClass: 'hover:text-fuchsia-500',
+    tagBgClass: 'bg-fuchsia-50',
+    tagTextClass: 'text-fuchsia-500',
+    tagHoverBgClass: 'hover:bg-fuchsia-100',
+    linkTextClass: 'text-fuchsia-500',
+    linkHoverClass: 'hover:text-fuchsia-600',
+    promoFromClass: 'from-fuchsia-50 via-pink-50 to-purple-50',
+    promoBorderClass: 'border-fuchsia-100/50',
+    promoBtnBgClass: 'bg-fuchsia-100',
+    promoBtnHoverBgClass: 'hover:bg-fuchsia-200',
+    promoBtnTextClass: 'text-fuchsia-600 hover:text-fuchsia-700',
   },
-  'beauty-trends-2025': {
-    slug: 'beauty-trends-2025',
-    title: '2025年最受歡迎嘅美容療程大盤點',
-    description: '從水光針到HIFU，盤點今年最受香港女士歡迎的面部護理療程，一文睇晒各大人氣療程。',
-    heroImage: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1200&q=80',
-    heroCaption: '2025年度最受歡迎的美容療程完整指南。',
-    category: '美容趨勢',
-    categorySlug: '美容趨勢',
-    tag: '年度盤點',
-    author: '周美儀',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80',
-    publishDate: '2025年4月1日',
-    publishTime: '11:00',
-    updatedDate: '2025年4月2日',
-    updatedTime: '16:30',
-    views: '18.6K',
-    readTime: '12 分鐘',
-    body: [
-      {
-        type: 'paragraph',
-        text: '2025年香港美容市場持續蓬勃發展，各種創新療程層出不窮。從傳統的面部護理到最新的科技美容，消費者的選擇越來越多元化。根據我們的調查數據，以下幾種療程成為今年最受歡迎的選擇。',
-      },
-      {
-        type: 'heading',
-        text: '一、水光針：持續霸榜的人氣之王',
-      },
-      {
-        type: 'paragraph',
-        text: '水光針連續多年位居最受歡迎療程榜首。透過將透明質酸、維他命等營養成分直接注入真皮層，能快速改善膚質、提升水潤度。今年更有「無針水光」技術面世，讓怕打針的客人也能享受水光肌的效果。',
-      },
-      {
-        type: 'heading',
-        text: '二、皮秒激光：去斑美白新標準',
-      },
-      {
-        type: 'paragraph',
-        text: '皮秒激光以其精準、高效、低損傷的特點，成為去斑美白的首選。相比傳統激光，皮秒激光的脈衝時間更短，對周圍組織的熱損傷更小，恢復期也更短。今年最新的蜂巢皮秒技術更能同時改善毛孔和膚質。',
-      },
-      {
-        type: 'image',
-        src: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=900&q=80',
-        caption: '皮秒激光已成為香港女士美白去斑的首選療程。',
-      },
-      {
-        type: 'heading',
-        text: '三、HIFU 超聲刀：非手術提拉之王',
-      },
-      {
-        type: 'paragraph',
-        text: 'HIFU 超聲刀依然是非手術面部提拉的首選方案。今年最新的第三代 HIFU 技術在精準度和舒適度上都有了顯著提升，單次治療即可看到明顯的提拉效果，適合面部開始出現鬆弛跡象的人群。',
-      },
-      {
-        type: 'list',
-        ordered: false,
-        items: [
-          '水光針 — 即時補水、提升膚質，見效快',
-          '皮秒激光 — 精準去斑、改善膚色不均',
-          'HIFU 超聲刀 — 深層提拉、改善面部輪廓',
-          'Thermage FLX — 全面緊緻、膠原蛋白再生',
-          '肉毒桿菌 — 去除動態皺紋、瘦面',
-        ],
-      },
-      {
-        type: 'bold-paragraph',
-        text: '選擇療程前建議先到專業美容院或醫美診所進行詳細諮詢，了解自己的肌膚狀況和需求，再決定最適合的療程方案。',
-      },
-    ],
+  '娛樂圈': {
+    badgeClass: 'bg-fuchsia-500 text-white border-0',
+    badgeHoverClass: 'hover:bg-fuchsia-600',
+    headerBg: 'linear-gradient(135deg, #fdf4ff 0%, #fdf2f8 30%, #fef9c3 70%, #fdf4ff 100%)',
+    accentGradient: 'linear-gradient(180deg, #e879f9, #a21caf)',
+    iconColorClass: 'text-fuchsia-500',
+    hoverTextClass: 'hover:text-fuchsia-500',
+    tagBgClass: 'bg-fuchsia-50',
+    tagTextClass: 'text-fuchsia-500',
+    tagHoverBgClass: 'hover:bg-fuchsia-100',
+    linkTextClass: 'text-fuchsia-500',
+    linkHoverClass: 'hover:text-fuchsia-600',
+    promoFromClass: 'from-fuchsia-50 via-pink-50 to-purple-50',
+    promoBorderClass: 'border-fuchsia-100/50',
+    promoBtnBgClass: 'bg-fuchsia-100',
+    promoBtnHoverBgClass: 'hover:bg-fuchsia-200',
+    promoBtnTextClass: 'text-fuchsia-600 hover:text-fuchsia-700',
+  },
+  '面部護理': {
+    badgeClass: 'bg-teal-500 text-white border-0',
+    badgeHoverClass: 'hover:bg-teal-600',
+    headerBg: 'linear-gradient(135deg, #f0fdfa 0%, #ecfeff 30%, #f0f9ff 70%, #f0fdfa 100%)',
+    accentGradient: 'linear-gradient(180deg, #5eead4, #0d9488)',
+    iconColorClass: 'text-teal-500',
+    hoverTextClass: 'hover:text-teal-500',
+    tagBgClass: 'bg-teal-50',
+    tagTextClass: 'text-teal-500',
+    tagHoverBgClass: 'hover:bg-teal-100',
+    linkTextClass: 'text-teal-500',
+    linkHoverClass: 'hover:text-teal-600',
+    promoFromClass: 'from-teal-50 via-cyan-50 to-emerald-50',
+    promoBorderClass: 'border-teal-100/50',
+    promoBtnBgClass: 'bg-teal-100',
+    promoBtnHoverBgClass: 'hover:bg-teal-200',
+    promoBtnTextClass: 'text-teal-600 hover:text-teal-700',
+  },
+  '回復青春': {
+    badgeClass: 'bg-purple-500 text-white border-0',
+    badgeHoverClass: 'hover:bg-purple-600',
+    headerBg: 'linear-gradient(135deg, #faf5ff 0%, #f5f3ff 30%, #ede9fe 70%, #faf5ff 100%)',
+    accentGradient: 'linear-gradient(180deg, #c084fc, #7c3aed)',
+    iconColorClass: 'text-purple-500',
+    hoverTextClass: 'hover:text-purple-500',
+    tagBgClass: 'bg-purple-50',
+    tagTextClass: 'text-purple-500',
+    tagHoverBgClass: 'hover:bg-purple-100',
+    linkTextClass: 'text-purple-500',
+    linkHoverClass: 'hover:text-purple-600',
+    promoFromClass: 'from-purple-50 via-violet-50 to-fuchsia-50',
+    promoBorderClass: 'border-purple-100/50',
+    promoBtnBgClass: 'bg-purple-100',
+    promoBtnHoverBgClass: 'hover:bg-purple-200',
+    promoBtnTextClass: 'text-purple-600 hover:text-purple-700',
+  },
+  '化妝護膚': {
+    badgeClass: 'bg-fuchsia-500 text-white border-0',
+    badgeHoverClass: 'hover:bg-fuchsia-600',
+    headerBg: 'linear-gradient(135deg, #fdf4ff 0%, #fdf2f8 30%, #fff1f2 70%, #fdf4ff 100%)',
+    accentGradient: 'linear-gradient(180deg, #f0abfc, #d946ef)',
+    iconColorClass: 'text-fuchsia-500',
+    hoverTextClass: 'hover:text-fuchsia-500',
+    tagBgClass: 'bg-fuchsia-50',
+    tagTextClass: 'text-fuchsia-500',
+    tagHoverBgClass: 'hover:bg-fuchsia-100',
+    linkTextClass: 'text-fuchsia-500',
+    linkHoverClass: 'hover:text-fuchsia-600',
+    promoFromClass: 'from-fuchsia-50 via-pink-50 to-rose-50',
+    promoBorderClass: 'border-fuchsia-100/50',
+    promoBtnBgClass: 'bg-fuchsia-100',
+    promoBtnHoverBgClass: 'hover:bg-fuchsia-200',
+    promoBtnTextClass: 'text-fuchsia-600 hover:text-fuchsia-700',
+  },
+  '身體保養': {
+    badgeClass: 'bg-blue-500 text-white border-0',
+    badgeHoverClass: 'hover:bg-blue-600',
+    headerBg: 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #ecfeff 70%, #eff6ff 100%)',
+    accentGradient: 'linear-gradient(180deg, #93c5fd, #3b82f6)',
+    iconColorClass: 'text-blue-500',
+    hoverTextClass: 'hover:text-blue-500',
+    tagBgClass: 'bg-blue-50',
+    tagTextClass: 'text-blue-500',
+    tagHoverBgClass: 'hover:bg-blue-100',
+    linkTextClass: 'text-blue-500',
+    linkHoverClass: 'hover:text-blue-600',
+    promoFromClass: 'from-blue-50 via-sky-50 to-cyan-50',
+    promoBorderClass: 'border-blue-100/50',
+    promoBtnBgClass: 'bg-blue-100',
+    promoBtnHoverBgClass: 'hover:bg-blue-200',
+    promoBtnTextClass: 'text-blue-600 hover:text-blue-700',
+  },
+  '身體塑形': {
+    badgeClass: 'bg-blue-500 text-white border-0',
+    badgeHoverClass: 'hover:bg-blue-600',
+    headerBg: 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #ecfeff 70%, #eff6ff 100%)',
+    accentGradient: 'linear-gradient(180deg, #93c5fd, #3b82f6)',
+    iconColorClass: 'text-blue-500',
+    hoverTextClass: 'hover:text-blue-500',
+    tagBgClass: 'bg-blue-50',
+    tagTextClass: 'text-blue-500',
+    tagHoverBgClass: 'hover:bg-blue-100',
+    linkTextClass: 'text-blue-500',
+    linkHoverClass: 'hover:text-blue-600',
+    promoFromClass: 'from-blue-50 via-sky-50 to-cyan-50',
+    promoBorderClass: 'border-blue-100/50',
+    promoBtnBgClass: 'bg-blue-100',
+    promoBtnHoverBgClass: 'hover:bg-blue-200',
+    promoBtnTextClass: 'text-blue-600 hover:text-blue-700',
+  },
+  '飲食健康': {
+    badgeClass: 'bg-green-500 text-white border-0',
+    badgeHoverClass: 'hover:bg-green-600',
+    headerBg: 'linear-gradient(135deg, #f0fdfa 0%, #f0f9ff 30%, #ecfeff 70%, #f0fdfa 100%)',
+    accentGradient: 'linear-gradient(180deg, #86efac, #22c55e)',
+    iconColorClass: 'text-green-500',
+    hoverTextClass: 'hover:text-green-500',
+    tagBgClass: 'bg-green-50',
+    tagTextClass: 'text-green-500',
+    tagHoverBgClass: 'hover:bg-green-100',
+    linkTextClass: 'text-green-500',
+    linkHoverClass: 'hover:text-green-600',
+    promoFromClass: 'from-green-50 via-emerald-50 to-teal-50',
+    promoBorderClass: 'border-green-100/50',
+    promoBtnBgClass: 'bg-green-100',
+    promoBtnHoverBgClass: 'hover:bg-green-200',
+    promoBtnTextClass: 'text-green-600 hover:text-green-700',
   },
 };
 
-/* ── Default fallback article ── */
-const DEFAULT_ARTICLE: ArticleData = ARTICLES_DB['celebrity-anti-aging-secrets'];
+const DEFAULT_THEME: CategoryTheme = CATEGORY_THEME_MAP['焦點話題'];
 
-/* ── Related articles ── */
-const RELATED_ARTICLES: RelatedArticle[] = [
-  {
-    slug: 'hifu-vs-thermage',
-    title: 'HIFU vs Thermage：最新技術全面比較',
-    image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600&q=80',
-    tag: '療程比較',
-    date: '2025年3月28日',
-    views: '14.1K',
-  },
-  {
-    slug: 'beauty-trends-2025',
-    title: '2025年最受歡迎嘅美容療程大盤點',
-    image: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=600&q=80',
-    tag: '年度盤點',
-    date: '2025年4月1日',
-    views: '18.6K',
-  },
-  {
-    slug: 'celebrity-anti-aging-secrets',
-    title: '韓國明星最愛的護膚品牌大公開',
-    image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=600&q=80',
-    tag: '韓流美妝',
-    date: '2025年3月30日',
-    views: '12.8K',
-  },
-  {
-    slug: 'celebrity-anti-aging-secrets',
-    title: '敏感肌護理：溫和有效嘅保養方法',
-    image: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=600&q=80',
-    tag: '敏感肌',
-    date: '2025年3月26日',
-    views: '10.2K',
-  },
-];
+function getCategoryTheme(category: string): CategoryTheme {
+  // Try direct match first (Chinese label), then resolve English slug to Chinese label
+  if (CATEGORY_THEME_MAP[category]) return CATEGORY_THEME_MAP[category];
+  const chineseLabel = CATEGORY_SLUG_TO_LABEL[category];
+  if (chineseLabel && CATEGORY_THEME_MAP[chineseLabel]) return CATEGORY_THEME_MAP[chineseLabel];
+  return DEFAULT_THEME;
+}
 
-const HOT_TOPICS: RelatedArticle[] = [
-  {
-    slug: 'celebrity-anti-aging-secrets',
-    title: '皮秒激光 vs 傳統激光：邊個更啱你？',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80',
-    tag: '療程分析',
-    date: '2025年3月23日',
-    views: '9.8K',
-  },
-  {
-    slug: 'celebrity-anti-aging-secrets',
-    title: '微電流美容儀真係有用？專家解讀',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80',
-    tag: '產品評測',
-    date: '2025年3月27日',
-    views: '8.9K',
-  },
-  {
-    slug: 'beauty-trends-2025',
-    title: '醫美療程前後注意事項全攻略',
-    image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600&q=80',
-    tag: '實用指南',
-    date: '2025年3月18日',
-    views: '8.2K',
-  },
-  {
-    slug: 'celebrity-anti-aging-secrets',
-    title: '香港醫美市場2025年趨勢分析',
-    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&q=80',
-    tag: '市場分析',
-    date: '2025年3月29日',
-    views: '11.4K',
-  },
-];
+/* ═══════════════════════════════════════════════════════════════
+   SUPABASE -> ARTICLE DATA MAPPING
+   ═══════════════════════════════════════════════════════════════ */
 
-const TRENDING_SIDEBAR = [
-  { title: '毛孔收細全攻略：從清潔到醫美', views: '12.3K' },
-  { title: 'HIFU vs Thermage 最新比較', views: '9.8K' },
-  { title: '2025年度十大美容院排行榜', views: '8.5K' },
-  { title: 'KOL實測：最強保濕精華液', views: '7.2K' },
-  { title: '韓式水光肌養成法', views: '6.9K' },
-];
+function safeParseJson(value: any): any {
+  if (!value) return null;
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
 
-const EDITOR_PICKS = [
-  { title: '香港十大隱世美容院推薦', tag: '編輯推薦' },
-  { title: '零基礎護膚入門懶人包', tag: '新手必讀' },
-  { title: '美容院消費陷阱大揭密', tag: '消費指南' },
-  { title: '醫美前必做的功課清單', tag: '實用貼士' },
-];
+function extractTextFromRichText(data: any): string[] {
+  // Handle Shopify rich_text_field format: { type: "root", children: [...] }
+  if (data && typeof data === 'object' && data.type === 'root' && Array.isArray(data.children)) {
+    const texts: string[] = [];
+    function extractFromNode(node: any) {
+      if (typeof node === 'string') {
+        texts.push(node);
+        return;
+      }
+      if (node?.type === 'paragraph' || node?.type === 'heading') {
+        const text = extractChildrenText(node.children);
+        if (text) texts.push(text);
+      } else if (node?.type === 'list') {
+        if (Array.isArray(node.children)) {
+          node.children.forEach((li: any) => {
+            const text = extractChildrenText(li.children);
+            if (text) texts.push(text);
+          });
+        }
+      } else if (Array.isArray(node?.children)) {
+        node.children.forEach(extractFromNode);
+      }
+    }
+    function extractChildrenText(children: any[]): string {
+      if (!Array.isArray(children)) return '';
+      return children.map((child: any) => {
+        if (typeof child === 'string') return child;
+        if (child?.type === 'text' && child?.value) return child.value;
+        if (child?.children) return extractChildrenText(child.children);
+        return '';
+      }).join('');
+    }
+    data.children.forEach(extractFromNode);
+    return texts.filter(Boolean);
+  }
+  return [];
+}
 
-const POPULAR_TAGS = [
-  'HIFU', '水光針', '膠原蛋白', '美白', '抗衰老', '瘦面', '去斑',
-  '暗瘡', '毛孔', '保濕', '防曬', '脫毛', '按摩', '纖體', '敏感肌', '韓式護膚',
-];
+function buildContentBlocks(record: any): ContentBlock[] {
+  const blocks: ContentBlock[] = [];
+
+  try {
+    // Intro
+    if (record.intro) {
+      const introData = safeParseJson(record.intro);
+      if (Array.isArray(introData)) {
+        introData.forEach((p: string) => {
+          if (typeof p === 'string' && p.trim()) blocks.push({ type: 'paragraph', text: p });
+        });
+      } else if (typeof introData === 'string' && introData.trim()) {
+        blocks.push({ type: 'paragraph', text: introData });
+      } else if (introData?.text && typeof introData.text === 'string') {
+        blocks.push({ type: 'paragraph', text: introData.text });
+      } else if (introData?.type === 'root') {
+        // Shopify rich text field format
+        const texts = extractTextFromRichText(introData);
+        texts.forEach((t) => blocks.push({ type: 'paragraph', text: t }));
+      }
+    }
+
+    // Sections 1–5
+    for (let i = 1; i <= 5; i++) {
+      const title = record[`section_${i}_title`];
+      const content = record[`section_${i}_content`];
+      const images = record[`section_${i}_images`];
+
+      if (title) {
+        blocks.push({ type: 'heading', text: title });
+      }
+
+      if (content) {
+        const contentData = safeParseJson(content);
+        if (Array.isArray(contentData)) {
+          contentData.forEach((p: string) => {
+            if (typeof p === 'string' && p.trim()) blocks.push({ type: 'paragraph', text: p });
+          });
+        } else if (typeof contentData === 'string' && contentData.trim()) {
+          blocks.push({ type: 'paragraph', text: contentData });
+        } else if (contentData?.text && typeof contentData.text === 'string') {
+          blocks.push({ type: 'paragraph', text: contentData.text });
+        } else if (contentData?.type === 'root') {
+          // Shopify rich text field format
+          const texts = extractTextFromRichText(contentData);
+          texts.forEach((t) => blocks.push({ type: 'paragraph', text: t }));
+        }
+      }
+
+      if (images && Array.isArray(images) && images.length > 0) {
+        if (images.length === 1) {
+          blocks.push({ type: 'image', src: images[0], caption: title || '' });
+        } else {
+          blocks.push({
+            type: 'gallery',
+            images: images.map((src: string, idx: number) => ({
+              src,
+              alt: `${title || '圖片'} ${idx + 1}`,
+              caption: '',
+            })),
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error building content blocks:', err);
+  }
+
+  return blocks;
+}
+
+function mapSupabaseToArticle(record: any): ArticleData {
+  const publishedAt = record.published_at ? new Date(record.published_at) : null;
+  const publishDate = publishedAt
+    ? publishedAt.toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric' })
+    : '';
+  const publishTime = publishedAt
+    ? publishedAt.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' })
+    : '';
+
+  const body = buildContentBlocks(record);
+  const wordCount = body
+    .filter((b) => b.type === 'paragraph' || b.type === 'bold-paragraph')
+    .reduce((acc, b) => acc + ((b as any).text?.length || 0), 0);
+  const readTime = `${Math.max(1, Math.ceil(wordCount / 400))} 分鐘`;
+
+  const rawCategory = record.category || record.blog_title || '美容護膚';
+  const resolvedCategoryLabel = getCategoryLabel(rawCategory);
+
+  return {
+    slug: record.handle || '',
+    title: record.title || '文章',
+    description: record.seo_description || '',
+    heroImage: record.cover_image_url || FALLBACK_IMAGE,
+    heroCaption: record.cover_image_alt || '',
+    category: resolvedCategoryLabel,
+    categorySlug: rawCategory,
+    tag: record.tags?.[0] || '美容',
+    tags: Array.isArray(record.tags) ? record.tags.map((t: string) => t?.trim()).filter(Boolean) : [],
+    author: record.author || '編輯部',
+    authorAvatar: FALLBACK_AVATAR,
+    publishDate,
+    publishTime,
+    views: `${Math.floor(Math.random() * 15 + 5)}K`,
+    readTime,
+    body: body.length > 0 ? body : [{ type: 'paragraph', text: record.seo_description || '暫無內容。' }],
+  };
+}
+
+function mapSupabaseToRelated(record: any): RelatedArticle {
+  const publishedAt = record.published_at ? new Date(record.published_at) : null;
+  const date = publishedAt
+    ? publishedAt.toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric' })
+    : '';
+
+  return {
+    slug: record.handle || '',
+    title: record.title || '',
+    image: record.cover_image_url || FALLBACK_IMAGE,
+    tag: record.tags?.[0] || '美容',
+    date,
+    views: `${Math.floor(Math.random() * 15 + 5)}K`,
+    category: record.category || '',
+  };
+}
+
+/** Get article detail path - route articles to their section-specific paths */
+function getArticleDetailPath(slug: string, category?: string): string {
+  if (category === 'anti-aging' || category === '回復青春') {
+    return `/anti-aging/${encodeURIComponent(slug)}`;
+  }
+  if (category === 'body-care' || category === '身體保養') {
+    return `/body-care/${encodeURIComponent(slug)}`;
+  }
+  if (category === 'skincare' || category === '化妝護膚') {
+    return `/skincare/${encodeURIComponent(slug)}`;
+  }
+  if (category === 'healthy-diet' || category === '飲食健康') {
+    return `/healthy-diet/${encodeURIComponent(slug)}`;
+  }
+  return `/topics/${encodeURIComponent(slug)}`;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    IMAGE GALLERY COMPONENT
@@ -706,7 +770,7 @@ function ImageGallery({ images }: { images: GalleryImage[] }) {
    ARTICLE BODY RENDERER
    ═══════════════════════════════════════════════════════════════ */
 
-function ArticleBody({ blocks }: { blocks: ContentBlock[] }) {
+function ArticleBody({ blocks, theme }: { blocks: ContentBlock[]; theme: CategoryTheme }) {
   const midPoint = Math.floor(blocks.length / 2);
   return (
     <div className="article-body space-y-5">
@@ -721,7 +785,7 @@ function ArticleBody({ blocks }: { blocks: ContentBlock[] }) {
             );
           case 'bold-paragraph':
             return (
-              <p key={idx} className="text-[15px] sm:text-base leading-[1.85] text-slate-800 font-medium bg-rose-50/50 border-l-3 border-rose-300 pl-4 py-3 rounded-r-lg">
+              <p key={idx} className={`text-[15px] sm:text-base leading-[1.85] text-slate-800 font-medium ${theme.tagBgClass}/50 border-l-3 pl-4 py-3 rounded-r-lg`} style={{ borderLeftColor: theme.accentGradient.includes('#') ? theme.accentGradient.split(', ')[1]?.replace(')', '') || '#e11d48' : '#e11d48' }}>
                 {block.text}
               </p>
             );
@@ -733,7 +797,7 @@ function ArticleBody({ blocks }: { blocks: ContentBlock[] }) {
               >
                 <span
                   className="inline-block w-1 h-5 rounded-full mr-2.5 align-middle"
-                  style={{ background: 'linear-gradient(180deg, #f472b6, #e11d48)' }}
+                  style={{ background: theme.accentGradient }}
                 />
                 {block.text}
               </h2>
@@ -763,17 +827,17 @@ function ArticleBody({ blocks }: { blocks: ContentBlock[] }) {
               <blockquote
                 key={idx}
                 className="relative my-6 pl-5 pr-4 py-4 rounded-xl"
-                style={{ background: 'linear-gradient(135deg, #fdf2f8 0%, #fff7ed 100%)' }}
+                style={{ background: theme.headerBg }}
               >
                 <div
                   className="absolute left-0 top-4 bottom-4 w-1 rounded-full"
-                  style={{ background: 'linear-gradient(180deg, #f472b6, #e11d48)' }}
+                  style={{ background: theme.accentGradient }}
                 />
                 <p className="text-[15px] sm:text-base leading-[1.8] text-slate-700 italic">
                   「{block.text}」
                 </p>
                 {block.author && (
-                  <cite className="block mt-2 text-[14px] text-rose-500 font-medium not-italic">
+                  <cite className={`block mt-2 text-[14px] ${theme.linkTextClass} font-medium not-italic`}>
                     — {block.author}
                   </cite>
                 )}
@@ -786,7 +850,7 @@ function ArticleBody({ blocks }: { blocks: ContentBlock[] }) {
                 key={idx}
                 className={`space-y-2 pl-5 ${
                   block.ordered ? 'list-decimal' : 'list-disc'
-                } marker:text-rose-400`}
+                } marker:${theme.tagTextClass}`}
               >
                 {block.items.map((item, i) => (
                   <li key={i} className="text-[15px] sm:text-base leading-[1.8] text-slate-700 pl-1">
@@ -814,9 +878,10 @@ function ArticleBody({ blocks }: { blocks: ContentBlock[] }) {
    SUB-COMPONENTS
    ═══════════════════════════════════════════════════════════════ */
 
-function ArticleToolbar({ onCopyLink }: { onCopyLink: () => void }) {
+function ArticleToolbar({ onCopyLink, theme }: { onCopyLink: () => void; theme?: CategoryTheme }) {
   const [copied, setCopied] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const t = theme || DEFAULT_THEME;
 
   const handleCopy = () => {
     onCopyLink();
@@ -828,14 +893,14 @@ function ArticleToolbar({ onCopyLink }: { onCopyLink: () => void }) {
     <div className="flex items-center gap-2">
       <button
         onClick={handleCopy}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all border border-slate-200 hover:border-rose-200"
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium text-slate-500 ${t.hoverTextClass} hover:${t.tagBgClass} transition-all border border-slate-200 hover:border-current`}
         title="複製連結"
       >
         <Link2 className="w-3.5 h-3.5" />
         {copied ? '已複製' : '複製連結'}
       </button>
       <button
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all border border-slate-200 hover:border-rose-200"
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium text-slate-500 ${t.hoverTextClass} hover:${t.tagBgClass} transition-all border border-slate-200 hover:border-current`}
         title="分享"
       >
         <Share2 className="w-3.5 h-3.5" />
@@ -845,8 +910,8 @@ function ArticleToolbar({ onCopyLink }: { onCopyLink: () => void }) {
         onClick={() => setBookmarked(!bookmarked)}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all border ${
           bookmarked
-            ? 'text-rose-600 bg-rose-50 border-rose-200'
-            : 'text-slate-500 hover:text-rose-600 hover:bg-rose-50 border-slate-200 hover:border-rose-200'
+            ? `${t.linkTextClass} ${t.tagBgClass} border-current`
+            : `text-slate-500 ${t.hoverTextClass} hover:${t.tagBgClass} border-slate-200 hover:border-current`
         }`}
         title="收藏"
       >
@@ -857,10 +922,11 @@ function ArticleToolbar({ onCopyLink }: { onCopyLink: () => void }) {
   );
 }
 
-function RelatedArticleCard({ article }: { article: RelatedArticle }) {
+function RelatedArticleCard({ article, theme }: { article: RelatedArticle; theme?: CategoryTheme }) {
+  const t = theme || DEFAULT_THEME;
   return (
     <Link
-      href={`/topics/${article.slug}`}
+      href={getArticleDetailPath(article.slug, article.category)}
       className="group rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border border-slate-100/80 block"
     >
       <div className="relative h-40 overflow-hidden">
@@ -871,13 +937,13 @@ function RelatedArticleCard({ article }: { article: RelatedArticle }) {
           loading="lazy"
         />
         <div className="absolute top-2.5 left-2.5">
-          <Badge className="bg-rose-500 text-white border-0 text-[14px] shadow-sm">
+          <Badge className={`${t.badgeClass} text-[14px] shadow-sm`}>
             {article.tag}
           </Badge>
         </div>
       </div>
       <div className="p-3.5">
-        <h3 className="font-bold text-slate-800 text-[14px] mb-2 line-clamp-2 group-hover:text-rose-600 transition-colors leading-snug">
+        <h3 className={`font-bold text-slate-800 text-[14px] mb-2 line-clamp-2 group-hover:${t.tagTextClass} transition-colors leading-snug`}>
           {article.title}
         </h3>
         <div className="flex items-center justify-between">
@@ -895,10 +961,11 @@ function RelatedArticleCard({ article }: { article: RelatedArticle }) {
   );
 }
 
-function HotTopicCard({ article }: { article: RelatedArticle }) {
+function HotTopicCard({ article, theme }: { article: RelatedArticle; theme?: CategoryTheme }) {
+  const t = theme || DEFAULT_THEME;
   return (
     <Link
-      href={`/topics/${article.slug}`}
+      href={getArticleDetailPath(article.slug, article.category)}
       className="group flex gap-3.5 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100/80 p-3"
     >
       <img
@@ -908,10 +975,10 @@ function HotTopicCard({ article }: { article: RelatedArticle }) {
         loading="lazy"
       />
       <div className="flex flex-col justify-center min-w-0">
-        <Badge className="bg-rose-50 text-rose-500 border-0 text-[12px] w-fit mb-1">
+        <Badge className={`${t.tagBgClass} ${t.tagTextClass} border-0 text-[12px] w-fit mb-1`}>
           {article.tag}
         </Badge>
-        <h4 className="text-[14px] font-semibold text-slate-700 line-clamp-2 group-hover:text-rose-600 transition-colors leading-snug">
+        <h4 className={`text-[14px] font-semibold text-slate-700 line-clamp-2 group-hover:${t.tagTextClass} transition-colors leading-snug`}>
           {article.title}
         </h4>
         <span className="flex items-center gap-1 text-[14px] text-slate-400 mt-1">
@@ -927,19 +994,22 @@ function SidebarSection({
   title,
   icon: Icon,
   children,
+  theme,
 }: {
   title: string;
   icon: React.ElementType;
   children: React.ReactNode;
+  theme?: CategoryTheme;
 }) {
+  const t = theme || DEFAULT_THEME;
   return (
     <div className="bg-white rounded-xl border border-slate-100/80 shadow-sm p-4">
       <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3.5">
         <span
           className="w-1 h-4 rounded-full"
-          style={{ background: 'linear-gradient(180deg, #f472b6, #e11d48)' }}
+          style={{ background: t.accentGradient }}
         />
-        <Icon className="w-3.5 h-3.5 text-rose-500" />
+        <Icon className={`w-3.5 h-3.5 ${t.iconColorClass}`} />
         {title}
       </h3>
       {children}
@@ -954,7 +1024,212 @@ function SidebarSection({
 export default function TopicArticlePage() {
   const params = useParams();
   const slug = typeof params.slug === 'string' ? params.slug : '';
-  const article = ARTICLES_DB[slug] || DEFAULT_ARTICLE;
+  const [article, setArticle] = useState<ArticleData | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<RelatedArticle[]>([]);
+  const [hotTopics, setHotTopics] = useState<RelatedArticle[]>([]);
+  const [sidebarTrending, setSidebarTrending] = useState<RelatedArticle[]>([]);
+  const [popularTags, setPopularTags] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchArticle() {
+      if (!slug) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Decode the slug in case of URL encoding issues
+        const decodedSlug = decodeURIComponent(slug);
+        
+        // Fetch main article by handle (slug) - try exact match first
+        let { data, error } = await supabase
+          .from('blog_articles')
+          .select('*')
+          .eq('handle', decodedSlug)
+          .eq('status', 'active')
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching article:', error);
+        }
+
+        // If not found, try with trimmed slug (handles whitespace issues)
+        if (!data && decodedSlug.trim() !== decodedSlug) {
+          const trimResult = await supabase
+            .from('blog_articles')
+            .select('*')
+            .eq('handle', decodedSlug.trim())
+            .eq('status', 'active')
+            .maybeSingle();
+          if (trimResult.data) data = trimResult.data;
+        }
+
+        // If still not found, try case-insensitive search using ilike
+        if (!data) {
+          const ilikeResult = await supabase
+            .from('blog_articles')
+            .select('*')
+            .ilike('handle', decodedSlug)
+            .eq('status', 'active')
+            .maybeSingle();
+          if (ilikeResult.data) data = ilikeResult.data;
+        }
+
+        // If still not found, try without status filter (article might have status issue)
+        if (!data) {
+          const noStatusResult = await supabase
+            .from('blog_articles')
+            .select('*')
+            .eq('handle', decodedSlug)
+            .maybeSingle();
+          if (noStatusResult.data) data = noStatusResult.data;
+        }
+
+        // Last resort: try partial match with like (handles encoding differences)
+        if (!data) {
+          const likeResult = await supabase
+            .from('blog_articles')
+            .select('*')
+            .like('handle', `%${decodedSlug}%`)
+            .limit(1)
+            .maybeSingle();
+          if (likeResult.data) data = likeResult.data;
+        }
+
+        // Try with the raw slug (before decodeURIComponent) if different
+        if (!data && slug !== decodedSlug) {
+          const rawResult = await supabase
+            .from('blog_articles')
+            .select('*')
+            .eq('handle', slug)
+            .maybeSingle();
+          if (rawResult.data) data = rawResult.data;
+        }
+
+        if (!data) {
+          console.warn('Article not found for slug:', slug, 'decoded:', decodedSlug);
+          setLoading(false);
+          return;
+        }
+
+        const mapped = mapSupabaseToArticle(data);
+        setArticle(mapped);
+
+        // Fetch related articles (same category, excluding current)
+        const { data: relatedData } = await supabase
+          .from('blog_articles')
+          .select('handle, title, cover_image_url, tags, published_at, category')
+          .eq('status', 'active')
+          .eq('category', data.category || '')
+          .neq('handle', slug)
+          .order('published_at', { ascending: false })
+          .limit(8);
+
+        if (relatedData && relatedData.length > 0) {
+          // Deduplicate by title to avoid showing duplicate articles
+          const seen = new Set<string>();
+          const uniqueRelated = relatedData.filter((item) => {
+            const key = item.title?.trim().toLowerCase() || '';
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          setRelatedArticles(uniqueRelated.slice(0, 4).map(mapSupabaseToRelated));
+        }
+
+        // Fetch hot topics (latest articles from other categories)
+        const { data: hotData } = await supabase
+          .from('blog_articles')
+          .select('handle, title, cover_image_url, tags, published_at, category')
+          .eq('status', 'active')
+          .neq('handle', slug)
+          .neq('category', data.category || '')
+          .order('published_at', { ascending: false })
+          .limit(8);
+
+        if (hotData && hotData.length > 0) {
+          const seenHot = new Set<string>();
+          const uniqueHot = hotData.filter((item) => {
+            const key = item.title?.trim().toLowerCase() || '';
+            if (seenHot.has(key)) return false;
+            seenHot.add(key);
+            return true;
+          });
+          setHotTopics(uniqueHot.slice(0, 4).map(mapSupabaseToRelated));
+        } else {
+          // Fallback: latest articles excluding current
+          const { data: fallbackHot } = await supabase
+            .from('blog_articles')
+            .select('handle, title, cover_image_url, tags, published_at, category')
+            .eq('status', 'active')
+            .neq('handle', slug)
+            .order('published_at', { ascending: false })
+            .limit(8);
+          if (fallbackHot) {
+            const seenFb = new Set<string>();
+            const uniqueFb = fallbackHot.filter((item) => {
+              const key = item.title?.trim().toLowerCase() || '';
+              if (seenFb.has(key)) return false;
+              seenFb.add(key);
+              return true;
+            });
+            setHotTopics(uniqueFb.slice(0, 4).map(mapSupabaseToRelated));
+          }
+        }
+
+        // Sidebar trending (latest articles)
+        const { data: trendingData } = await supabase
+          .from('blog_articles')
+          .select('handle, title, cover_image_url, tags, published_at')
+          .eq('status', 'active')
+          .neq('handle', slug)
+          .order('published_at', { ascending: false })
+          .limit(10);
+
+        if (trendingData) {
+          const seenTrending = new Set<string>();
+          const uniqueTrending = trendingData.filter((item) => {
+            const key = item.title?.trim().toLowerCase() || '';
+            if (seenTrending.has(key)) return false;
+            seenTrending.add(key);
+            return true;
+          });
+          setSidebarTrending(uniqueTrending.slice(0, 5).map(mapSupabaseToRelated));
+        }
+
+        // Extract popular tags
+        const { data: allArticles } = await supabase
+          .from('blog_articles')
+          .select('tags')
+          .eq('status', 'active');
+
+        if (allArticles) {
+          const tagCounts: Record<string, number> = {};
+          allArticles.forEach((item: any) => {
+            if (item.tags && Array.isArray(item.tags)) {
+              item.tags.forEach((t: string) => {
+                const trimmed = t && t.trim();
+                if (trimmed) {
+                  tagCounts[trimmed] = (tagCounts[trimmed] || 0) + 1;
+                }
+              });
+            }
+          });
+          const sortedTags = Object.entries(tagCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([tag]) => tag)
+            .slice(0, 16);
+          setPopularTags(sortedTags);
+        }
+      } catch (err) {
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchArticle();
+  }, [slug]);
 
   const handleCopyLink = () => {
     if (typeof window !== 'undefined') {
@@ -962,31 +1237,80 @@ export default function TopicArticlePage() {
     }
   };
 
+  if (loading) {
+    return (
+      <PublicLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-rose-50">
+              <Clock className="w-7 h-7 text-rose-300 animate-pulse" />
+            </div>
+            <h3 className="text-base font-semibold text-slate-700 mb-1">載入中...</h3>
+          </div>
+        </div>
+      </PublicLayout>
+    );
+  }
+
+  if (!article) {
+    return (
+      <PublicLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-slate-50">
+              <ImageIcon className="w-7 h-7 text-slate-300" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">找不到文章</h3>
+            <p className="text-sm text-slate-400 mb-4">此文章可能已被移除或不存在。</p>
+            <div className="flex flex-col gap-3 items-center">
+              <button
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center gap-1.5 text-slate-500 font-medium hover:text-slate-700 text-sm"
+              >
+                <RefreshCw className="w-4 h-4" />
+                重新載入
+              </button>
+              <Link href="/topics" className="inline-flex items-center gap-1.5 text-rose-500 font-medium hover:text-rose-600">
+                <ArrowLeft className="w-4 h-4" />
+                返回文章列表
+              </Link>
+            </div>
+          </div>
+        </div>
+      </PublicLayout>
+    );
+  }
+
+  const theme = getCategoryTheme(article.category);
+  const categoryRoute = getCategoryRoute(article.category);
+
   return (
-    <PublicLayout>
+    <PublicLayout activeHref={categoryRoute.href}>
       {/* ═══════════ 1. BREADCRUMB & TOP INFO ═══════════ */}
       <section
         className="border-b border-slate-100"
-        style={{ background: 'linear-gradient(135deg, #fdf2f8 0%, #fff1f2 30%, #fefce8 70%, #fdf2f8 100%)' }}
+        style={{ background: theme.headerBg }}
       >
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-[14px] text-slate-400 mb-4">
-            <Link href="/" className="hover:text-rose-500 transition-colors">
+            <Link href="/" className={`${theme.hoverTextClass} transition-colors`}>
               首頁
             </Link>
             <ChevronRight className="w-3 h-3" />
-            <Link href="/topics" className="hover:text-rose-500 transition-colors">
-              焦點話題
+            <Link href={getCategoryRoute(article.category).href} className={`${theme.hoverTextClass} transition-colors`}>
+              {getCategoryRoute(article.category).label}
             </Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-rose-500 font-medium">{article.category}</span>
+            <span className={`${theme.linkTextClass} font-medium`}>{article.title.length > 20 ? article.title.substring(0, 20) + '...' : article.title}</span>
           </nav>
 
           {/* Category tag */}
-          <Badge className="bg-rose-500 text-white border-0 text-[12px] shadow-sm mb-3">
-            {article.tag}
-          </Badge>
+          <Link href={getCategoryRoute(article.category).href}>
+            <Badge className={`${theme.badgeClass} text-[12px] shadow-sm mb-3 ${theme.badgeHoverClass} transition-colors cursor-pointer`}>
+              {article.category}
+            </Badge>
+          </Link>
 
           {/* ═══════════ 2. ARTICLE TITLE ═══════════ */}
           <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-extrabold text-slate-900 leading-tight tracking-tight mb-4">
@@ -1000,7 +1324,7 @@ export default function TopicArticlePage() {
               <img
                 src={article.authorAvatar}
                 alt={article.author}
-                className="w-6 h-6 rounded-full object-cover border border-rose-100"
+                className="w-6 h-6 rounded-full object-cover border border-slate-200"
               />
               <span className="font-medium text-slate-600">{article.author}</span>
             </div>
@@ -1060,7 +1384,7 @@ export default function TopicArticlePage() {
 
             {/* ═══════════ 7. ARTICLE TOOLS ═══════════ */}
             <div className="flex items-center justify-between mb-6 pb-5 border-b border-slate-100">
-              <ArticleToolbar onCopyLink={handleCopyLink} />
+              <ArticleToolbar onCopyLink={handleCopyLink} theme={theme} />
               <div className="hidden sm:flex items-center gap-3 text-[12px] text-slate-400">
                 <span className="flex items-center gap-1">
                   <MessageCircle className="w-3 h-3" />
@@ -1074,50 +1398,58 @@ export default function TopicArticlePage() {
             </div>
 
             {/* ═══════════ 5 & 6. ARTICLE BODY ═══════════ */}
-            <ArticleBody blocks={article.body} />
+            <ArticleBody blocks={article.body} theme={theme} />
 
             {/* ── Article footer ── */}
             <div className="mt-10 pt-6 border-t border-slate-100">
               {/* Tags */}
               <div className="flex flex-wrap items-center gap-2 mb-6">
                 <Tag className="w-3.5 h-3.5 text-slate-400" />
-                {['美容', '護膚', article.tag, article.category].map((tag) => (
+                {article.tags.length > 0 ? article.tags.map((t) => (
                   <Link
-                    key={tag}
-                    href="/topics"
-                    className="text-[14px] px-2.5 py-1 rounded-full bg-rose-50 text-rose-500 font-medium hover:bg-rose-100 transition-colors"
+                    key={t}
+                    href={`/topics/tag/${encodeURIComponent(t)}`}
+                    className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
                   >
-                    {tag}
+                    {t}
                   </Link>
-                ))}
+                )) : (
+                  <Link
+                    href={getCategoryRoute(article.category).href}
+                    className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
+                  >
+                    {article.category}
+                  </Link>
+                )}
               </div>
 
               {/* Bottom tools (mobile) */}
               <div className="sm:hidden mb-6">
-                <ArticleToolbar onCopyLink={handleCopyLink} />
+                <ArticleToolbar onCopyLink={handleCopyLink} theme={theme} />
               </div>
 
               {/* Back link */}
               <Link
-                href="/topics"
-                className="inline-flex items-center gap-1.5 text-[14px] text-rose-500 font-medium hover:text-rose-600 transition-colors"
+                href={getCategoryRoute(article.category).href}
+                className={`inline-flex items-center gap-1.5 text-[14px] ${theme.linkTextClass} font-medium ${theme.linkHoverClass} transition-colors`}
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                返回焦點話題
+                返回{getCategoryRoute(article.category).label}
               </Link>
             </div>
 
             {/* ═══════════ 8. RELATED ARTICLES ═══════════ */}
+            {relatedArticles.length > 0 && (
             <section className="mt-10">
               {/* AD: Promotional Block Near Related Articles */}
-              <div className="mb-8 relative rounded-2xl overflow-hidden bg-gradient-to-r from-rose-50 via-pink-50 to-fuchsia-50 border border-rose-100/50 p-5">
+              <div className={`mb-8 relative rounded-2xl overflow-hidden bg-gradient-to-r ${theme.promoFromClass} border ${theme.promoBorderClass} p-5`}>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <p className="text-[14px] text-rose-500 font-semibold mb-0.5">精選推薦</p>
+                    <p className={`text-[14px] ${theme.linkTextClass} font-semibold mb-0.5`}>精選推薦</p>
                     <h4 className="text-sm font-bold text-slate-700">探索更多美容專題文章</h4>
                     <p className="text-[12px] text-slate-500 mt-0.5">由編輯團隊嚴選嘅深度分析同專家觀點</p>
                   </div>
-                  <Link href="/topics" className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-100 hover:bg-rose-200 px-4 py-2 rounded-full transition-colors">
+                  <Link href={getCategoryRoute(article.category).href} className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold ${theme.promoBtnTextClass} ${theme.promoBtnBgClass} ${theme.promoBtnHoverBgClass} px-4 py-2 rounded-full transition-colors`}>
                     瀏覽更多
                     <ArrowRight className="w-3 h-3" />
                   </Link>
@@ -1128,75 +1460,78 @@ export default function TopicArticlePage() {
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5">
                 <span
                   className="w-1 h-5 rounded-full"
-                  style={{ background: 'linear-gradient(180deg, #f472b6, #e11d48)' }}
+                  style={{ background: theme.accentGradient }}
                 />
                 相關文章
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {RELATED_ARTICLES.filter((a) => a.slug !== slug)
-                  .slice(0, 4)
-                  .map((article, i) => (
-                    <RelatedArticleCard key={i} article={article} />
+                {relatedArticles.map((ra, i) => (
+                    <RelatedArticleCard key={i} article={ra} theme={theme} />
                   ))}
               </div>
             </section>
+            )}
 
             {/* ═══════════ 9. HOT TOPICS ═══════════ */}
+            {hotTopics.length > 0 && (
             <section className="mt-10">
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5">
                 <span
                   className="w-1 h-5 rounded-full"
-                  style={{ background: 'linear-gradient(180deg, #f472b6, #e11d48)' }}
+                  style={{ background: theme.accentGradient }}
                 />
-                <Flame className="w-4 h-4 text-rose-500" />
+                <Flame className={`w-4 h-4 ${theme.iconColorClass}`} />
                 熱門焦點
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {HOT_TOPICS.map((article, i) => (
-                  <HotTopicCard key={i} article={article} />
+                {hotTopics.map((ht, i) => (
+                  <HotTopicCard key={i} article={ht} theme={theme} />
                 ))}
               </div>
             </section>
+            )}
 
             {/* ── Extended reading (mobile only) ── */}
+            {relatedArticles.length > 0 && (
             <section className="mt-10 lg:hidden">
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
                 <span
                   className="w-1 h-5 rounded-full"
-                  style={{ background: 'linear-gradient(180deg, #f472b6, #e11d48)' }}
+                  style={{ background: theme.accentGradient }}
                 />
-                <TrendingUp className="w-4 h-4 text-rose-500" />
+                <TrendingUp className={`w-4 h-4 ${theme.iconColorClass}`} />
                 延伸閱讀
               </h2>
               <div className="space-y-3">
-                {RELATED_ARTICLES.map((article, i) => (
-                  <HotTopicCard key={i} article={article} />
+                {relatedArticles.map((ra, i) => (
+                  <HotTopicCard key={i} article={ra} theme={theme} />
                 ))}
               </div>
             </section>
+            )}
           </article>
 
           {/* ═══════════ 10. DESKTOP SIDEBAR ═══════════ */}
           <aside className="hidden lg:block w-[300px] shrink-0 space-y-5">
             {/* 熱門文章 */}
-            <SidebarSection title="熱門文章" icon={Flame}>
+            <SidebarSection title="熱門文章" icon={Flame} theme={theme}>
               <div className="space-y-3">
-                {TRENDING_SIDEBAR.map((article, i) => (
+                {sidebarTrending.map((sa, i) => (
                   <Link
                     key={i}
-                    href="/topics"
-                    className="group flex items-start gap-3 hover:bg-rose-50/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
+                    href={`/topics/${encodeURIComponent(sa.slug)}`}
+                    className={`group flex items-start gap-3 hover:${theme.tagBgClass}/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors`}
                   >
-                    <span className="text-lg font-bold text-rose-200 shrink-0 w-6 text-right leading-tight">
+                    <span className={`text-lg font-bold ${theme.tagTextClass}/40 shrink-0 w-6 text-right leading-tight`}>
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="min-w-0">
-                      <h4 className="text-[14px] font-medium text-slate-700 line-clamp-2 group-hover:text-rose-600 transition-colors leading-snug">
-                        {article.title}
+                      <h4 className={`text-[14px] font-medium text-slate-700 line-clamp-2 group-hover:${theme.tagTextClass} transition-colors leading-snug`}>
+                        {sa.title}
                       </h4>
                       <span className="text-[14px] text-slate-400 flex items-center gap-1 mt-0.5">
                         <Eye className="w-2.5 h-2.5" />
-                        {article.views} 瀏覽
+                        {sa.views} 瀏覽
                       </span>
                     </div>
                   </Link>
@@ -1205,20 +1540,21 @@ export default function TopicArticlePage() {
             </SidebarSection>
 
             {/* 編輯推薦 */}
-            <SidebarSection title="編輯推薦" icon={Star}>
+            {relatedArticles.length > 0 && (
+            <SidebarSection title="編輯推薦" icon={Star} theme={theme}>
               <div className="space-y-2.5">
-                {EDITOR_PICKS.map((pick, i) => (
+                {relatedArticles.slice(0, 4).map((pick, i) => (
                   <Link
                     key={i}
-                    href="/topics"
-                    className="group flex items-center gap-2.5 hover:bg-rose-50/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
+                    href={`/topics/${encodeURIComponent(pick.slug)}`}
+                    className={`group flex items-center gap-2.5 hover:${theme.tagBgClass}/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors`}
                   >
-                    <Bookmark className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                    <Bookmark className={`w-3.5 h-3.5 ${theme.iconColorClass}/60 shrink-0`} />
                     <div className="min-w-0">
-                      <h4 className="text-[14px] font-medium text-slate-700 line-clamp-1 group-hover:text-rose-600 transition-colors">
+                      <h4 className={`text-[14px] font-medium text-slate-700 line-clamp-1 group-hover:${theme.tagTextClass} transition-colors`}>
                         {pick.title}
                       </h4>
-                      <span className="text-[12px] text-rose-400 font-medium">
+                      <span className={`text-[12px] ${theme.tagTextClass} font-medium`}>
                         {pick.tag}
                       </span>
                     </div>
@@ -1226,47 +1562,52 @@ export default function TopicArticlePage() {
                 ))}
               </div>
             </SidebarSection>
+            )}
 
             {/* 最新更新 */}
-            <SidebarSection title="最新更新" icon={TrendingUp}>
+            {sidebarTrending.length > 0 && (
+            <SidebarSection title="最新更新" icon={TrendingUp} theme={theme}>
               <div className="space-y-2.5">
-                {RELATED_ARTICLES.slice(0, 4).map((article, i) => (
+                {sidebarTrending.slice(0, 4).map((sa, i) => (
                   <Link
                     key={i}
-                    href={`/topics/${article.slug}`}
-                    className="group flex gap-3 items-start hover:bg-rose-50/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
+                    href={`/topics/${encodeURIComponent(sa.slug)}`}
+                    className={`group flex gap-3 items-start hover:${theme.tagBgClass}/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors`}
                   >
                     <img
-                      src={article.image}
-                      alt={article.title}
+                      src={sa.image || FALLBACK_IMAGE}
+                      alt={sa.title}
                       className="w-14 h-10 rounded-md object-cover shrink-0"
                       loading="lazy"
                     />
                     <div className="min-w-0">
-                      <h4 className="text-[12px] font-medium text-slate-700 line-clamp-2 group-hover:text-rose-600 transition-colors leading-snug">
-                        {article.title}
+                      <h4 className={`text-[12px] font-medium text-slate-700 line-clamp-2 group-hover:${theme.tagTextClass} transition-colors leading-snug`}>
+                        {sa.title}
                       </h4>
-                      <span className="text-[12px] text-slate-400">{article.date}</span>
+                      <span className="text-[12px] text-slate-400">{sa.date}</span>
                     </div>
                   </Link>
                 ))}
               </div>
             </SidebarSection>
+            )}
 
             {/* 熱門標籤 */}
-            <SidebarSection title="熱門標籤" icon={Tag}>
+            {popularTags.length > 0 && (
+            <SidebarSection title="熱門標籤" icon={Tag} theme={theme}>
               <div className="flex flex-wrap gap-1.5">
-                {POPULAR_TAGS.map((tag) => (
+                {popularTags.map((tag) => (
                   <Link
                     key={tag}
-                    href="/topics"
-                    className="text-[14px] px-2.5 py-1 rounded-full bg-rose-50 text-rose-500 font-medium hover:bg-rose-100 transition-colors"
+                    href={`/topics/tag/${encodeURIComponent(tag)}`}
+                    className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
                   >
                     {tag}
                   </Link>
                 ))}
               </div>
             </SidebarSection>
+            )}
 
             {/* Sidebar Ad Unit */}
             <SidebarAdUnit variant="default" />
@@ -1277,89 +1618,96 @@ export default function TopicArticlePage() {
       {/* ═══════════ MOBILE SIDEBAR MODULES ═══════════ */}
       <div className="lg:hidden max-w-[1280px] mx-auto px-4 sm:px-6 pb-10 space-y-6">
         {/* 熱門標籤 */}
+        {popularTags.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-100/80 shadow-sm p-4">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
             <span
               className="w-1 h-4 rounded-full"
-              style={{ background: 'linear-gradient(180deg, #f472b6, #e11d48)' }}
+              style={{ background: theme.accentGradient }}
             />
-            <Tag className="w-3.5 h-3.5 text-rose-500" />
+            <Tag className={`w-3.5 h-3.5 ${theme.iconColorClass}`} />
             熱門標籤
           </h3>
           <div className="flex flex-wrap gap-1.5">
-            {POPULAR_TAGS.map((tag) => (
-              <span
+            {popularTags.map((tag) => (
+              <Link
                 key={tag}
-                className="text-[14px] px-2.5 py-1 rounded-full bg-rose-50 text-rose-500 font-medium"
+                href={`/topics/tag/${encodeURIComponent(tag)}`}
+                className={`text-[14px] px-2.5 py-1 rounded-full ${theme.tagBgClass} ${theme.tagTextClass} font-medium ${theme.tagHoverBgClass} transition-colors`}
               >
                 {tag}
-              </span>
+              </Link>
             ))}
           </div>
         </div>
+        )}
 
         {/* 編輯推薦 */}
+        {relatedArticles.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-100/80 shadow-sm p-4">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
             <span
               className="w-1 h-4 rounded-full"
-              style={{ background: 'linear-gradient(180deg, #f472b6, #e11d48)' }}
+              style={{ background: theme.accentGradient }}
             />
-            <Star className="w-3.5 h-3.5 text-rose-500" />
+            <Star className={`w-3.5 h-3.5 ${theme.iconColorClass}`} />
             編輯推薦
           </h3>
           <div className="space-y-2">
-            {EDITOR_PICKS.map((pick, i) => (
+            {relatedArticles.slice(0, 4).map((pick, i) => (
               <Link
                 key={i}
-                href="/topics"
+                href={`/topics/${encodeURIComponent(pick.slug)}`}
                 className="group flex items-center gap-2.5 py-1.5"
               >
-                <Bookmark className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                <Bookmark className={`w-3.5 h-3.5 ${theme.iconColorClass}/60 shrink-0`} />
                 <div>
-                  <h4 className="text-[14px] font-medium text-slate-700 group-hover:text-rose-600 transition-colors">
+                  <h4 className={`text-[14px] font-medium text-slate-700 group-hover:${theme.tagTextClass} transition-colors`}>
                     {pick.title}
                   </h4>
-                  <span className="text-[12px] text-rose-400 font-medium">{pick.tag}</span>
+                  <span className={`text-[12px] ${theme.tagTextClass} font-medium`}>{pick.tag}</span>
                 </div>
               </Link>
             ))}
           </div>
         </div>
+        )}
 
         {/* 熱門文章 */}
+        {sidebarTrending.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-100/80 shadow-sm p-4">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
             <span
               className="w-1 h-4 rounded-full"
-              style={{ background: 'linear-gradient(180deg, #f472b6, #e11d48)' }}
+              style={{ background: theme.accentGradient }}
             />
-            <Flame className="w-3.5 h-3.5 text-rose-500" />
+            <Flame className={`w-3.5 h-3.5 ${theme.iconColorClass}`} />
             熱門文章
           </h3>
           <div className="space-y-2.5">
-            {TRENDING_SIDEBAR.map((article, i) => (
+            {sidebarTrending.map((sa, i) => (
               <Link
                 key={i}
-                href="/topics"
+                href={`/topics/${encodeURIComponent(sa.slug)}`}
                 className="group flex items-start gap-3 py-1"
               >
-                <span className="text-base font-bold text-rose-200 shrink-0 w-5 text-right leading-tight">
+                <span className={`text-base font-bold ${theme.tagTextClass}/40 shrink-0 w-5 text-right leading-tight`}>
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <div>
-                  <h4 className="text-[14px] font-medium text-slate-700 group-hover:text-rose-600 transition-colors leading-snug">
-                    {article.title}
+                  <h4 className={`text-[14px] font-medium text-slate-700 group-hover:${theme.tagTextClass} transition-colors leading-snug`}>
+                    {sa.title}
                   </h4>
                   <span className="text-[14px] text-slate-400 flex items-center gap-1 mt-0.5">
                     <Eye className="w-2.5 h-2.5" />
-                    {article.views} 瀏覽
+                    {sa.views} 瀏覽
                   </span>
                 </div>
               </Link>
             ))}
           </div>
         </div>
+        )}
       </div>
     </PublicLayout>
   );

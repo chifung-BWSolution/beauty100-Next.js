@@ -56,6 +56,318 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_articles: {
+        Row: {
+          author: string | null
+          blog_handle: string | null
+          blog_title: string | null
+          category: string | null
+          cover_image_alt: string | null
+          cover_image_url: string | null
+          created_at: string | null
+          handle: string
+          id: string
+          intro: Json | null
+          published_at: string | null
+          section_1_content: Json | null
+          section_1_images: string[] | null
+          section_1_title: string | null
+          section_2_content: Json | null
+          section_2_images: string[] | null
+          section_2_title: string | null
+          section_3_content: Json | null
+          section_3_images: string[] | null
+          section_3_title: string | null
+          section_4_content: Json | null
+          section_4_images: string[] | null
+          section_4_title: string | null
+          section_5_content: Json | null
+          section_5_images: string[] | null
+          section_5_title: string | null
+          seo_description: string | null
+          seo_title: string | null
+          status: string
+          tags: string[] | null
+          title: string
+        }
+        Insert: {
+          author?: string | null
+          blog_handle?: string | null
+          blog_title?: string | null
+          category?: string | null
+          cover_image_alt?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          handle: string
+          id?: string
+          intro?: Json | null
+          published_at?: string | null
+          section_1_content?: Json | null
+          section_1_images?: string[] | null
+          section_1_title?: string | null
+          section_2_content?: Json | null
+          section_2_images?: string[] | null
+          section_2_title?: string | null
+          section_3_content?: Json | null
+          section_3_images?: string[] | null
+          section_3_title?: string | null
+          section_4_content?: Json | null
+          section_4_images?: string[] | null
+          section_4_title?: string | null
+          section_5_content?: Json | null
+          section_5_images?: string[] | null
+          section_5_title?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          status?: string
+          tags?: string[] | null
+          title: string
+        }
+        Update: {
+          author?: string | null
+          blog_handle?: string | null
+          blog_title?: string | null
+          category?: string | null
+          cover_image_alt?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          handle?: string
+          id?: string
+          intro?: Json | null
+          published_at?: string | null
+          section_1_content?: Json | null
+          section_1_images?: string[] | null
+          section_1_title?: string | null
+          section_2_content?: Json | null
+          section_2_images?: string[] | null
+          section_2_title?: string | null
+          section_3_content?: Json | null
+          section_3_images?: string[] | null
+          section_3_title?: string | null
+          section_4_content?: Json | null
+          section_4_images?: string[] | null
+          section_4_title?: string | null
+          section_5_content?: Json | null
+          section_5_images?: string[] | null
+          section_5_title?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
+      contact_submissions: {
+        Row: {
+          created_at: string | null
+          email: string
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          message: string
+          name: string
+          status: string | null
+          subject: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          message: string
+          name: string
+          status?: string | null
+          subject: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          message?: string
+          name?: string
+          status?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_submissions_handled_by_fkey"
+            columns: ["handled_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kol_applications: {
+        Row: {
+          content_direction: string
+          created_at: string | null
+          email: string
+          experience: string | null
+          followers: string
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          introduction: string
+          name: string
+          phone: string
+          platform_link: string
+          platform_name: string
+          region: string
+          status: string | null
+        }
+        Insert: {
+          content_direction: string
+          created_at?: string | null
+          email: string
+          experience?: string | null
+          followers: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          introduction: string
+          name: string
+          phone: string
+          platform_link: string
+          platform_name: string
+          region: string
+          status?: string | null
+        }
+        Update: {
+          content_direction?: string
+          created_at?: string | null
+          email?: string
+          experience?: string | null
+          followers?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          introduction?: string
+          name?: string
+          phone?: string
+          platform_link?: string
+          platform_name?: string
+          region?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_applications_handled_by_fkey"
+            columns: ["handled_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kol_promotion_requests: {
+        Row: {
+          additional_requirements: string | null
+          budget_range: string
+          contact_email: string
+          contact_person: string
+          contact_phone: string
+          created_at: string | null
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          preferred_followers: string
+          preferred_kol_type: string[] | null
+          preferred_platform: string[] | null
+          promotion_date: string | null
+          promotion_type: string
+          salon_name: string
+          service_description: string
+          status: string | null
+        }
+        Insert: {
+          additional_requirements?: string | null
+          budget_range: string
+          contact_email: string
+          contact_person: string
+          contact_phone: string
+          created_at?: string | null
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          preferred_followers: string
+          preferred_kol_type?: string[] | null
+          preferred_platform?: string[] | null
+          promotion_date?: string | null
+          promotion_type: string
+          salon_name: string
+          service_description: string
+          status?: string | null
+        }
+        Update: {
+          additional_requirements?: string | null
+          budget_range?: string
+          contact_email?: string
+          contact_person?: string
+          contact_phone?: string
+          created_at?: string | null
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          preferred_followers?: string
+          preferred_kol_type?: string[] | null
+          preferred_platform?: string[] | null
+          promotion_date?: string | null
+          promotion_type?: string
+          salon_name?: string
+          service_description?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kol_promotion_requests_handled_by_fkey"
+            columns: ["handled_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      members: {
+        Row: {
+          auth_user_id: string | null
+          avatar_url: string | null
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          is_active: boolean | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          auth_user_id?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          auth_user_id?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       salon_applications: {
         Row: {
           application_type: string | null
@@ -136,6 +448,9 @@ export type Database = {
       salon_profile_versions: {
         Row: {
           address: string | null
+          attachments: Json | null
+          change_reason: string | null
+          closed_date: string | null
           contact_number: string | null
           contact_person: string | null
           created_by: string | null
@@ -147,8 +462,10 @@ export type Database = {
           handle: string | null
           highlight_tags: Json | null
           id: string
+          is_shop_owner: boolean | null
           is_starred: boolean | null
           namecard_photo: string | null
+          new_opening_date: string | null
           office_hr_fri: string | null
           office_hr_mon: string | null
           office_hr_sat: string | null
@@ -159,6 +476,8 @@ export type Database = {
           product_media: Json | null
           profile_id: string | null
           rejection_reason: string | null
+          renovation_date: string | null
+          reopened_date: string | null
           salon_name: string | null
           selected_tags: Json | null
           seo_description: string | null
@@ -166,6 +485,11 @@ export type Database = {
           shopify_product_id: string | null
           status: string | null
           storefront_photo: string | null
+          submission_type: string | null
+          submitter_email: string | null
+          submitter_name: string | null
+          submitter_note: string | null
+          submitter_phone: string | null
           tags: string | null
           updated_at: string | null
           version_name: string | null
@@ -174,6 +498,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          attachments?: Json | null
+          change_reason?: string | null
+          closed_date?: string | null
           contact_number?: string | null
           contact_person?: string | null
           created_by?: string | null
@@ -185,8 +512,10 @@ export type Database = {
           handle?: string | null
           highlight_tags?: Json | null
           id?: string
+          is_shop_owner?: boolean | null
           is_starred?: boolean | null
           namecard_photo?: string | null
+          new_opening_date?: string | null
           office_hr_fri?: string | null
           office_hr_mon?: string | null
           office_hr_sat?: string | null
@@ -197,6 +526,8 @@ export type Database = {
           product_media?: Json | null
           profile_id?: string | null
           rejection_reason?: string | null
+          renovation_date?: string | null
+          reopened_date?: string | null
           salon_name?: string | null
           selected_tags?: Json | null
           seo_description?: string | null
@@ -204,6 +535,11 @@ export type Database = {
           shopify_product_id?: string | null
           status?: string | null
           storefront_photo?: string | null
+          submission_type?: string | null
+          submitter_email?: string | null
+          submitter_name?: string | null
+          submitter_note?: string | null
+          submitter_phone?: string | null
           tags?: string | null
           updated_at?: string | null
           version_name?: string | null
@@ -212,6 +548,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          attachments?: Json | null
+          change_reason?: string | null
+          closed_date?: string | null
           contact_number?: string | null
           contact_person?: string | null
           created_by?: string | null
@@ -223,8 +562,10 @@ export type Database = {
           handle?: string | null
           highlight_tags?: Json | null
           id?: string
+          is_shop_owner?: boolean | null
           is_starred?: boolean | null
           namecard_photo?: string | null
+          new_opening_date?: string | null
           office_hr_fri?: string | null
           office_hr_mon?: string | null
           office_hr_sat?: string | null
@@ -235,6 +576,8 @@ export type Database = {
           product_media?: Json | null
           profile_id?: string | null
           rejection_reason?: string | null
+          renovation_date?: string | null
+          reopened_date?: string | null
           salon_name?: string | null
           selected_tags?: Json | null
           seo_description?: string | null
@@ -242,6 +585,11 @@ export type Database = {
           shopify_product_id?: string | null
           status?: string | null
           storefront_photo?: string | null
+          submission_type?: string | null
+          submitter_email?: string | null
+          submitter_name?: string | null
+          submitter_note?: string | null
+          submitter_phone?: string | null
           tags?: string | null
           updated_at?: string | null
           version_name?: string | null
@@ -269,6 +617,7 @@ export type Database = {
         Row: {
           address: string | null
           application_id: string | null
+          closed_date: string | null
           contact_number: string | null
           contact_person: string | null
           created_by: string | null
@@ -285,6 +634,7 @@ export type Database = {
           image_src: string | null
           is_active: boolean | null
           namecard_photo: string | null
+          new_opening_date: string | null
           office_hr_fri: string | null
           office_hr_mon: string | null
           office_hr_sat: string | null
@@ -295,7 +645,10 @@ export type Database = {
           product_media: Json | null
           product_type: string | null
           raw_data: Json | null
+          renovation_date: string | null
+          reopened_date: string | null
           salon_name: string | null
+          salon_status: string | null
           selected_tags: Json | null
           seo_description: string | null
           seo_title: string | null
@@ -314,6 +667,7 @@ export type Database = {
         Insert: {
           address?: string | null
           application_id?: string | null
+          closed_date?: string | null
           contact_number?: string | null
           contact_person?: string | null
           created_by?: string | null
@@ -330,6 +684,7 @@ export type Database = {
           image_src?: string | null
           is_active?: boolean | null
           namecard_photo?: string | null
+          new_opening_date?: string | null
           office_hr_fri?: string | null
           office_hr_mon?: string | null
           office_hr_sat?: string | null
@@ -340,7 +695,10 @@ export type Database = {
           product_media?: Json | null
           product_type?: string | null
           raw_data?: Json | null
+          renovation_date?: string | null
+          reopened_date?: string | null
           salon_name?: string | null
+          salon_status?: string | null
           selected_tags?: Json | null
           seo_description?: string | null
           seo_title?: string | null
@@ -359,6 +717,7 @@ export type Database = {
         Update: {
           address?: string | null
           application_id?: string | null
+          closed_date?: string | null
           contact_number?: string | null
           contact_person?: string | null
           created_by?: string | null
@@ -375,6 +734,7 @@ export type Database = {
           image_src?: string | null
           is_active?: boolean | null
           namecard_photo?: string | null
+          new_opening_date?: string | null
           office_hr_fri?: string | null
           office_hr_mon?: string | null
           office_hr_sat?: string | null
@@ -385,7 +745,10 @@ export type Database = {
           product_media?: Json | null
           product_type?: string | null
           raw_data?: Json | null
+          renovation_date?: string | null
+          reopened_date?: string | null
           salon_name?: string | null
+          salon_status?: string | null
           selected_tags?: Json | null
           seo_description?: string | null
           seo_title?: string | null
@@ -589,6 +952,44 @@ export type Database = {
         }
         Relationships: []
       }
+      staff: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          position: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          position?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          position?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_activity_logs: {
         Row: {
           action: string | null
@@ -640,6 +1041,7 @@ export type Database = {
           full_name: string | null
           id: string
           role: string | null
+          roles: string[] | null
           updated_at: string | null
         }
         Insert: {
@@ -648,6 +1050,7 @@ export type Database = {
           full_name?: string | null
           id: string
           role?: string | null
+          roles?: string[] | null
           updated_at?: string | null
         }
         Update: {
@@ -656,6 +1059,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           role?: string | null
+          roles?: string[] | null
           updated_at?: string | null
         }
         Relationships: []

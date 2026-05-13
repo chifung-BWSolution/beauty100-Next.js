@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PublicLayout from '@/components/public/PublicLayout';
 import {
-  Search, MapPin, Sparkles, X, Filter, Phone, Globe,
-  ChevronDown, ChevronUp, Star, SlidersHorizontal,
-  Store, ChevronLeft, ChevronRight, Shield, CheckCircle2,
+  Search, MapPin, Sparkles, X, Phone, Globe,
+  Star, Store, ChevronLeft, ChevronRight, CheckCircle2,
+  ChevronDown, RotateCcw, Clock,
 } from 'lucide-react';
 
 const PAGE_SIZE = 12;
@@ -19,18 +20,119 @@ const REGION_GROUPS = [
   { region: '全部地區', emoji: '📍', districts: [] as string[] },
   { region: '香港島', emoji: '🏙️', districts: ['中環', '上環', '灣仔', '銅鑼灣', '北角', '鰂魚涌', '天后', '炮台山', '柴灣', '西灣河', '西營盤', '香港仔', '堅尼地城', '半山區', '跑馬地'] },
   { region: '九龍', emoji: '🌆', districts: ['尖沙咀', '觀塘', '旺角', '油麻地', '佐敦', '太子', '深水埗', '長沙灣', '荔枝角', '美孚', '九龍城', '九龍塘', '何文田', '紅磡', '九龍灣', '牛頭角', '藍田', '黃大仙', '鑽石山', '新蒲崗', '慈雲山', '大角咀', '彩虹', '樂富'] },
-  { region: '新界', emoji: '🌿', districts: ['元朗', '荃灣', '屯門', '大埔', '沙田', '火炭', '馬鞍山', '將軍澳', '天水圍', '葵芳', '葵涌', '青衣', '上水', '粉嶺', '西貢', '大圍', '大窩口', '東涌'] },
-  { region: '離島區', emoji: '🏝️', districts: ['離島區'] },
+  { region: '新界', emoji: '🌿', districts: ['元朗', '荃灣', '屯門', '大埔', '沙田', '火炭', '馬鞍山', '將軍澳', '天水圍', '葵芳', '葵涌', '青衣', '上水', '粉嶺', '西貢', '大圍', '大窩口'] },
+  { region: '離島區', emoji: '🏝️', districts: ['離島', '東涌', '大嶼山', '長洲', '坪洲', '南丫島', '梅窩', '愉景灣'] },
 ];
 
-const BEAUTY_TYPES = [
-  { id: 'facial', label: '面部護理' },
-  { id: 'body', label: '身體保養' },
-  { id: 'medical', label: '醫美療程' },
-  { id: 'makeup', label: '化妝服務' },
-  { id: 'nails', label: '美甲 / 美睫' },
-  { id: 'slimming', label: '纖體塑形' },
+// Cover styles for salons without images - 16 diverse backgrounds
+const COVER_STYLES = [
+  {
+    bgImage: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
+    overlayFrom: 'rgba(6,78,59,0.7)',
+    overlayTo: 'rgba(13,148,136,0.5)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=800&q=80',
+    overlayFrom: 'rgba(251,113,133,0.6)',
+    overlayTo: 'rgba(249,168,212,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&q=80',
+    overlayFrom: 'rgba(41,37,36,0.6)',
+    overlayTo: 'rgba(146,64,14,0.4)',
+    textColor: '#f5f5f4',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+    overlayFrom: 'rgba(3,105,161,0.6)',
+    overlayTo: 'rgba(6,182,212,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+    overlayFrom: 'rgba(88,28,135,0.65)',
+    overlayTo: 'rgba(147,51,234,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=800&q=80',
+    overlayFrom: 'rgba(30,58,138,0.65)',
+    overlayTo: 'rgba(59,130,246,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&q=80',
+    overlayFrom: 'rgba(157,23,77,0.6)',
+    overlayTo: 'rgba(236,72,153,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800&q=80',
+    overlayFrom: 'rgba(20,83,45,0.65)',
+    overlayTo: 'rgba(34,197,94,0.35)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=800&q=80',
+    overlayFrom: 'rgba(120,53,15,0.65)',
+    overlayTo: 'rgba(217,119,6,0.4)',
+    textColor: '#fef3c7',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80',
+    overlayFrom: 'rgba(159,18,57,0.6)',
+    overlayTo: 'rgba(244,63,94,0.35)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=800&q=80',
+    overlayFrom: 'rgba(17,94,89,0.65)',
+    overlayTo: 'rgba(45,212,191,0.35)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&q=80',
+    overlayFrom: 'rgba(55,48,163,0.65)',
+    overlayTo: 'rgba(99,102,241,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1552693673-1bf958298935?w=800&q=80',
+    overlayFrom: 'rgba(9,9,11,0.5)',
+    overlayTo: 'rgba(63,63,70,0.4)',
+    textColor: '#fafafa',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80',
+    overlayFrom: 'rgba(21,94,117,0.65)',
+    overlayTo: 'rgba(34,211,238,0.35)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80',
+    overlayFrom: 'rgba(113,63,18,0.65)',
+    overlayTo: 'rgba(234,179,8,0.35)',
+    textColor: '#fef9c3',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&q=80',
+    overlayFrom: 'rgba(76,29,149,0.6)',
+    overlayTo: 'rgba(168,85,247,0.35)',
+    textColor: '#ffffff',
+  },
 ];
+
+// Simple hash to consistently assign a cover style based on salon name/id
+function getCoverStyleIndex(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash) % COVER_STYLES.length;
+}
 
 interface SalonProfile {
   id: string;
@@ -50,6 +152,13 @@ interface SalonProfile {
   is_active: boolean | null;
   product_type: string | null;
   created_by: string | null;
+  office_hr_mon: string | null;
+  office_hr_tue: string | null;
+  office_hr_wed: string | null;
+  office_hr_thu: string | null;
+  office_hr_fri: string | null;
+  office_hr_sat: string | null;
+  office_hr_sun: string | null;
 }
 
 interface TagCategory {
@@ -58,6 +167,7 @@ interface TagCategory {
 }
 
 export default function ExploreSalonsPage() {
+  const router = useRouter();
   const [salons, setSalons] = useState<SalonProfile[]>([]);
   const [tagCategories, setTagCategories] = useState<TagCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,32 +175,79 @@ export default function ExploreSalonsPage() {
   const [selectedRegion, setSelectedRegion] = useState('全部地區');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedBeautyType, setSelectedBeautyType] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const [claimFilter, setClaimFilter] = useState<'all' | 'claimed' | 'unclaimed'>('all');
+  const [expandedHoursSalonId, setExpandedHoursSalonId] = useState<string | null>(null);
 
-  // Load salons and tags
+  // Opening hours helpers
+  const DAY_KEYS = ['office_hr_sun', 'office_hr_mon', 'office_hr_tue', 'office_hr_wed', 'office_hr_thu', 'office_hr_fri', 'office_hr_sat'] as const;
+  const DAY_LABELS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+
+  const getTodayHours = (salon: SalonProfile): string | null => {
+    const dayIndex = new Date().getDay(); // 0=Sun, 1=Mon...
+    const key = DAY_KEYS[dayIndex];
+    return salon[key] || null;
+  };
+
+  const getAllHours = (salon: SalonProfile): { label: string; hours: string | null; isToday: boolean }[] => {
+    const todayIndex = new Date().getDay();
+    return DAY_KEYS.map((key, i) => ({
+      label: DAY_LABELS[i],
+      hours: salon[key] || null,
+      isToday: i === todayIndex,
+    }));
+  };
+
+  // Tag prefix removal helper
+  const removeTagPrefix = (tag: string): string => {
+    const prefixes = ['face_', 'machine_', 'body_', 'hair_', 'semi-perm_', 'eyes_', 'med_', 'pay_', 'quali_', 'seg_', 'service_', 'amenities_', 'booking_'];
+    for (const prefix of prefixes) {
+      if (tag.startsWith(prefix)) {
+        return tag.slice(prefix.length);
+      }
+    }
+    return tag;
+  };
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [salonsRes, tagsRes] = await Promise.all([
-          supabase
-            .from('salon_profiles')
-            .select('id, salon_name, address, district, district_name, description, image_src, product_media, tags, selected_tags, highlight_tags, contact_number, whatsapp_number, website, is_active, product_type, created_by')
-            .eq('is_active', true)
-            .order('salon_name'),
-          supabase
-            .from('salon_tags')
-            .select('*')
-            .order('sort_order'),
-        ]);
+        // Fetch all salons using pagination (Supabase default limit is 1000)
+        const FETCH_LIMIT = 1000;
+        let allSalons: any[] = [];
+        let from = 0;
+        let hasMore = true;
 
-        if (salonsRes.data) {
-          setSalons(salonsRes.data);
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('salon_profiles')
+            .select('id, salon_name, address, district, district_name, description, image_src, product_media, tags, selected_tags, highlight_tags, contact_number, whatsapp_number, website, is_active, product_type, created_by, office_hr_mon, office_hr_tue, office_hr_wed, office_hr_thu, office_hr_fri, office_hr_sat, office_hr_sun')
+            .or('is_active.eq.true,is_active.is.null')
+            .order('salon_name')
+            .range(from, from + FETCH_LIMIT - 1);
+
+          if (error) {
+            console.error('Error fetching salons:', error);
+            break;
+          }
+
+          if (data) {
+            allSalons = [...allSalons, ...data];
+            if (data.length < FETCH_LIMIT) {
+              hasMore = false;
+            } else {
+              from += FETCH_LIMIT;
+            }
+          } else {
+            hasMore = false;
+          }
         }
+
+        setSalons(allSalons);
+
+        const tagsRes = await supabase
+          .from('salon_tags')
+          .select('*')
+          .order('sort_order');
 
         if (tagsRes.data) {
           const grouped: Record<string, { id: string; label: string; category: string }[]> = {};
@@ -112,64 +269,6 @@ export default function ExploreSalonsPage() {
 
   const currentRegionGroup = REGION_GROUPS.find(r => r.region === selectedRegion);
 
-  const filteredSalons = useMemo(() => {
-    return salons.filter(salon => {
-      // Search filter
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const nameMatch = salon.salon_name?.toLowerCase().includes(q);
-        const addressMatch = salon.address?.toLowerCase().includes(q);
-        const districtMatch = salon.district_name?.toLowerCase().includes(q) || salon.district?.toLowerCase().includes(q);
-        const descMatch = salon.description?.toLowerCase().includes(q);
-        if (!nameMatch && !addressMatch && !districtMatch && !descMatch) return false;
-      }
-
-      // Region filter
-      if (selectedRegion !== '全部地區' && currentRegionGroup) {
-        const salonDistrict = salon.district_name || salon.district || '';
-        const inRegion = currentRegionGroup.districts.some(d => salonDistrict.includes(d) || d.includes(salonDistrict));
-        if (!inRegion) return false;
-      }
-
-      // District filter
-      if (selectedDistrict) {
-        const salonDistrict = salon.district_name || salon.district || '';
-        if (!salonDistrict.includes(selectedDistrict) && !selectedDistrict.includes(salonDistrict)) return false;
-      }
-
-      // Beauty type filter
-      if (selectedBeautyType) {
-        const salonTags = parseTags(salon);
-        const productType = salon.product_type?.toLowerCase() || '';
-        const tagStr = salonTags.join(' ').toLowerCase();
-        const match = tagStr.includes(selectedBeautyType.toLowerCase()) || productType.includes(selectedBeautyType.toLowerCase());
-        if (!match) return false;
-      }
-
-      // Tag filter
-      if (selectedTags.length > 0) {
-        const salonTags = parseTags(salon);
-        const hasAllTags = selectedTags.every(tag => salonTags.includes(tag));
-        if (!hasAllTags) return false;
-      }
-
-      // Claim status filter
-      if (claimFilter === 'claimed' && !salon.created_by) return false;
-      if (claimFilter === 'unclaimed' && salon.created_by) return false;
-
-      return true;
-    });
-  }, [salons, searchQuery, selectedRegion, selectedDistrict, selectedTags, selectedBeautyType, claimFilter, currentRegionGroup]);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedRegion, selectedDistrict, selectedTags, selectedBeautyType, claimFilter]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredSalons.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const paginatedSalons = filteredSalons.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-
   const parseTags = useCallback((salon: SalonProfile): string[] => {
     const tags: string[] = [];
     if (salon.selected_tags) {
@@ -184,6 +283,52 @@ export default function ExploreSalonsPage() {
     }
     return tags;
   }, []);
+
+  const filteredSalons = useMemo(() => {
+    return salons.filter(salon => {
+      // Search filter
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const nameMatch = salon.salon_name?.toLowerCase().includes(q);
+        const addressMatch = salon.address?.toLowerCase().includes(q);
+        const districtMatch = salon.district_name?.toLowerCase().includes(q) || salon.district?.toLowerCase().includes(q);
+        const descMatch = salon.description?.toLowerCase().includes(q);
+        if (!nameMatch && !addressMatch && !districtMatch && !descMatch) return false;
+      }
+
+      // Region filter
+      if (selectedRegion !== '全部地區' && currentRegionGroup) {
+        const salonDistrict = (salon.district_name || salon.district || '').trim();
+        if (!salonDistrict) return false;
+        const inRegion = currentRegionGroup.districts.some(d => salonDistrict.includes(d));
+        if (!inRegion) return false;
+      }
+
+      // District filter
+      if (selectedDistrict) {
+        const salonDistrict = (salon.district_name || salon.district || '').trim();
+        if (!salonDistrict.includes(selectedDistrict)) return false;
+      }
+
+      // Tag filter
+      if (selectedTags.length > 0) {
+        const salonTags = parseTags(salon);
+        const hasAllTags = selectedTags.every(tag => salonTags.includes(tag));
+        if (!hasAllTags) return false;
+      }
+
+      return true;
+    });
+  }, [salons, searchQuery, selectedRegion, selectedDistrict, selectedTags, currentRegionGroup, parseTags]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedRegion, selectedDistrict, selectedTags]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSalons.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedSalons = filteredSalons.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const parseHighlightTags = useCallback((salon: SalonProfile): string[] => {
     if (!salon.highlight_tags) return [];
@@ -200,15 +345,6 @@ export default function ExploreSalonsPage() {
     return null;
   }, []);
 
-  const toggleCategory = (category: string) => {
-    setExpandedCategories(prev => {
-      const next = new Set(prev);
-      if (next.has(category)) next.delete(category);
-      else next.add(category);
-      return next;
-    });
-  };
-
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
@@ -220,15 +356,11 @@ export default function ExploreSalonsPage() {
     setSelectedRegion('全部地區');
     setSelectedDistrict('');
     setSelectedTags([]);
-    setSelectedBeautyType('');
-    setClaimFilter('all');
   };
 
   const activeFilterCount =
     (selectedRegion !== '全部地區' ? 1 : 0) +
     (selectedDistrict ? 1 : 0) +
-    (selectedBeautyType ? 1 : 0) +
-    (claimFilter !== 'all' ? 1 : 0) +
     selectedTags.length;
 
   const getPageNumbers = () => {
@@ -247,6 +379,8 @@ export default function ExploreSalonsPage() {
     return pages;
   };
 
+  const [expandedFilterSection, setExpandedFilterSection] = useState<string | null>(null);
+
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6" style={{ fontFamily: '"Noto Sans TC", sans-serif' }}>
@@ -256,255 +390,264 @@ export default function ExploreSalonsPage() {
           <p className="text-sm text-slate-400">探索香港優質美容院，搵到最啱你嘅美容服務</p>
         </div>
 
-        {/* Region Tabs */}
-        <div className="mb-5 overflow-x-auto scrollbar-hide">
-          <div className="flex gap-2 min-w-max pb-1">
-            {REGION_GROUPS.map(rg => (
-              <button
-                key={rg.region}
-                onClick={() => {
-                  setSelectedRegion(rg.region);
-                  setSelectedDistrict('');
-                }}
-                className={`text-sm px-4 py-2 rounded-full border transition-all whitespace-nowrap ${
-                  selectedRegion === rg.region
-                    ? 'bg-rose-500 text-white border-rose-500 font-semibold shadow-md shadow-rose-200'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50/50'
-                }`}
-              >
-                {rg.emoji} {rg.region}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* District Sub-tabs */}
-        {selectedRegion !== '全部地區' && currentRegionGroup && currentRegionGroup.districts.length > 0 && (
-          <div className="mb-5 overflow-x-auto scrollbar-hide">
-            <div className="flex gap-1.5 min-w-max pb-1">
-              <button
-                onClick={() => setSelectedDistrict('')}
-                className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
-                  !selectedDistrict
-                    ? 'bg-rose-100 text-rose-700 border-rose-300 font-medium'
-                    : 'bg-white/60 text-slate-500 border-slate-200 hover:border-rose-200 hover:text-rose-500'
-                }`}
-              >
-                全部
-              </button>
-              {currentRegionGroup.districts.map(d => (
-                <button
-                  key={d}
-                  onClick={() => setSelectedDistrict(selectedDistrict === d ? '' : d)}
-                  className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
-                    selectedDistrict === d
-                      ? 'bg-rose-100 text-rose-700 border-rose-300 font-medium'
-                      : 'bg-white/60 text-slate-500 border-slate-200 hover:border-rose-200 hover:text-rose-500'
-                  }`}
-                >
-                  {d}
+        {/* ===== REDESIGNED FILTER SECTION ===== */}
+        <div className="mb-6 rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(241,245,249,1)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          
+          {/* Search Bar - Always visible at top */}
+          <div className="p-4 pb-3">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                type="text"
+                placeholder="搜尋美容院名稱、地區、地址..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-11 pl-10 pr-10 rounded-xl border-slate-200 bg-slate-50/80 text-sm focus:border-rose-300 focus:bg-white focus:ring-1 focus:ring-rose-100 transition-all"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                  <X className="w-4 h-4" />
                 </button>
-              ))}
+              )}
             </div>
           </div>
-        )}
 
-        {/* Search Bar + Filter Toggle */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-5">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
-            <Input
-              type="text"
-              placeholder="搜尋美容院名稱、地址..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 pl-10 pr-4 rounded-xl border-rose-100 bg-white/80 text-sm focus:border-rose-300 shadow-sm"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500">
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-            className={`h-11 rounded-xl border-rose-100 gap-2 relative ${showFilters ? 'bg-rose-50 border-rose-300 text-rose-600' : 'bg-white/80 text-slate-600 hover:border-rose-200'}`}
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            進階篩選
-            {activeFilterCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white text-[14px] font-bold rounded-full flex items-center justify-center">
-                {activeFilterCount}
-              </span>
-            )}
-          </Button>
-        </div>
+          {/* Filter Row - Horizontal chips always visible */}
+          <div className="px-4 pb-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Region Dropdown Chip */}
+              <div className="relative">
+                <button
+                  onClick={() => setExpandedFilterSection(expandedFilterSection === 'region' ? null : 'region')}
+                  className={`flex items-center gap-1.5 text-sm px-3.5 py-2 rounded-lg border transition-all ${
+                    selectedRegion !== '全部地區'
+                      ? 'bg-rose-50 text-rose-700 border-rose-200 font-medium'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  {selectedRegion !== '全部地區' ? (selectedDistrict || selectedRegion) : '地區'}
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedFilterSection === 'region' ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
 
-        {/* Advanced Filters Panel */}
-        {showFilters && (
-          <div className="mb-6 rounded-2xl overflow-hidden shadow-lg" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.75)' }}>
-            <div className="p-5 space-y-5">
-              {/* Beauty Type Filter */}
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-rose-400" />
-                  美容類型
-                </h3>
-                <div className="flex flex-wrap gap-2">
+              {/* Service Type Dropdown Chip */}
+              <div className="relative">
+                <button
+                  onClick={() => setExpandedFilterSection(expandedFilterSection === 'services' ? null : 'services')}
+                  className={`flex items-center gap-1.5 text-sm px-3.5 py-2 rounded-lg border transition-all ${
+                    selectedTags.length > 0
+                      ? 'bg-purple-50 text-purple-700 border-purple-200 font-medium'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {selectedTags.length > 0 ? `已選 ${selectedTags.length} 項` : '服務類型'}
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedFilterSection === 'services' ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              {/* Active filter badges inline */}
+              {activeFilterCount > 0 && (
+                <>
+                  <div className="hidden sm:block w-px h-6 bg-slate-200 mx-1" />
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {selectedRegion !== '全部地區' && (
+                      <Badge className="bg-rose-100 text-rose-700 border-0 text-xs gap-1 pr-1.5 py-0.5 cursor-pointer hover:bg-rose-200 transition-colors" onClick={() => { setSelectedRegion('全部地區'); setSelectedDistrict(''); }}>
+                        <MapPin className="w-2.5 h-2.5" />
+                        {selectedDistrict || selectedRegion}
+                        <X className="w-2.5 h-2.5 ml-0.5" />
+                      </Badge>
+                    )}
+                    {selectedTags.slice(0, 3).map(tag => (
+                      <Badge key={tag} className="bg-purple-100 text-purple-700 border-0 text-xs gap-1 pr-1.5 py-0.5 cursor-pointer hover:bg-purple-200 transition-colors" onClick={() => toggleTag(tag)}>
+                        {tag}
+                        <X className="w-2.5 h-2.5 ml-0.5" />
+                      </Badge>
+                    ))}
+                    {selectedTags.length > 3 && (
+                      <Badge className="bg-slate-100 text-slate-600 border-0 text-xs py-0.5">
+                        +{selectedTags.length - 3}
+                      </Badge>
+                    )}
+                  </div>
                   <button
-                    onClick={() => setSelectedBeautyType('')}
-                    className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
-                      !selectedBeautyType
-                        ? 'bg-rose-500 text-white border-rose-500 font-medium'
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-rose-300 hover:text-rose-600'
-                    }`}
+                    onClick={clearAllFilters}
+                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-rose-500 transition-colors ml-auto sm:ml-2"
                   >
-                    全部類型
+                    <RotateCcw className="w-3 h-3" />
+                    重設
                   </button>
-                  {BEAUTY_TYPES.map(bt => (
-                    <button
-                      key={bt.id}
-                      onClick={() => setSelectedBeautyType(selectedBeautyType === bt.label ? '' : bt.label)}
-                      className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
-                        selectedBeautyType === bt.label
-                          ? 'bg-rose-500 text-white border-rose-500 font-medium'
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-rose-300 hover:text-rose-600'
-                      }`}
-                    >
-                      {bt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                </>
+              )}
+            </div>
+          </div>
 
-              {/* Claim Status Filter */}
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-rose-400" />
-                  認領狀態
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: 'all' as const, label: '全部' },
-                    { value: 'claimed' as const, label: '已認領' },
-                    { value: 'unclaimed' as const, label: '未認領' },
-                  ].map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setClaimFilter(opt.value)}
-                      className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
-                        claimFilter === opt.value
-                          ? 'bg-rose-500 text-white border-rose-500 font-medium'
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-rose-300 hover:text-rose-600'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {/* Expandable Region Panel */}
+          {expandedFilterSection === 'region' && (
+            <div className="border-t border-slate-100 p-4 bg-slate-50/50 animate-in slide-in-from-top-1 duration-200">
+              <div className="space-y-3">
+                {/* Selected region summary */}
+                {selectedRegion !== '全部地區' && (
+                  <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+                    <span className="text-xs text-slate-400 shrink-0">已選：</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge className="bg-rose-100 text-rose-700 border-0 text-xs gap-1 pr-1.5 py-0.5 cursor-pointer hover:bg-rose-200 transition-colors" onClick={() => { setSelectedRegion('全部地區'); setSelectedDistrict(''); }}>
+                        <MapPin className="w-2.5 h-2.5" />
+                        {selectedDistrict || selectedRegion}
+                        <X className="w-2.5 h-2.5" />
+                      </Badge>
+                    </div>
+                  </div>
+                )}
 
-              {/* Tag Filters */}
-              {tagCategories.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-rose-400" />
-                    熱門療程
-                  </h3>
-                  <div className="space-y-2">
-                    {tagCategories.map(({ category, tags }) => (
-                      <div key={category} className="border border-slate-100 rounded-xl overflow-hidden">
+                {/* Region sections in scrollable area */}
+                <div className="max-h-[320px] overflow-y-auto pr-1 space-y-3 custom-scrollbar">
+                  {/* Region tabs */}
+                  <div className="bg-white rounded-xl p-3 border border-slate-100">
+                    <p className="text-xs font-semibold text-slate-500 mb-2">選擇區域</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {REGION_GROUPS.map(rg => (
                         <button
-                          onClick={() => toggleCategory(category)}
-                          className="w-full flex items-center justify-between px-3.5 py-2.5 text-sm text-slate-600 hover:bg-rose-50/50 transition-colors"
+                          key={rg.region}
+                          onClick={() => {
+                            setSelectedRegion(rg.region);
+                            setSelectedDistrict('');
+                          }}
+                          className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all ${
+                            selectedRegion === rg.region
+                              ? 'bg-rose-500 text-white border-rose-500 font-medium shadow-sm'
+                              : 'bg-white text-slate-600 border-slate-200 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50'
+                          }`}
                         >
-                          <span className="font-medium">{category}</span>
-                          <div className="flex items-center gap-2">
-                            {selectedTags.filter(t => tags.some(tag => tag.label === t)).length > 0 && (
-                              <span className="text-[14px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-medium">
-                                {selectedTags.filter(t => tags.some(tag => tag.label === t)).length}
-                              </span>
-                            )}
-                            {expandedCategories.has(category) ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                          </div>
+                          {selectedRegion === rg.region && <span className="mr-0.5">✓</span>}
+                          {rg.emoji} {rg.region}
                         </button>
-                        {expandedCategories.has(category) && (
-                          <div className="px-3.5 pb-3 flex flex-wrap gap-1.5">
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* District sub-selection */}
+                  {selectedRegion !== '全部地區' && currentRegionGroup && currentRegionGroup.districts.length > 0 && (
+                    <div className="bg-white rounded-xl p-3 border border-slate-100">
+                      <p className="text-xs font-semibold text-slate-500 mb-2">選擇分區（{selectedRegion}）</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          onClick={() => { setSelectedDistrict(''); setExpandedFilterSection(null); }}
+                          className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all ${
+                            !selectedDistrict
+                              ? 'bg-rose-500 text-white border-rose-500 font-medium shadow-sm'
+                              : 'bg-white text-slate-600 border-slate-200 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50'
+                          }`}
+                        >
+                          {!selectedDistrict && <span className="mr-0.5">✓</span>}
+                          全部{selectedRegion}
+                        </button>
+                        {currentRegionGroup.districts.map(d => (
+                          <button
+                            key={d}
+                            onClick={() => { setSelectedDistrict(d === selectedDistrict ? '' : d); setExpandedFilterSection(null); }}
+                            className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all ${
+                              selectedDistrict === d
+                                ? 'bg-rose-500 text-white border-rose-500 font-medium shadow-sm'
+                                : 'bg-white text-slate-600 border-slate-200 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50'
+                            }`}
+                          >
+                            {selectedDistrict === d && <span className="mr-0.5">✓</span>}
+                            {d}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Done button */}
+                <div className="flex justify-end pt-2 border-t border-slate-100">
+                  <Button
+                    size="sm"
+                    onClick={() => setExpandedFilterSection(null)}
+                    className="bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-sm px-4"
+                  >
+                    完成
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Expandable Services Panel */}
+          {expandedFilterSection === 'services' && (
+            <div className="border-t border-slate-100 p-4 bg-slate-50/50 animate-in slide-in-from-top-1 duration-200">
+              {tagCategories.length > 0 && (() => {
+                const serviceTypeKeywords = ['面部', '身體', '醫美', '脫毛', '紋繡', '眼睫', '護理', '儀器', '美容', '激光', 'Spa', '按摩', '纖體', '塑形', '瘦身', '抗衰', '暗瘡', '色斑', '半永久', '微針', '水光', 'HIFU', '射頻'];
+                const serviceCategories = tagCategories.filter(({ category }) =>
+                  serviceTypeKeywords.some(k => category.includes(k))
+                );
+                const otherCategories = tagCategories.filter(({ category }) =>
+                  !serviceTypeKeywords.some(k => category.includes(k))
+                );
+                const allCategories = [...serviceCategories, ...otherCategories];
+
+                return (
+                  <div className="space-y-4">
+                    {/* Quick selected tags summary */}
+                    {selectedTags.length > 0 && (
+                      <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+                        <span className="text-xs text-slate-400 shrink-0">已選：</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedTags.map(tag => (
+                            <Badge key={tag} className="bg-purple-100 text-purple-700 border-0 text-xs gap-1 pr-1.5 py-0.5 cursor-pointer hover:bg-purple-200 transition-colors" onClick={() => toggleTag(tag)}>
+                              {tag}
+                              <X className="w-2.5 h-2.5" />
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Category sections in a scrollable area */}
+                    <div className="max-h-[320px] overflow-y-auto pr-1 space-y-3 custom-scrollbar">
+                      {allCategories.map(({ category, tags }) => (
+                        <div key={category} className="bg-white rounded-xl p-3 border border-slate-100">
+                          <p className="text-xs font-semibold text-slate-500 mb-2">{category}</p>
+                          <div className="flex flex-wrap gap-1.5">
                             {tags.map(tag => (
                               <button
                                 key={tag.id}
                                 onClick={() => toggleTag(tag.label)}
-                                className={`text-sm px-2.5 py-1 rounded-full border transition-all ${
+                                className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all ${
                                   selectedTags.includes(tag.label)
-                                    ? 'bg-rose-500 text-white border-rose-500 font-medium'
-                                    : 'bg-white text-slate-500 border-slate-200 hover:border-rose-300 hover:text-rose-500'
+                                    ? 'bg-purple-500 text-white border-purple-500 font-medium shadow-sm'
+                                    : 'bg-white text-slate-600 border-slate-200 hover:border-purple-300 hover:text-purple-600 hover:bg-purple-50'
                                 }`}
                               >
+                                {selectedTags.includes(tag.label) && <span className="mr-0.5">✓</span>}
                                 {tag.label}
                               </button>
                             ))}
                           </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                        </div>
+                      ))}
+                    </div>
 
-              {/* Active Filters & Clear */}
-              {activeFilterCount > 0 && (
-                <div className="flex items-center justify-between pt-3 border-t border-rose-50">
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedRegion !== '全部地區' && (
-                      <Badge className="bg-rose-100 text-rose-700 border-0 text-sm gap-1 pr-1">
-                        {selectedRegion}
-                        <button onClick={() => { setSelectedRegion('全部地區'); setSelectedDistrict(''); }}>
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    )}
-                    {selectedDistrict && (
-                      <Badge className="bg-rose-100 text-rose-700 border-0 text-sm gap-1 pr-1">
-                        {selectedDistrict}
-                        <button onClick={() => setSelectedDistrict('')}>
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    )}
-                    {selectedBeautyType && (
-                      <Badge className="bg-purple-100 text-purple-700 border-0 text-sm gap-1 pr-1">
-                        {selectedBeautyType}
-                        <button onClick={() => setSelectedBeautyType('')}>
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    )}
-                    {claimFilter !== 'all' && (
-                      <Badge className="bg-emerald-100 text-emerald-700 border-0 text-sm gap-1 pr-1">
-                        {claimFilter === 'claimed' ? '已認領' : '未認領'}
-                        <button onClick={() => setClaimFilter('all')}>
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    )}
-                    {selectedTags.map(tag => (
-                      <Badge key={tag} className="bg-fuchsia-100 text-fuchsia-700 border-0 text-sm gap-1 pr-1">
-                        {tag}
-                        <button onClick={() => toggleTag(tag)}>
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
+                    {/* Done button */}
+                    <div className="flex justify-end pt-2 border-t border-slate-100">
+                      <Button
+                        size="sm"
+                        onClick={() => setExpandedFilterSection(null)}
+                        className="bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-sm px-4"
+                      >
+                        完成
+                      </Button>
+                    </div>
                   </div>
-                  <button onClick={clearAllFilters} className="text-sm text-rose-500 hover:text-rose-600 font-medium whitespace-nowrap ml-3">
-                    清除全部
-                  </button>
-                </div>
-              )}
+                );
+              })()}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+        {/* ===== END REDESIGNED FILTER ===== */}
 
         {/* Results Count */}
         <div className="flex items-center justify-between mb-4">
@@ -514,11 +657,6 @@ export default function ExploreSalonsPage() {
               <span className="ml-2 text-slate-400">（第 {safePage} / {totalPages} 頁）</span>
             )}
           </p>
-          {activeFilterCount > 0 && !showFilters && (
-            <button onClick={clearAllFilters} className="text-sm text-rose-500 hover:text-rose-600 font-medium flex items-center gap-1">
-              <X className="w-3 h-3" /> 清除篩選
-            </button>
-          )}
         </div>
 
         {/* Salon Grid */}
@@ -555,14 +693,17 @@ export default function ExploreSalonsPage() {
                 const imgSrc = getImageSrc(salon);
                 const highlights = parseHighlightTags(salon);
                 const salonTags = parseTags(salon);
-                const displayTags = highlights.length > 0 ? highlights : salonTags.slice(0, 4);
+                const salonDistrict = (salon.district_name || salon.district || '').trim();
+                const filteredHighlights = highlights.filter(tag => removeTagPrefix(tag) !== salonDistrict);
+                const displayTags = filteredHighlights.length > 0 ? filteredHighlights : salonTags.filter(tag => removeTagPrefix(tag) !== salonDistrict).slice(0, 4);
                 const isClaimed = !!salon.created_by;
 
                 return (
                   <div
                     key={salon.id}
-                    className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                    style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.8)' }}
+                    onClick={() => router.push(`/salon/${salon.id}`)}
+                    className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 isolate will-change-transform block cursor-pointer"
+                    style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.8)', borderRadius: '1rem' }}
                   >
                     {/* Image */}
                     <div className="relative h-48 overflow-hidden bg-gradient-to-br from-rose-100 to-fuchsia-100">
@@ -573,11 +714,35 @@ export default function ExploreSalonsPage() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           loading="lazy"
                         />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Sparkles className="w-12 h-12 text-rose-200" />
-                        </div>
-                      )}
+                      ) : (() => {
+                        const styleIdx = getCoverStyleIndex(salon.id || salon.salon_name || '');
+                        const coverStyle = COVER_STYLES[styleIdx];
+                        return (
+                          <div className="relative w-full h-full">
+                            <img
+                              src={coverStyle.bgImage}
+                              alt=""
+                              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              loading="lazy"
+                            />
+                            <div
+                              className="absolute inset-0"
+                              style={{
+                                background: `linear-gradient(135deg, ${coverStyle.overlayFrom}, ${coverStyle.overlayTo})`,
+                              }}
+                            />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                              <p className="text-[10px] uppercase tracking-[0.25em] opacity-70 mb-1" style={{ color: coverStyle.textColor }}>
+                                Beauty Salon
+                              </p>
+                              <h3 className="text-lg font-bold text-center leading-tight drop-shadow-md line-clamp-2" style={{ color: coverStyle.textColor }}>
+                                {salon.salon_name || '美容院'}
+                              </h3>
+                              <div className="mt-2 w-10 h-0.5 opacity-60 rounded" style={{ backgroundColor: coverStyle.textColor }} />
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* District badge - top left */}
                       {(salon.district_name || salon.district) && (
@@ -589,14 +754,18 @@ export default function ExploreSalonsPage() {
 
                       {/* Claim button - top right */}
                       {!isClaimed ? (
-                        <Link
-                          href={`/merchant-signup?type=claim&salon=${encodeURIComponent(JSON.stringify({ salon_name: salon.salon_name, salon_id: salon.id, district: salon.district_name || salon.district || '' }))}`}
-                          className="absolute top-3 right-3 flex items-center gap-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-rose-600 px-2.5 py-1.5 rounded-full shadow-sm hover:bg-rose-500 hover:text-white transition-all duration-200 border border-rose-200 hover:border-rose-500"
-                          onClick={(e) => e.stopPropagation()}
+                        <div
+                          role="button"
+                          className="absolute top-3 right-3 flex items-center gap-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-rose-600 px-2.5 py-1.5 rounded-full shadow-sm hover:bg-rose-500 hover:text-white transition-all duration-200 border border-rose-200 hover:border-rose-500 cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = `/merchant-signup?type=claim&salon=${encodeURIComponent(JSON.stringify({ salon_name: salon.salon_name, salon_id: salon.id, district: salon.district_name || salon.district || '' }))}`;
+                          }}
                         >
                           <Store className="w-3 h-3" />
                           認領店家
-                        </Link>
+                        </div>
                       ) : (
                         <div className="absolute top-3 right-3 flex items-center gap-1 bg-emerald-500/90 backdrop-blur-sm text-xs font-semibold text-white px-2.5 py-1.5 rounded-full shadow-sm">
                           <CheckCircle2 className="w-3 h-3" />
@@ -612,16 +781,43 @@ export default function ExploreSalonsPage() {
                       </h3>
 
                       {salon.address && (
-                        <p className="text-sm text-slate-400 mb-2.5 line-clamp-1 flex items-start gap-1">
+                        <p className="text-sm text-slate-400 mb-2 line-clamp-1 flex items-start gap-1">
                           <MapPin className="w-3 h-3 mt-0.5 shrink-0" />
                           {salon.address}
                         </p>
                       )}
 
-                      {salon.description && (
-                        <p className="text-sm text-slate-500 mb-3 line-clamp-2 leading-relaxed">
-                          {salon.description.replace(/<[^>]*>/g, '').slice(0, 100)}
-                        </p>
+                      {/* Opening Hours */}
+                      {getTodayHours(salon) && (
+                        <div className="mb-2.5">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setExpandedHoursSalonId(expandedHoursSalonId === salon.id ? null : salon.id);
+                            }}
+                            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors w-full"
+                          >
+                            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span>今日: {getTodayHours(salon)}</span>
+                            <ChevronDown className={`w-3.5 h-3.5 ml-auto transition-transform ${expandedHoursSalonId === salon.id ? 'rotate-180' : ''}`} />
+                          </button>
+                          {expandedHoursSalonId === salon.id && (
+                            <div className="mt-2 pl-5 space-y-0.5 animate-in slide-in-from-top-1 duration-200">
+                              {getAllHours(salon).map(({ label, hours, isToday }) => (
+                                <div
+                                  key={label}
+                                  className={`flex justify-between text-sm py-0.5 ${
+                                    isToday ? 'font-semibold text-slate-800' : 'text-slate-500'
+                                  }`}
+                                >
+                                  <span>{label}</span>
+                                  <span className={isToday ? 'font-bold' : ''}>{hours || '休息'}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       )}
 
                       {/* Tags */}
@@ -637,7 +833,7 @@ export default function ExploreSalonsPage() {
                               }`}
                             >
                               {highlights.includes(tag) && <Star className="w-2.5 h-2.5 mr-0.5 fill-amber-400 text-amber-400" />}
-                              {tag}
+                              {removeTagPrefix(tag)}
                             </Badge>
                           ))}
                           {salonTags.length > displayTags.length && (
@@ -686,12 +882,11 @@ export default function ExploreSalonsPage() {
                             </a>
                           )}
                         </div>
-                        <Link
-                          href={`/salon-profile?id=${salon.id}`}
+                        <span
                           className="text-[14px] font-semibold text-rose-500 hover:text-rose-600 transition-colors whitespace-nowrap"
                         >
                           立即查看 →
-                        </Link>
+                        </span>
                       </div>
                     </div>
                   </div>

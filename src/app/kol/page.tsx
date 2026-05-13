@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import PublicLayout from '@/components/public/PublicLayout';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
 import {
   Sparkles, Users, Megaphone, HeadphonesIcon,
   ClipboardList, Search, UserCheck,
@@ -278,6 +279,7 @@ function ApplicationFormSection() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -286,10 +288,33 @@ function ApplicationFormSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    // Simulate submission delay
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    setSubmitting(false);
-    setSubmitted(true);
+    setError('');
+
+    try {
+      const { error: dbError } = await supabase
+        .from('kol_applications')
+        .insert({
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          platform_name: formData.platformName,
+          platform_link: formData.platformLink,
+          followers: formData.followers,
+          content_direction: formData.contentDirection,
+          region: formData.region,
+          experience: formData.experience || null,
+          introduction: formData.introduction,
+        });
+
+      if (dbError) throw dbError;
+
+
+      setSubmitted(true);
+    } catch (err: any) {
+      setError(err.message || '提交失敗，請稍後再試');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -432,6 +457,11 @@ function ApplicationFormSection() {
           />
 
           {/* Submit */}
+          {error && (
+            <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
           <div className="pt-2">
             <Button
               type="submit"

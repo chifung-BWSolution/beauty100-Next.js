@@ -120,6 +120,55 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
           </div>
         ) : (
           <div className="space-y-5">
+            {/* Public suggestion info banner */}
+            {version.submission_type === 'public_suggestion' && (
+              <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-blue-100 text-blue-700 border-0">📋 公眾建議</Badge>
+                    {version.change_reason && (
+                      <Badge variant="outline" className="text-sm">
+                        {({ new_opening: '🆕 新開張', closed: '🔒 結業', renovation: '🔧 裝修', reopened: '🔄 重開', update_info: '📝 更新資料', upload_photo: '📷 上載相片' } as Record<string, string>)[version.change_reason] || version.change_reason}
+                      </Badge>
+                    )}
+                    {version.is_shop_owner && (
+                      <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">⭐ 自稱負責人</Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                  <div className="bg-white rounded-lg p-2.5">
+                    <p className="text-blue-500 text-xs mb-0.5">提交者</p>
+                    <p className="font-medium text-slate-700">{version.submitter_name || '-'}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-2.5">
+                    <p className="text-blue-500 text-xs mb-0.5">電郵</p>
+                    <p className="font-medium text-slate-700">{version.submitter_email || '-'}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-2.5">
+                    <p className="text-blue-500 text-xs mb-0.5">電話</p>
+                    <p className="font-medium text-slate-700">{version.submitter_phone || '-'}</p>
+                  </div>
+                </div>
+                {(version.closed_date || version.renovation_date || version.reopened_date || version.new_opening_date) && (
+                  <div className="bg-white rounded-lg p-2.5 text-sm">
+                    <p className="text-blue-500 text-xs mb-0.5">相關日期</p>
+                    <p className="font-medium text-amber-700">
+                      {version.closed_date && `結業日期：${new Date(version.closed_date).toLocaleDateString('zh-HK')}`}
+                      {version.renovation_date && `裝修開始日期：${new Date(version.renovation_date).toLocaleDateString('zh-HK')}`}
+                      {version.reopened_date && `重開日期：${new Date(version.reopened_date).toLocaleDateString('zh-HK')}`}
+                      {version.new_opening_date && `開張日期：${new Date(version.new_opening_date).toLocaleDateString('zh-HK')}`}
+                    </p>
+                  </div>
+                )}
+                {version.submitter_note && (
+                  <div className="bg-white rounded-lg p-2.5 text-sm">
+                    <p className="text-blue-500 text-xs mb-0.5">備註</p>
+                    <p className="text-slate-700">{version.submitter_note}</p>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-4 text-sm text-slate-500 bg-slate-50 rounded-lg p-3">
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-100 border border-amber-200 inline-block"></span>已更改欄位</span>
               <span className="text-slate-300">|</span>

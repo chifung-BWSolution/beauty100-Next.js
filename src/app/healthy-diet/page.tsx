@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import PublicLayout from '@/components/public/PublicLayout';
 import { Badge } from '@/components/ui/badge';
@@ -8,24 +8,10 @@ import {
   Clock, ArrowRight, Eye, Flame, TrendingUp, Star,
   Bookmark, Tag, Leaf,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 /* ═══════════════════════════════════════════════════════════════
-   TABS
-   ═══════════════════════════════════════════════════════════════ */
-
-const TABS = [
-  '全部',
-  '健康飲食',
-  '營養觀念',
-  '排毒養顏',
-  '瘦身飲食',
-  '日常養生',
-] as const;
-
-type TabLabel = (typeof TABS)[number];
-
-/* ═══════════════════════════════════════════════════════════════
-   DATA
+   DATA & TYPES
    ═══════════════════════════════════════════════════════════════ */
 
 interface Article {
@@ -33,201 +19,20 @@ interface Article {
   description: string;
   image: string;
   tag: string;
-  category: TabLabel[];
   date: string;
   views: string;
   featured?: boolean;
+  slug?: string;
 }
 
-const ALL_ARTICLES: Article[] = [
-  // ── 健康飲食 ──
-  {
-    title: '美白食物排行榜：食出白滑肌膚',
-    description: '想皮膚白滑？呢幾款食物含豐富維他命C同抗氧化成分，幫你由內靚到外，愈食愈靚。',
-    image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80',
-    tag: '美白飲食',
-    category: ['健康飲食'],
-    date: '2025年4月2日',
-    views: '24.3K',
-    featured: true,
-  },
-  {
-    title: '飲食禁忌：呢啲食物會令皮膚變差',
-    description: '有啲食物其實會令皮膚變差，睇吓你有冇食錯嘢，避開呢啲飲食陷阱。',
-    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80',
-    tag: '注意事項',
-    category: ['健康飲食'],
-    date: '2025年3月25日',
-    views: '15.8K',
-    featured: true,
-  },
-  {
-    title: '超級食物大盤點：每日必食嘅營養食材',
-    description: '藜麥、奇亞籽、羽衣甘藍⋯⋯呢啲超級食物營養價值極高，日日食保持健康。',
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80',
-    tag: '超級食物',
-    category: ['健康飲食'],
-    date: '2025年3月20日',
-    views: '12.1K',
-  },
-  {
-    title: '地中海飲食法：全球最健康嘅飲食模式',
-    description: '地中海飲食獲WHO推薦，以橄欖油、魚類、蔬果為主，點樣融入日常生活？',
-    image: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=600&q=80',
-    tag: '飲食法',
-    category: ['健康飲食'],
-    date: '2025年3月15日',
-    views: '9.7K',
-  },
-  // ── 營養觀念 ──
-  {
-    title: '抗衰老超級食物：延緩衰老嘅飲食秘訣',
-    description: '藍莓、三文魚、牛油果⋯⋯呢啲超級食物可以幫你有效延緩衰老，維持年輕狀態。',
-    image: 'https://images.unsplash.com/photo-1557800636-894a64c1696f?w=800&q=80',
-    tag: '抗氧化',
-    category: ['營養觀念'],
-    date: '2025年4月1日',
-    views: '21.5K',
-    featured: true,
-  },
-  {
-    title: '膠原蛋白飲品真嘅有用？科學拆解',
-    description: '膠原蛋白飲品大熱，但真係飲咗就有效？聽吓專家點講，科學角度分析。',
-    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80',
-    tag: '科學解讀',
-    category: ['營養觀念'],
-    date: '2025年3月22日',
-    views: '16.2K',
-    featured: true,
-  },
-  {
-    title: '維他命C點樣食先最有效？吸收率大解密',
-    description: '維他命C係美白抗氧化必備，但唔同食法吸收率差好遠，教你最有效嘅攝取方式。',
-    image: 'https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=600&q=80',
-    tag: '維他命',
-    category: ['營養觀念'],
-    date: '2025年3月18日',
-    views: '11.4K',
-  },
-  // ── 排毒養顏 ──
-  {
-    title: '排毒飲食計劃：7日肌膚煥然一新',
-    description: '7日排毒飲食計劃幫你清除體內毒素，改善腸胃健康，肌膚自然會變好。',
-    image: 'https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=800&q=80',
-    tag: '排毒計劃',
-    category: ['排毒養顏'],
-    date: '2025年3月30日',
-    views: '18.9K',
-    featured: true,
-  },
-  {
-    title: '綠色蔬果汁配方：每日一杯排清毒素',
-    description: '自家製綠色蔬果汁，簡單幾種材料就可以有效排毒養顏，每日飲一杯好處多。',
-    image: 'https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=600&q=80',
-    tag: '果汁配方',
-    category: ['排毒養顏'],
-    date: '2025年3月24日',
-    views: '13.6K',
-  },
-  {
-    title: '排毒食材Top 10：清腸胃由飲食開始',
-    description: '檸檬、薑、蘆薈⋯⋯呢10種天然排毒食材，日常加入餐單就可以改善體質。',
-    image: 'https://images.unsplash.com/photo-1543362906-acfc16c67564?w=600&q=80',
-    tag: '排毒食材',
-    category: ['排毒養顏'],
-    date: '2025年3月16日',
-    views: '10.2K',
-  },
-  // ── 瘦身飲食 ──
-  {
-    title: '低卡飽肚餐單：減肥唔使捱餓',
-    description: '想瘦身但唔想捱餓？呢幾款低卡但飽肚嘅餐單幫到你，食得飽又瘦得到。',
-    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
-    tag: '低卡餐單',
-    category: ['瘦身飲食'],
-    date: '2025年3月28日',
-    views: '17.4K',
-    featured: true,
-  },
-  {
-    title: '間歇性斷食入門指南：新手必讀',
-    description: '間歇性斷食係近年大熱嘅飲食方式，16:8同5:2邊種啱你？新手應該點樣開始？',
-    image: 'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&q=80',
-    tag: '斷食',
-    category: ['瘦身飲食'],
-    date: '2025年3月21日',
-    views: '14.8K',
-  },
-  {
-    title: '高蛋白飲食：增肌減脂最強攻略',
-    description: '想增肌減脂就要食啱蛋白質，教你計算每日所需份量同最佳食物來源。',
-    image: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=600&q=80',
-    tag: '高蛋白',
-    category: ['瘦身飲食'],
-    date: '2025年3月14日',
-    views: '9.8K',
-  },
-  // ── 日常養生 ──
-  {
-    title: '養顏湯水推薦：靚湯養出好皮膚',
-    description: '中式養顏湯水一直都好受歡迎，呢幾款靚湯簡單易煲又有效，全家都適合飲。',
-    image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80',
-    tag: '養顏湯水',
-    category: ['日常養生'],
-    date: '2025年3月29日',
-    views: '19.2K',
-    featured: true,
-  },
-  {
-    title: '日常養生茶推薦：簡單沖泡好處多',
-    description: '每日一杯養生茶，改善體質又養顏，呢幾款茶啱晒都市人，辦公室都沖到。',
-    image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&q=80',
-    tag: '養生茶',
-    category: ['日常養生'],
-    date: '2025年3月19日',
-    views: '11.7K',
-  },
-  {
-    title: '四季養生飲食法：跟住時令食最健康',
-    description: '中醫講究時令飲食，春夏秋冬各有唔同嘅飲食重點，跟住食養好身體。',
-    image: 'https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=600&q=80',
-    tag: '四季養生',
-    category: ['日常養生'],
-    date: '2025年3月12日',
-    views: '8.9K',
-  },
-  {
-    title: '早餐點食最健康？營養師推薦5款組合',
-    description: '早餐係一日之中最重要嘅一餐，營養師推薦5款簡單又健康嘅早餐組合。',
-    image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=80',
-    tag: '早餐',
-    category: ['日常養生'],
-    date: '2025年3月8日',
-    views: '7.3K',
-  },
-];
-
-const TRENDING_ARTICLES = [
-  { title: '美白食物排行榜：食出白滑肌膚', views: '24.3K' },
-  { title: '抗衰老超級食物：延緩衰老嘅飲食秘訣', views: '21.5K' },
-  { title: '養顏湯水推薦：靚湯養出好皮膚', views: '19.2K' },
-  { title: '排毒飲食計劃：7日肌膚煥然一新', views: '18.9K' },
-  { title: '低卡飽肚餐單：減肥唔使捱餓', views: '17.4K' },
-  { title: '膠原蛋白飲品真嘅有用？科學拆解', views: '16.2K' },
-];
-
-const EDITOR_PICKS = [
-  { title: '健康飲食新手入門完整指南', tag: '編輯精選' },
-  { title: '營養師推薦嘅日常食材清單', tag: '消費指南' },
-  { title: '全家人都適合嘅養生餐單', tag: '家庭健康' },
-  { title: '外食族點樣食得健康？', tag: '都市飲食' },
-];
-
-const POPULAR_TAGS = [
-  '排毒', '美白', '抗氧化', '瘦身', '養生茶', '湯水',
-  '超級食物', '維他命', '膠原蛋白', '斷食', '低卡',
-  '高蛋白', '蔬果汁', '四季養生', '早餐', '營養',
-];
+interface SidebarArticle {
+  title: string;
+  slug: string;
+  image: string;
+  date: string;
+  tag: string;
+  views?: string;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    COMPONENTS
@@ -235,7 +40,7 @@ const POPULAR_TAGS = [
 
 function FeaturedMainCard({ article }: { article: Article }) {
   return (
-    <Link href="/topics/healthy-diet-guide" className="group relative block rounded-2xl overflow-hidden bg-slate-900 h-[320px] sm:h-[360px] lg:h-full">
+    <Link href={`/healthy-diet/${article.slug || 'healthy-diet-guide'}`} className="group relative block rounded-2xl overflow-hidden bg-slate-900 h-[320px] sm:h-[360px] lg:h-full">
       <img
         src={article.image}
         alt={article.title}
@@ -259,7 +64,7 @@ function FeaturedMainCard({ article }: { article: Article }) {
 
 function FeaturedSupportCard({ article }: { article: Article }) {
   return (
-    <Link href="/topics/healthy-diet-guide" className="group relative block rounded-xl overflow-hidden bg-slate-900 h-[140px] sm:h-[130px] lg:h-full">
+    <Link href={`/healthy-diet/${article.slug || 'healthy-diet-guide'}`} className="group relative block rounded-xl overflow-hidden bg-slate-900 h-[140px] sm:h-[130px] lg:h-full">
       <img
         src={article.image}
         alt={article.title}
@@ -280,7 +85,7 @@ function FeaturedSupportCard({ article }: { article: Article }) {
 function ArticleCard({ article }: { article: Article }) {
   return (
     <Link
-      href="/topics/healthy-diet-guide"
+      href={`/healthy-diet/${article.slug || 'healthy-diet-guide'}`}
       className="group rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border border-slate-100/80 block"
     >
       <div className="relative h-44 overflow-hidden">
@@ -318,7 +123,7 @@ function ArticleCard({ article }: { article: Article }) {
 function ArticleCardWide({ article }: { article: Article }) {
   return (
     <Link
-      href="/topics/healthy-diet-guide"
+      href={`/healthy-diet/${article.slug || 'healthy-diet-guide'}`}
       className="group flex gap-4 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100/80 p-3"
     >
       <img
@@ -360,27 +165,103 @@ function SidebarSection({ title, icon: Icon, children }: { title: string; icon: 
    ═══════════════════════════════════════════════════════════════ */
 
 export default function HealthyDietPage() {
-  const [activeTab, setActiveTab] = useState<TabLabel>('全部');
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [trendingArticles, setTrendingArticles] = useState<SidebarArticle[]>([]);
+  const [editorPicks, setEditorPicks] = useState<SidebarArticle[]>([]);
+  const [popularTags, setPopularTags] = useState<string[]>([]);
 
-  // Filter articles based on active tab
-  const filteredArticles = useMemo(() => {
-    if (activeTab === '全部') return ALL_ARTICLES;
-    return ALL_ARTICLES.filter((a) => a.category.includes(activeTab));
-  }, [activeTab]);
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const { data, error } = await supabase
+          .from('blog_articles')
+          .select('*')
+          .eq('category', 'healthy-diet')
+          .eq('status', 'active')
+          .order('published_at', { ascending: false });
 
-  // Get featured articles (those marked featured, or first few)
+        if (error) {
+          console.error('Error fetching articles:', error);
+          return;
+        }
+
+        if (data) {
+          const mapped: Article[] = data.map((item: any, idx: number) => ({
+            title: item.title || '',
+            description: item.seo_description || '',
+            image: item.cover_image_url || 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80',
+            tag: item.tags?.[0] || '飲食健康',
+            date: item.published_at
+              ? new Date(item.published_at).toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric' })
+              : '',
+            views: `${Math.floor(Math.random() * 15 + 5)}K`,
+            featured: idx < 4,
+            slug: item.handle,
+          }));
+          setArticles(mapped);
+
+          // Extract popular tags from all articles
+          const tagCounts: Record<string, number> = {};
+          data.forEach((item: any) => {
+            if (item.tags && Array.isArray(item.tags)) {
+              item.tags.forEach((t: string) => {
+                tagCounts[t] = (tagCounts[t] || 0) + 1;
+              });
+            }
+          });
+          const sortedTags = Object.entries(tagCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([tag]) => tag)
+            .slice(0, 16);
+          setPopularTags(sortedTags.length > 0 ? sortedTags : ['排毒', '美白', '抗氧化', '瘦身', '養生茶', '湯水', '超級食物', '維他命', '膠原蛋白', '斷食', '低卡', '高蛋白']);
+
+          // Trending articles: take from middle of the list (different from top featured)
+          const trendingMapped: SidebarArticle[] = data.slice(4, 10).map((item: any) => ({
+            title: item.title || '',
+            slug: item.handle || '',
+            image: item.cover_image_url || '',
+            date: item.published_at
+              ? new Date(item.published_at).toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric' })
+              : '',
+            tag: item.tags?.[0] || '飲食健康',
+            views: `${Math.floor(Math.random() * 800 + 200)}`,
+          }));
+          setTrendingArticles(trendingMapped);
+
+          // Editor picks: articles with most tags or star content
+          const editorData = [...data]
+            .filter((item: any) => item.tags && item.tags.length > 1)
+            .slice(0, 4);
+          const editorFallback = editorData.length >= 2 ? editorData : data.slice(0, 4);
+          const editorMapped: SidebarArticle[] = editorFallback.map((item: any) => ({
+            title: item.title || '',
+            slug: item.handle || '',
+            image: item.cover_image_url || '',
+            date: item.published_at
+              ? new Date(item.published_at).toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric' })
+              : '',
+            tag: item.blog_title?.includes('明星') ? '明星推薦' : (item.tags?.[0] || '編輯精選'),
+          }));
+          setEditorPicks(editorMapped);
+        }
+      } catch (err) {
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchArticles();
+  }, []);
+
   const featuredArticles = useMemo(() => {
-    const featured = filteredArticles.filter((a) => a.featured);
-    if (featured.length >= 3) return featured.slice(0, 4);
-    const rest = filteredArticles.filter((a) => !a.featured);
-    return [...featured, ...rest].slice(0, 4);
-  }, [filteredArticles]);
+    return articles.filter((a) => a.featured).slice(0, 4);
+  }, [articles]);
 
-  // Main feed = everything except the top featured
   const feedArticles = useMemo(() => {
     const featuredIds = new Set(featuredArticles.map((a) => a.title));
-    return filteredArticles.filter((a) => !featuredIds.has(a.title));
-  }, [filteredArticles, featuredArticles]);
+    return articles.filter((a) => !featuredIds.has(a.title));
+  }, [articles, featuredArticles]);
 
   const mainFeatured = featuredArticles[0];
   const supportFeatured = featuredArticles.slice(1, 4);
@@ -406,28 +287,8 @@ export default function HealthyDietPage() {
         </div>
       </section>
 
-      {/* ═══════════ 2. TAB NAVIGATION ═══════════ */}
-      <section className="sticky top-[60px] z-40 bg-white/95 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-            <div className="flex items-center gap-1 py-3 min-w-max">
-              {TABS.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-full text-[14px] font-medium whitespace-nowrap transition-all duration-200 ${
-                    activeTab === tab
-                      ? 'bg-green-500 text-white shadow-md shadow-green-200/50'
-                      : 'text-slate-500 hover:text-green-600 hover:bg-green-50/60'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ═══════════ 2. DIVIDER ═══════════ */}
+      <div className="border-b border-slate-100" />
 
       {/* ═══════════ 3. CONTENT AREA ═══════════ */}
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -435,7 +296,7 @@ export default function HealthyDietPage() {
           {/* ── Main Column ── */}
           <div className="flex-1 min-w-0">
             {/* Featured Zone */}
-            {mainFeatured && (
+            {!loading && mainFeatured && (
               <section className="mb-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-[460px]">
                   <div className="lg:col-span-7 h-[320px] sm:h-[360px] lg:h-full">
@@ -455,17 +316,24 @@ export default function HealthyDietPage() {
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                   <span className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #86efac, #22c55e)' }} />
-                  {activeTab === '全部' ? '最新文章' : activeTab}
+                  最新文章
                 </h2>
                 <span className="text-[12px] text-slate-400">
-                  共 {feedArticles.length + featuredArticles.length} 篇文章
+                  共 {articles.length} 篇文章
                 </span>
               </div>
 
-              {feedArticles.length > 0 ? (
+              {loading ? (
+                <div className="text-center py-16 bg-white/60 rounded-xl border border-slate-100/60">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-green-50">
+                    <Clock className="w-7 h-7 text-green-300 animate-pulse" />
+                  </div>
+                  <h3 className="text-base font-semibold text-slate-700 mb-1">載入中...</h3>
+                </div>
+              ) : feedArticles.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {feedArticles.map((article, i) => (
-                    <ArticleCard key={`${activeTab}-${i}`} article={article} />
+                    <ArticleCard key={`feed-${i}`} article={article} />
                   ))}
                 </div>
               ) : (
@@ -474,12 +342,13 @@ export default function HealthyDietPage() {
                     <Clock className="w-7 h-7 text-green-300" />
                   </div>
                   <h3 className="text-base font-semibold text-slate-700 mb-1">更多精彩內容即將推出</h3>
-                  <p className="text-sm text-slate-400">敬請期待更多「{activeTab}」相關文章！</p>
+                  <p className="text-sm text-slate-400">敬請期待更多飲食健康相關文章！</p>
                 </div>
               )}
             </section>
 
             {/* ── More Articles (mobile only) ── */}
+            {!loading && articles.length > 0 && (
             <section className="mt-10 lg:hidden">
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
                 <span className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #86efac, #22c55e)' }} />
@@ -487,11 +356,12 @@ export default function HealthyDietPage() {
                 更多飲食健康文章
               </h2>
               <div className="space-y-3">
-                {ALL_ARTICLES.slice(0, 5).map((article, i) => (
+                {articles.slice(0, 5).map((article, i) => (
                   <ArticleCardWide key={i} article={article} />
                 ))}
               </div>
             </section>
+            )}
           </div>
 
           {/* ── Desktop Sidebar ── */}
@@ -499,10 +369,10 @@ export default function HealthyDietPage() {
             {/* 熱門文章 */}
             <SidebarSection title="熱門文章" icon={Flame}>
               <div className="space-y-3">
-                {TRENDING_ARTICLES.map((article, i) => (
+                {trendingArticles.map((article, i) => (
                   <Link
                     key={i}
-                    href="/healthy-diet"
+                    href={`/healthy-diet/${article.slug}`}
                     className="group flex items-start gap-3 hover:bg-green-50/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
                   >
                     <span className="text-lg font-bold text-green-200 shrink-0 w-6 text-right leading-tight">
@@ -524,10 +394,10 @@ export default function HealthyDietPage() {
             {/* 編輯推薦 */}
             <SidebarSection title="編輯推薦" icon={Star}>
               <div className="space-y-2.5">
-                {EDITOR_PICKS.map((pick, i) => (
+                {editorPicks.map((pick, i) => (
                   <Link
                     key={i}
-                    href="/healthy-diet"
+                    href={`/healthy-diet/${pick.slug}`}
                     className="group flex items-center gap-2.5 hover:bg-green-50/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
                   >
                     <Bookmark className="w-3.5 h-3.5 text-green-300 shrink-0" />
@@ -542,13 +412,14 @@ export default function HealthyDietPage() {
               </div>
             </SidebarSection>
 
-            {/* 更多飲食健康文章 */}
-            <SidebarSection title="更多飲食健康文章" icon={TrendingUp}>
+            {/* 最新更新 */}
+            {articles.length > 0 && (
+            <SidebarSection title="最新更新" icon={TrendingUp}>
               <div className="space-y-2.5">
-                {ALL_ARTICLES.slice(0, 4).map((article, i) => (
+                {articles.slice(0, 4).map((article, i) => (
                   <Link
                     key={i}
-                    href="/healthy-diet"
+                    href={`/healthy-diet/${article.slug || ''}`}
                     className="group flex gap-3 items-start hover:bg-green-50/40 -mx-2 px-2 py-1.5 rounded-lg transition-colors"
                   >
                     <img
@@ -567,17 +438,19 @@ export default function HealthyDietPage() {
                 ))}
               </div>
             </SidebarSection>
+            )}
 
             {/* 熱門標籤 */}
             <SidebarSection title="熱門標籤" icon={Tag}>
               <div className="flex flex-wrap gap-1.5">
-                {POPULAR_TAGS.map((tag) => (
-                  <span
+                {popularTags.map((tag) => (
+                  <Link
                     key={tag}
-                    className="text-[14px] px-2.5 py-1 rounded-full bg-green-50 text-green-500 font-medium hover:bg-green-100 transition-colors cursor-pointer"
+                    href={`/topics/tag/${encodeURIComponent(tag)}`}
+                    className="text-[14px] px-2.5 py-1 rounded-full bg-green-50 text-green-500 font-medium hover:bg-green-100 transition-colors"
                   >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </SidebarSection>
@@ -595,13 +468,14 @@ export default function HealthyDietPage() {
             熱門標籤
           </h3>
           <div className="flex flex-wrap gap-1.5">
-            {POPULAR_TAGS.map((tag) => (
-              <span
+            {popularTags.map((tag) => (
+              <Link
                 key={tag}
-                className="text-[14px] px-2.5 py-1 rounded-full bg-green-50 text-green-500 font-medium"
+                href={`/topics/tag/${encodeURIComponent(tag)}`}
+                className="text-[14px] px-2.5 py-1 rounded-full bg-green-50 text-green-500 font-medium hover:bg-green-100 transition-colors"
               >
                 {tag}
-              </span>
+              </Link>
             ))}
           </div>
         </div>
@@ -614,10 +488,10 @@ export default function HealthyDietPage() {
             編輯推薦
           </h3>
           <div className="space-y-2">
-            {EDITOR_PICKS.map((pick, i) => (
+            {editorPicks.map((pick, i) => (
               <Link
                 key={i}
-                href="/healthy-diet"
+                href={`/healthy-diet/${pick.slug}`}
                 className="group flex items-center gap-2.5 py-1.5"
               >
                 <Bookmark className="w-3.5 h-3.5 text-green-300 shrink-0" />
@@ -640,10 +514,10 @@ export default function HealthyDietPage() {
             熱門文章
           </h3>
           <div className="space-y-2.5">
-            {TRENDING_ARTICLES.slice(0, 5).map((article, i) => (
+            {trendingArticles.slice(0, 5).map((article, i) => (
               <Link
                 key={i}
-                href="/healthy-diet"
+                href={`/healthy-diet/${article.slug}`}
                 className="group flex items-start gap-3 py-1"
               >
                 <span className="text-base font-bold text-green-200 shrink-0 w-5 text-right leading-tight">

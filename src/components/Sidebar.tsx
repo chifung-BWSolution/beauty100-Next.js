@@ -11,7 +11,11 @@ import {
   Sparkles,
   Shield,
   Activity,
-  Settings
+  Settings,
+  Home,
+  MessageSquare,
+  UserCog,
+  Megaphone
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
@@ -73,12 +77,15 @@ export default function Sidebar({ userRole: userRoleProp, hasApprovedProfile, is
     { name: '申請入駐', href: '/merchant-onboarding', icon: FileText, show: true },
     { name: '申請狀態', href: '/application-status', icon: CheckSquare, show: true },
     { name: '我的美容院', href: '/salon-profile', icon: Store, show: hasApprovedProfile || isAdmin },
+    { name: 'KOL 推廣', href: '/kol-promotion', icon: Megaphone, show: true },
   ].filter(l => l.show);
 
   const adminLinks = [
     { name: '申請管理', href: '/admin/dashboard', icon: CheckSquare, badge: pendingCount > 0 ? pendingCount : null },
+    { name: '表單查詢', href: '/admin/enquiries', icon: MessageSquare },
     { name: '所有美容院', href: '/admin/salons', icon: Store },
     { name: '用戶管理', href: '/admin/users', icon: Shield },
+    { name: 'Staff 管理', href: '/admin/staff', icon: UserCog },
     { name: '用戶日誌', href: '/admin/logs', icon: Activity },
     { name: '系統設定', href: '/admin/settings', icon: Settings },
   ];
@@ -187,6 +194,17 @@ export default function Sidebar({ userRole: userRoleProp, hasApprovedProfile, is
               <Settings className="w-3.5 h-3.5 text-slate-300 group-hover:text-rose-400 flex-shrink-0 transition-colors" />
             </Link>
           )}
+          <Link
+            href="/"
+            onClick={handleNavClick}
+            prefetch={false}
+            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all duration-200 text-sm font-medium group"
+          >
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+              <Home className="w-3.5 h-3.5" />
+            </div>
+            <span>返回主頁</span>
+          </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all duration-200 text-sm font-medium group"
@@ -201,7 +219,16 @@ export default function Sidebar({ userRole: userRoleProp, hasApprovedProfile, is
 
       {/* Mobile Logout */}
       {isMobile && (
-        <div className="p-3 border-t border-rose-50 mt-auto">
+        <div className="p-3 border-t border-rose-50 mt-auto space-y-1">
+          <Link
+            href="/"
+            onClick={handleNavClick}
+            prefetch={false}
+            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-rose-500 hover:bg-rose-50 transition-all duration-200 font-semibold text-sm"
+          >
+            <Home className="w-4 h-4" />
+            <span>返回主頁</span>
+          </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-rose-500 hover:bg-rose-50 transition-all duration-200 font-semibold text-sm"

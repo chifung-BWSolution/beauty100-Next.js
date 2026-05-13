@@ -259,7 +259,8 @@ export default function AdminDashboardPage() {
 
   const stats = {
     pendingApps: applications.filter(a => a.status === 'pending').length,
-    pendingEdits: profileVersions.length,
+    pendingEdits: profileVersions.filter(v => v.submission_type !== 'public_suggestion').length,
+    pendingPublicSuggestions: profileVersions.filter(v => v.submission_type === 'public_suggestion').length,
   };
 
   if (loading) {
@@ -278,10 +279,11 @@ export default function AdminDashboardPage() {
         <p className="text-slate-500">審核及管理美容院申請及資料更新</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6 max-w-xs">
+      <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6 max-w-lg">
         {[
           { label: '待審核申請', value: stats.pendingApps, color: 'text-amber-600' },
-          { label: '待審核更新', value: stats.pendingEdits, color: 'text-purple-600' },
+          { label: '商戶更新', value: stats.pendingEdits, color: 'text-purple-600' },
+          { label: '公眾建議', value: stats.pendingPublicSuggestions, color: 'text-blue-600' },
         ].map(s => (
           <Card key={s.label} className="border-0 shadow-sm">
             <CardContent className="p-4">
@@ -297,7 +299,7 @@ export default function AdminDashboardPage() {
           <TabsTrigger value="applications">入駐申請</TabsTrigger>
           <TabsTrigger value="edits">
             資料更新申請
-            {stats.pendingEdits > 0 && <Badge className="ml-2 bg-fuchsia-600 text-white border-0 h-5 px-1.5 text-sm">{stats.pendingEdits}</Badge>}
+            {profileVersions.length > 0 && <Badge className="ml-2 bg-fuchsia-600 text-white border-0 h-5 px-1.5 text-sm">{profileVersions.length}</Badge>}
           </TabsTrigger>
         </TabsList>
 
@@ -404,27 +406,71 @@ export default function AdminDashboardPage() {
                   <TableHeader>
                     <TableRow className="bg-slate-50">
                       <TableHead className="font-semibold whitespace-nowrap">美容院</TableHead>
+                      <TableHead className="font-semibold whitespace-nowrap">來源</TableHead>
+                      <TableHead className="font-semibold whitespace-nowrap">更新類型</TableHead>
+                      <TableHead className="font-semibold whitespace-nowrap">提交者</TableHead>
                       <TableHead className="font-semibold whitespace-nowrap">提交時間</TableHead>
                       <TableHead className="font-semibold text-right whitespace-nowrap">操作</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {profileVersions.map(v => (
-                      <TableRow key={v.id} className="hover:bg-slate-50/50">
-                        <TableCell className="whitespace-normal">
-                          <p className="font-medium text-slate-800 break-words">{v.salon_name}</p>
-                          <p className="text-sm text-slate-400 break-all">{users[v.created_by] || '-'}</p>
-                        </TableCell>
-                        <TableCell className="text-slate-500 text-sm whitespace-normal">{format(new Date(v.created_date), 'MM/dd/yyyy HH:mm')}</TableCell>
-                        <TableCell className="text-right whitespace-normal">
-                          <Button variant="ghost" size="sm" onClick={() => { setSelectedVersion(v); setShowVersionModal(true); }} className="text-pink-600 hover:bg-pink-50 whitespace-nowrap">
-                            <Eye className="w-4 h-4 mr-1" />審核
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {profileVersions.map(v => {
+                      const isPublic = v.submission_type === 'public_suggestion';
+                      const changeReasonLabels: Record<string, string> = {
+                        new_opening: '🆕 新開張',
+                        closed: '🔒 結業',
+                        renovation: '🔧 裝修',
+                        reopened: '🔄 重開',
+                        update_info: '📝 更新資料',
+                        upload_photo: '📷 上載相片',
+                      };
+                      const reasonLabel = v.change_reason ? changeReasonLabels[v.change_reason] || v.change_reason : '-';
+                      const dateInfo = v.closed_date ? `結業：${new Date(v.closed_date).toLocaleDateString('zh-HK')}` 
+                        : v.renovation_date ? `裝修：${new Date(v.renovation_date).toLocaleDateString('zh-HK')}`
+                        : v.reopened_date ? `重開：${new Date(v.reopened_date).toLocaleDateString('zh-HK')}`
+                        : v.new_opening_date ? `開張：${new Date(v.new_opening_date).toLocaleDateString('zh-HK')}`
+                        : null;
+                      return (
+                        <TableRow key={v.id} className="hover:bg-slate-50/50">
+                          <TableCell className="whitespace-normal">
+                            <p className="font-medium text-slate-800 break-words">{v.salon_name}</p>
+                            {dateInfo && <p className="text-xs text-amber-600 mt-0.5">{dateInfo}</p>}
+                          </TableCell>
+                          <TableCell className="whitespace-normal">
+                            {isPublic ? (
+                              <Badge className="bg-blue-100 text-blue-700 border-0">公眾</Badge>
+                            ) : (
+                              <Badge className="bg-purple-100 text-purple-700 border-0">商戶</Badge>
+                            )}
+                            {v.is_shop_owner && (
+                              <Badge className="ml-1 bg-amber-100 text-amber-700 border-0 text-xs">負責人</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="whitespace-normal text-sm">
+                            {reasonLabel}
+                          </TableCell>
+                          <TableCell className="whitespace-normal">
+                            {isPublic ? (
+                              <div className="text-sm">
+                                <p className="font-medium text-slate-700">{v.submitter_name || '-'}</p>
+                                {v.submitter_email && <p className="text-xs text-slate-400">{v.submitter_email}</p>}
+                                {v.submitter_phone && <p className="text-xs text-slate-400">{v.submitter_phone}</p>}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-slate-400 break-all">{v.created_by_email || users[v.created_by] || '-'}</p>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-slate-500 text-sm whitespace-normal">{format(new Date(v.created_date), 'MM/dd/yyyy HH:mm')}</TableCell>
+                          <TableCell className="text-right whitespace-normal">
+                            <Button variant="ghost" size="sm" onClick={() => { setSelectedVersion(v); setShowVersionModal(true); }} className="text-pink-600 hover:bg-pink-50 whitespace-nowrap">
+                              <Eye className="w-4 h-4 mr-1" />審核
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                     {profileVersions.length === 0 && (
-                      <TableRow><TableCell colSpan={3} className="text-center py-12">
+                      <TableRow><TableCell colSpan={6} className="text-center py-12">
                         <CheckCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                         <p className="text-slate-500">目前沒有待審核的資料更新</p>
                       </TableCell></TableRow>
@@ -433,18 +479,54 @@ export default function AdminDashboardPage() {
                 </Table>
               </div>
               <div className="md:hidden space-y-3">
-                {profileVersions.map(v => (
-                  <Card key={v.id} className="border shadow-sm">
-                    <CardContent className="p-4">
-                      <p className="font-medium text-slate-800 mb-1">{v.salon_name}</p>
-                      <p className="text-sm text-slate-400 mb-3">{users[v.created_by] || '-'}</p>
-                      <div className="text-sm text-slate-500 mb-3">{format(new Date(v.created_date), 'MM/dd HH:mm')}</div>
-                      <Button variant="ghost" size="sm" onClick={() => { setSelectedVersion(v); setShowVersionModal(true); }} className="w-full text-pink-600 hover:bg-pink-50">
-                        <Eye className="w-4 h-4 mr-1" />審核更新
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
+                {profileVersions.map(v => {
+                  const isPublic = v.submission_type === 'public_suggestion';
+                  const changeReasonLabels: Record<string, string> = {
+                    new_opening: '🆕 新開張',
+                    closed: '🔒 結業',
+                    renovation: '🔧 裝修',
+                    reopened: '🔄 重開',
+                    update_info: '📝 更新資料',
+                    upload_photo: '📷 上載相片',
+                  };
+                  const reasonLabel = v.change_reason ? changeReasonLabels[v.change_reason] || v.change_reason : '';
+                  const dateInfo = v.closed_date ? `結業：${new Date(v.closed_date).toLocaleDateString('zh-HK')}` 
+                    : v.renovation_date ? `裝修：${new Date(v.renovation_date).toLocaleDateString('zh-HK')}`
+                    : v.reopened_date ? `重開：${new Date(v.reopened_date).toLocaleDateString('zh-HK')}`
+                    : v.new_opening_date ? `開張：${new Date(v.new_opening_date).toLocaleDateString('zh-HK')}`
+                    : null;
+                  return (
+                    <Card key={v.id} className="border shadow-sm">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-medium text-slate-800 mb-1">{v.salon_name}</p>
+                            <div className="flex gap-1.5 flex-wrap">
+                              {isPublic ? (
+                                <Badge className="bg-blue-100 text-blue-700 border-0 text-xs">公眾</Badge>
+                              ) : (
+                                <Badge className="bg-purple-100 text-purple-700 border-0 text-xs">商戶</Badge>
+                              )}
+                              {v.is_shop_owner && <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">負責人</Badge>}
+                              {reasonLabel && <Badge variant="outline" className="text-xs">{reasonLabel}</Badge>}
+                            </div>
+                          </div>
+                        </div>
+                        {isPublic && v.submitter_name && (
+                          <p className="text-sm text-slate-500 mb-1">提交者：{v.submitter_name}</p>
+                        )}
+                        {!isPublic && (
+                          <p className="text-sm text-slate-400 mb-1">{v.created_by_email || users[v.created_by] || '-'}</p>
+                        )}
+                        {dateInfo && <p className="text-xs text-amber-600 mb-2">{dateInfo}</p>}
+                        <div className="text-sm text-slate-500 mb-3">{format(new Date(v.created_date), 'MM/dd HH:mm')}</div>
+                        <Button variant="ghost" size="sm" onClick={() => { setSelectedVersion(v); setShowVersionModal(true); }} className="w-full text-pink-600 hover:bg-pink-50">
+                          <Eye className="w-4 h-4 mr-1" />審核更新
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
                 {profileVersions.length === 0 && (
                   <div className="text-center py-12"><CheckCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" /><p className="text-slate-500">目前沒有待審核的資料更新</p></div>
                 )}

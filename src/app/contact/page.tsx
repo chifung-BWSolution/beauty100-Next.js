@@ -5,6 +5,7 @@ import PublicLayout from '@/components/public/PublicLayout';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
 import {
   Mail, Phone, Clock, Send,
   MessageSquare, Building2, Users, Sparkles,
@@ -23,7 +24,7 @@ const CONTACT_METHODS = [
   {
     icon: Phone,
     title: 'WhatsApp',
-    detail: '+852 1234 5678',
+    detail: '+852 6858 9265',
     description: '即時對話，快速回覆',
     color: 'bg-emerald-100 text-emerald-600',
     gradient: 'from-emerald-50 to-teal-50',
@@ -31,7 +32,7 @@ const CONTACT_METHODS = [
   {
     icon: Clock,
     title: '服務時間',
-    detail: '週一至週五 10:00-18:00',
+    detail: '週一至週五 9:00-18:00',
     description: '公眾假期除外',
     color: 'bg-blue-100 text-blue-600',
     gradient: 'from-blue-50 to-indigo-50',
@@ -53,12 +54,35 @@ export default function ContactPage() {
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-    setFormData({ name: '', email: '', subject: '', message: '' });
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const { error: dbError } = await supabase
+        .from('contact_submissions')
+        .insert({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+        });
+
+      if (dbError) throw dbError;
+
+
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 3000);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    } catch (err: any) {
+      setError(err.message || '提交失敗，請稍後再試');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -166,13 +190,19 @@ export default function ContactPage() {
                     className="rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-rose-300 resize-none transition-colors"
                   />
                 </div>
+                {error && (
+                  <div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+                    {error}
+                  </div>
+                )}
                 <Button
                   type="submit"
+                  disabled={submitting}
                   className="h-11 px-6 rounded-xl text-sm font-medium shadow-md hover:shadow-lg transition-all"
                   style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  傳送訊息
+                  {submitting ? '提交中...' : '傳送訊息'}
                 </Button>
               </form>
             </div>

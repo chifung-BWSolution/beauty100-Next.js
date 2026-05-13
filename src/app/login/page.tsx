@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Sparkles, Eye, EyeOff, LogIn, Store, Star, ChevronRight, ArrowLeft, Mail, Lock, User } from 'lucide-react';
+import { Sparkles, Eye, EyeOff, LogIn, Store, Star, ChevronRight, ArrowLeft, Mail, Lock, User, Home } from 'lucide-react';
 
 const TABS = { login: 'login', signup: 'signup' };
 
@@ -122,12 +122,16 @@ export default function UserLoginPage() {
       <div className="absolute bottom-[-100px] left-[-100px] w-[350px] h-[350px] rounded-full opacity-20 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #e879f9, #f0abfc)' }} />
 
       <div className="w-full max-w-[420px] relative z-10">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-rose-400 hover:text-rose-600 font-medium mb-6 transition-colors">
+          <Home className="w-4 h-4" />
+          返回主頁
+        </Link>
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg shadow-rose-200/50 mb-4" style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}>
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">BEAUTY</h1>
-          <p className="text-sm text-rose-400/80 mt-1 font-medium">商戶 &amp; KOL 入駐平台</p>
+          <p className="text-sm text-rose-400/80 mt-1 font-medium">商戶入駐平台</p>
         </div>
 
         <div className="rounded-3xl overflow-hidden shadow-2xl shadow-rose-100/60" style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.75)' }}>
@@ -176,7 +180,6 @@ export default function UserLoginPage() {
                     <p className="text-sm font-semibold text-slate-600 mb-1">請選擇您的身份</p>
                     {[
                       { role: 'merchant', icon: Store, label: '美容院商家', desc: '擁有美容院，希望入駐平台', gradient: 'from-rose-50 to-pink-50', border: 'border-rose-200 hover:border-rose-300', iconBg: 'bg-rose-100', iconColor: 'text-rose-500' },
-                      { role: 'kol', icon: Star, label: 'KOL / 推廣大使', desc: '希望推廣美容院服務', gradient: 'from-fuchsia-50 to-purple-50', border: 'border-fuchsia-200 hover:border-fuchsia-300', iconBg: 'bg-fuchsia-100', iconColor: 'text-fuchsia-500' },
                     ].map(item => (
                       <button key={item.role} type="button" onClick={() => setSelectedRole(item.role)}
                         className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 bg-gradient-to-r ${item.gradient} ${item.border} hover:shadow-md transition-all duration-200 text-left group hover:scale-[1.01]`}>
@@ -197,9 +200,9 @@ export default function UserLoginPage() {
                       <button type="button" onClick={() => setSelectedRole('')} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500">
                         <ArrowLeft className="w-4 h-4" />
                       </button>
-                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${selectedRole === 'merchant' ? 'bg-rose-100 text-rose-600' : 'bg-fuchsia-100 text-fuchsia-600'}`}>
-                        {selectedRole === 'merchant' ? <Store className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
-                        {selectedRole === 'merchant' ? '美容院商家' : 'KOL / 推廣大使'}
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold bg-rose-100 text-rose-600`}>
+                        <Store className="w-3.5 h-3.5" />
+                        美容院商家
                       </div>
                     </div>
                     <div className="space-y-1.5">
@@ -219,7 +222,7 @@ export default function UserLoginPage() {
                       <div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" /><Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="再次輸入密碼" required className="h-12 pl-10 rounded-xl border-rose-100 bg-rose-50/40 text-sm" /></div>
                     </div>
                     {error && <div className="bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3">{error}</div>}
-                    <Button type="submit" disabled={loading} className="w-full h-12 font-semibold rounded-xl text-white border-0 mt-2" style={{ background: selectedRole === 'merchant' ? 'linear-gradient(135deg, #f472b6, #e11d48)' : 'linear-gradient(135deg, #e879f9, #a21caf)' }}>
+                    <Button type="submit" disabled={loading} className="w-full h-12 font-semibold rounded-xl text-white border-0 mt-2" style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}>
                       {loading ? <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />註冊中...</span> : '立即免費註冊'}
                     </Button>
                   </>

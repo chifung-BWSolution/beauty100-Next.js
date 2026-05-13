@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+
 import PublicLayout from '@/components/public/PublicLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +11,8 @@ import {
   Zap, Sparkles, Palette, Apple, Shield, MapPin, ChevronRight, ChevronLeft, Flame, Tag,
   Users,
 } from 'lucide-react';
-import { HorizontalBannerAd, PromotionalBlock, SidebarAdUnit, BottomDualAd } from '@/components/ads/AdComponents';
+// Ad components removed from homepage
+import { supabase } from '@/lib/supabase';
 
 /* ───────────────────────────── DATA ───────────────────────────── */
 
@@ -23,45 +25,64 @@ const CATEGORIES = [
   { label: '身體保養', href: '/body-care', icon: Shield, color: 'from-blue-400 to-cyan-500', description: '全身保養貼士' },
 ];
 
-const HERO_FEATURED = {
-  title: '2025年最受歡迎的面部護理療程',
-  description: '盤點今年最受香港女士歡迎的面部護理療程，從水光針到HIFU，一文睇晒各大人氣療程。',
-  image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80',
-  tag: '焦點話題',
-  href: '/topics',
+const CATEGORY_MAP: Record<string, { title: string; href: string }> = {
+  'trending-topics': { title: '焦點話題', href: '/topics' },
+  'entertainment': { title: '娛樂圈', href: '/entertainment' },
+  'facial-care': { title: '面部護理', href: '/facial-care' },
+  'anti-aging': { title: '回復青春', href: '/anti-aging' },
+  'body-shaping': { title: '身材管理', href: '/body-shaping' },
+  'skincare': { title: '化妝護膚', href: '/skincare' },
+  'healthy-diet': { title: '飲食健康', href: '/healthy-diet' },
+  'body-care': { title: '身體保養', href: '/body-care' },
 };
 
-const HERO_SUPPORTING = [
-  {
-    title: '女星逆齡保養術：40歲皮膚如少女',
-    image: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=400&q=80',
-    tag: '娛樂圈',
-    href: '/entertainment',
-  },
-  {
-    title: '排毒飲食計劃：7日肌膚煥然一新',
-    image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&q=80',
-    tag: '飲食健康',
-    href: '/healthy-diet',
-  },
-  {
-    title: '韓式水光肌養成法 一週護膚指南',
-    image: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=400&q=80',
-    tag: '化妝護膚',
-    href: '/skincare',
-  },
+/** Get the article detail path based on category */
+function getArticleDetailPath(category: string, handle: string): string {
+  if (category === 'anti-aging') {
+    return `/anti-aging/${encodeURIComponent(handle)}`;
+  }
+  if (category === 'body-care') {
+    return `/body-care/${encodeURIComponent(handle)}`;
+  }
+  return `/topics/${encodeURIComponent(handle)}`;
+}
+
+// Cover styles for salons without images - diverse backgrounds
+const COVER_STYLES = [
+  { bgImage: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80', overlayFrom: 'rgba(6,78,59,0.7)', overlayTo: 'rgba(13,148,136,0.5)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=800&q=80', overlayFrom: 'rgba(251,113,133,0.6)', overlayTo: 'rgba(249,168,212,0.4)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&q=80', overlayFrom: 'rgba(41,37,36,0.6)', overlayTo: 'rgba(146,64,14,0.4)', textColor: '#f5f5f4' },
+  { bgImage: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80', overlayFrom: 'rgba(3,105,161,0.6)', overlayTo: 'rgba(6,182,212,0.4)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80', overlayFrom: 'rgba(88,28,135,0.65)', overlayTo: 'rgba(147,51,234,0.4)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=800&q=80', overlayFrom: 'rgba(30,58,138,0.65)', overlayTo: 'rgba(59,130,246,0.4)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&q=80', overlayFrom: 'rgba(157,23,77,0.6)', overlayTo: 'rgba(236,72,153,0.4)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800&q=80', overlayFrom: 'rgba(20,83,45,0.65)', overlayTo: 'rgba(34,197,94,0.35)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=800&q=80', overlayFrom: 'rgba(120,53,15,0.65)', overlayTo: 'rgba(217,119,6,0.4)', textColor: '#fef3c7' },
+  { bgImage: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80', overlayFrom: 'rgba(159,18,57,0.6)', overlayTo: 'rgba(244,63,94,0.35)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=800&q=80', overlayFrom: 'rgba(17,94,89,0.65)', overlayTo: 'rgba(45,212,191,0.35)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&q=80', overlayFrom: 'rgba(55,48,163,0.65)', overlayTo: 'rgba(99,102,241,0.4)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1552693673-1bf958298935?w=800&q=80', overlayFrom: 'rgba(9,9,11,0.5)', overlayTo: 'rgba(63,63,70,0.4)', textColor: '#fafafa' },
+  { bgImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80', overlayFrom: 'rgba(21,94,117,0.65)', overlayTo: 'rgba(34,211,238,0.35)', textColor: '#ffffff' },
+  { bgImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80', overlayFrom: 'rgba(113,63,18,0.65)', overlayTo: 'rgba(234,179,8,0.35)', textColor: '#fef9c3' },
+  { bgImage: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&q=80', overlayFrom: 'rgba(76,29,149,0.6)', overlayTo: 'rgba(168,85,247,0.35)', textColor: '#ffffff' },
 ];
 
-const FEATURED_SALONS = [
-  { name: 'Glow Beauty Studio', area: '銅鑼灣', rating: 4.9, reviews: 128, image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80', tags: ['面部護理', 'HIFU'] },
-  { name: 'Radiance Spa', area: '尖沙咀', rating: 4.8, reviews: 95, image: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6a?w=400&q=80', tags: ['身材管理', '按摩'] },
-  { name: 'Aura Beauty', area: '中環', rating: 4.9, reviews: 203, image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80', tags: ['回復青春', '水光針'] },
-  { name: 'Pure Skin Lab', area: '旺角', rating: 4.7, reviews: 67, image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&q=80', tags: ['面部護理', '暗瘡'] },
-  { name: 'Luxe Skin Clinic', area: '灣仔', rating: 4.8, reviews: 156, image: 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=400&q=80', tags: ['美白', '去斑'] },
-  { name: 'Serenity Beauty', area: '太古', rating: 4.6, reviews: 89, image: 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=400&q=80', tags: ['脫毛', '按摩'] },
-  { name: 'Diamond Glow', area: '觀塘', rating: 4.7, reviews: 112, image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80', tags: ['Thermage', '膠原蛋白'] },
-  { name: 'Belle Visage', area: '沙田', rating: 4.9, reviews: 178, image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80', tags: ['瘦面', '纖體'] },
-];
+function getCoverStyleIndex(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash) % COVER_STYLES.length;
+}
+
+interface FeaturedSalon {
+  id: string;
+  name: string;
+  area: string;
+  image: string | null;
+  tags: string[];
+}
 
 interface ArticleSectionData {
   title: string;
@@ -69,104 +90,8 @@ interface ArticleSectionData {
   articles: { title: string; image: string; tag?: string; href: string; description?: string }[];
 }
 
-const EDITORIAL_SECTIONS: ArticleSectionData[] = [
-  {
-    title: '焦點話題',
-    href: '/topics',
-    articles: [
-      { title: '香港十大人氣美容院 2025年度排行榜', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80', tag: '排行榜', href: '/topics', description: '綜合用戶評分、環境及服務質素，揀選出今年最值得去的十間美容院。' },
-      { title: '醫美新趨勢：微整形定係傳統護膚好？', image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80', tag: '專題', href: '/topics', description: '深入比較醫美微整形與傳統護膚的效果、成本及安全性。' },
-      { title: '新手必讀：第一次做Facial要注意咩？', image: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=400&q=80', href: '/topics' },
-      { title: '夏日防曬攻略：SPF係咪越高越好？', image: 'https://images.unsplash.com/photo-1526758097130-bab247274f58?w=400&q=80', href: '/topics' },
-    ],
-  },
-  {
-    title: '娛樂圈',
-    href: '/entertainment',
-    articles: [
-      { title: '女星逆齡保養術：40歲皮膚如少女', image: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=400&q=80', tag: '明星', href: '/entertainment', description: '揭開多位凍齡女星的護膚秘訣，從日常習慣到專業療程全面解析。' },
-      { title: '韓國明星最愛的護膚品牌大公開', image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&q=80', tag: '韓流', href: '/entertainment', description: 'K-beauty品牌深度分析，看看韓國明星真正在用甚麼。' },
-      { title: '紅毯妝容解構：點樣畫出高級感？', image: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&q=80', href: '/entertainment' },
-      { title: '星級髮型師推薦：今季最流行髮色', image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80', href: '/entertainment' },
-    ],
-  },
-  {
-    title: '面部護理',
-    href: '/facial-care',
-    articles: [
-      { title: 'HIFU vs Thermage：點揀最適合自己？', image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&q=80', tag: '比較', href: '/facial-care', description: '兩大拉提療程全面比較，從原理到效果逐一分析。' },
-      { title: '毛孔收細全攻略：從清潔到醫美', image: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=400&q=80', tag: '指南', href: '/facial-care', description: '針對不同毛孔問題的解決方案，從家居護理到專業療程。' },
-      { title: '敏感肌護理：溫和有效嘅保養方法', image: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=400&q=80', href: '/facial-care' },
-      { title: '黑眼圈急救法：眼部護理全指南', image: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=400&q=80', href: '/facial-care' },
-    ],
-  },
-  {
-    title: '回復青春',
-    href: '/anti-aging',
-    articles: [
-      { title: '抗衰老從25歲開始：年齡護膚指南', image: 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=400&q=80', tag: '指南', href: '/anti-aging', description: '根據不同年齡階段制定抗衰老護膚計劃。' },
-      { title: '膠原蛋白流失怎麼辦？全面補充方法', image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80', href: '/anti-aging' },
-    ],
-  },
-  {
-    title: '身材管理',
-    href: '/body-shaping',
-    articles: [
-      { title: '冷凍溶脂 vs 熱光溶脂：最新體雕技術比較', image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&q=80', tag: '比較', href: '/body-shaping', description: '全面比較兩大非入侵性體雕技術的效果及適合人群。' },
-      { title: '產後修身攻略：安全有效的方法', image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&q=80', href: '/body-shaping' },
-    ],
-  },
-  {
-    title: '化妝護膚',
-    href: '/skincare',
-    articles: [
-      { title: '韓式水光肌養成法：七日護膚計劃', image: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=400&q=80', tag: '教學', href: '/skincare', description: '跟住做就可以擁有韓星般的水潤光澤肌膚。' },
-      { title: '成分黨必讀：透明質酸 vs 神經醯胺', image: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=400&q=80', href: '/skincare' },
-    ],
-  },
-  {
-    title: '飲食健康',
-    href: '/healthy-diet',
-    articles: [
-      { title: '食出好皮膚：美容飲食完全指南', image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&q=80', tag: '飲食', href: '/healthy-diet', description: '營養師推薦的美容飲食方案，由內至外改善膚質。' },
-      { title: '抗氧化超級食物Top 10', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80', href: '/healthy-diet' },
-    ],
-  },
-  {
-    title: '身體保養',
-    href: '/body-care',
-    articles: [
-      { title: '全身保養攻略：從頭到腳嘅護理秘訣', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6a?w=400&q=80', tag: '指南', href: '/body-care', description: '全面身體護理指南，包括手足、頸部及身體肌膚保養。' },
-      { title: 'SPA按摩全攻略：香港最受歡迎的療程', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6a?w=400&q=80', href: '/body-care' },
-    ],
-  },
-];
-
-const TRENDING_ARTICLES = [
-  { title: '毛孔收細全攻略：從清潔到醫美', href: '/facial-care', views: '12.3K' },
-  { title: 'HIFU vs Thermage 最新比較', href: '/facial-care', views: '9.8K' },
-  { title: '2025年度十大美容院排行榜', href: '/topics', views: '8.5K' },
-  { title: '韓式水光肌養成法', href: '/skincare', views: '6.9K' },
-  { title: '明星逆齡保養術大公開', href: '/entertainment', views: '6.1K' },
-  { title: '敏感肌護理完全指南', href: '/facial-care', views: '5.8K' },
-  { title: '冷凍溶脂效果實測', href: '/body-shaping', views: '5.3K' },
-  { title: '排毒飲食計劃七日改善膚質', href: '/healthy-diet', views: '4.9K' },
-];
-
-const EDITOR_PICKS = [
-  { title: '香港十大隱世美容院推薦', href: '/explore-salons', tag: '編輯推薦' },
-  { title: '零基礎護膚入門懶人包', href: '/skincare', tag: '新手必讀' },
-  { title: '美容院消費陷阱大揭密', href: '/topics', tag: '消費指南' },
-  { title: '醫美前必做的功課清單', href: '/facial-care', tag: '實用貼士' },
-];
-
-const POPULAR_TAGS = [
-  'HIFU', '水光針', '膠原蛋白', '美白', '抗衰老', '瘦面', '去斑',
-  '暗瘡', '毛孔', '保濕', '防曬', '脫毛', '按摩', '纖體',
-];
-
 const PLATFORM_STATS = [
-  { label: '合作美容院', value: '500+', icon: Award },
+  { label: '合作美容院', value: '2,000+', icon: Award },
   { label: '專業文章', value: '2,000+', icon: TrendingUp },
   { label: '月均瀏覽', value: '100K+', icon: Eye },
   { label: '用戶好評', value: '4.8', icon: Star },
@@ -221,11 +146,11 @@ function ArticleCardSmall({ article }: { article: ArticleSectionData['articles']
 
 /* ───────────────────── SALON CAROUSEL ───────────────────── */
 
-function SalonCarousel() {
+function SalonCarousel({ salons }: { salons: FeaturedSalon[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const autoplayRef = useRef<NodeJS.Timeout | null>(null);
-  const totalSlides = FEATURED_SALONS.length;
+  const totalSlides = salons.length;
 
   // Number of visible cards based on viewport (handled via CSS, but we track for dot logic)
   const getVisibleCount = useCallback(() => {
@@ -326,31 +251,59 @@ function SalonCarousel() {
             transform: `translateX(-${trackOffset}px)`,
           }}
         >
-          {FEATURED_SALONS.map((salon, i) => (
+          {salons.map((salon, i) => (
             <Link
-              key={i}
-              href="/explore-salons"
+              key={salon.id || i}
+              href={salon.id ? `/salon/${salon.id}` : '/explore-salons'}
               className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100/80 shrink-0"
               style={{ width: `calc((100% - ${gapPx * (visibleCount - 1)}px) / ${visibleCount})` }}
             >
               <div className="relative h-36 overflow-hidden bg-gradient-to-br from-rose-100 to-pink-50">
-                <img src={salon.image} alt={salon.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80'; }} />
+                {salon.image ? (
+                  <img src={salon.image} alt={salon.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                ) : (() => {
+                  const styleIdx = getCoverStyleIndex(salon.id || salon.name);
+                  const coverStyle = COVER_STYLES[styleIdx];
+                  return (
+                    <div className="relative w-full h-full">
+                      <img
+                        src={coverStyle.bgImage}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                      <div
+                        className="absolute inset-0"
+                        style={{ background: `linear-gradient(135deg, ${coverStyle.overlayFrom}, ${coverStyle.overlayTo})` }}
+                      />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
+                        <p className="text-[9px] uppercase tracking-[0.2em] opacity-70 mb-0.5" style={{ color: coverStyle.textColor }}>
+                          Beauty Salon
+                        </p>
+                        <h3 className="text-sm font-bold text-center leading-tight drop-shadow-md line-clamp-2" style={{ color: coverStyle.textColor }}>
+                          {salon.name}
+                        </h3>
+                        <div className="mt-1.5 w-8 h-0.5 opacity-60 rounded" style={{ backgroundColor: coverStyle.textColor }} />
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
               <div className="p-3.5">
                 <h3 className="font-bold text-slate-800 text-sm mb-1 group-hover:text-rose-600 transition-colors">{salon.name}</h3>
-                <div className="flex items-center gap-1.5 text-[12px] text-slate-400 mb-2">
-                  <MapPin className="w-3 h-3" />
-                  <span>{salon.area}</span>
-                  <span className="mx-1">·</span>
-                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                  <span className="text-slate-600 font-medium">{salon.rating}</span>
-                  <span className="text-slate-300">({salon.reviews})</span>
-                </div>
-                <div className="flex gap-1.5 flex-wrap">
-                  {salon.tags.map((tag) => (
-                    <span key={tag} className="text-[14px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-500 font-medium">{tag}</span>
-                  ))}
-                </div>
+                {salon.area && (
+                  <div className="flex items-center gap-1.5 text-[12px] text-slate-400 mb-2">
+                    <MapPin className="w-3 h-3" />
+                    <span>{salon.area}</span>
+                  </div>
+                )}
+                {salon.tags.length > 0 && (
+                  <div className="flex gap-1.5 flex-wrap">
+                    {salon.tags.map((tag) => (
+                      <span key={tag} className="text-[14px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-500 font-medium">{tag}</span>
+                    ))}
+                  </div>
+                )}
               </div>
             </Link>
           ))}
@@ -379,51 +332,297 @@ function SalonCarousel() {
 /* ───────────────────── MAIN PAGE ───────────────────── */
 
 export default function HomePage() {
+  const [mounted, setMounted] = useState(false);
+  const [editorialSections, setEditorialSections] = useState<ArticleSectionData[]>([]);
+  const [heroFeatured, setHeroFeatured] = useState<{ title: string; description: string; image: string; tag: string; href: string } | null>(null);
+  const [heroSupporting, setHeroSupporting] = useState<{ title: string; image: string; tag: string; href: string }[]>([]);
+  const [trendingArticles, setTrendingArticles] = useState<{ title: string; href: string; views: string }[]>([]);
+  const [editorPicks, setEditorPicks] = useState<{ title: string; href: string; tag: string }[]>([]);
+  const [popularTags, setPopularTags] = useState<string[]>([]);
+  const [featuredSalons, setFeaturedSalons] = useState<FeaturedSalon[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Fetch featured salons from real data
+  useEffect(() => {
+    async function fetchFeaturedSalons() {
+      try {
+        const { data, error } = await supabase
+          .from('salon_profiles')
+          .select('id, salon_name, district_name, image_src, product_media, selected_tags, highlight_tags, tags')
+          .or('is_active.eq.true,is_active.is.null')
+          .limit(8);
+
+        if (error || !data) return;
+
+        const salons: FeaturedSalon[] = data.map((s: any) => {
+          // Get the best image available - null if none
+          let image: string | null = null;
+          if (s.image_src) {
+            image = s.image_src;
+          } else if (s.product_media && Array.isArray(s.product_media) && s.product_media.length > 0) {
+            const first = s.product_media[0];
+            image = typeof first === 'string' ? first : (first?.src || first?.url || null);
+          }
+
+          // Safe JSON parse helper
+          const safeParseTags = (val: any): string[] => {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;
+            if (typeof val === 'string') {
+              try {
+                const parsed = JSON.parse(val);
+                if (Array.isArray(parsed)) return parsed;
+              } catch {
+                // Not valid JSON – treat as a single tag string
+                return val.trim() ? [val.trim()] : [];
+              }
+            }
+            return [];
+          };
+
+          // Get highlight tags first, fallback to regular tags only if no highlights
+          const highlightTags: string[] = safeParseTags(s.highlight_tags);
+
+          const regularTags: string[] = (() => {
+            const selected = safeParseTags(s.selected_tags);
+            if (selected.length > 0) return selected;
+            return safeParseTags(s.tags);
+          })();
+
+          const area = s.district_name || '';
+
+          // Show highlight tags if available, otherwise fallback to regular tags
+          const filteredTags = (highlightTags.length > 0 ? highlightTags : regularTags)
+            .filter((tag: string) => tag !== area)
+            .slice(0, 2);
+
+          return {
+            id: s.id,
+            name: s.salon_name || '美容院',
+            area,
+            image,
+            tags: filteredTags,
+          };
+        });
+
+        setFeaturedSalons(salons);
+      } catch (err: any) {
+        const msg = err?.message || String(err);
+        if (!msg.includes('Failed to fetch') && !msg.includes('Network error')) {
+          console.error('Error fetching salons:', err);
+        }
+      }
+    }
+    fetchFeaturedSalons();
+  }, []);
+
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const { data, error } = await supabase
+          .from('blog_articles')
+          .select('handle, title, seo_description, cover_image_url, tags, published_at, category, blog_title')
+          .eq('status', 'active')
+          .order('published_at', { ascending: false })
+          .limit(100);
+
+        if (error) {
+          // Suppress network errors in preview/canvas environments
+          if (error.message !== 'Network error' && error.message !== 'Supabase not configured') {
+            console.error('Error fetching articles:', error);
+          }
+          return;
+        }
+
+        if (!data || data.length === 0) return;
+
+        // Filter out articles with missing handles (they won't have valid detail pages)
+        const validData = data.filter((item: any) => item.handle && item.handle.trim() !== '');
+        if (validData.length === 0) return;
+
+        // Build hero section from latest articles
+        const first = validData[0];
+        setHeroFeatured({
+          title: first.title,
+          description: first.seo_description || '',
+          image: first.cover_image_url || 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80',
+          tag: CATEGORY_MAP[first.category || '']?.title || first.tags?.[0] || '焦點話題',
+          href: getArticleDetailPath(first.category || '', first.handle),
+        });
+
+        // Supporting = next 3 articles from different categories
+        const supporting: typeof heroSupporting = [];
+        const usedCategories = new Set([first.category]);
+        for (let i = 1; i < validData.length && supporting.length < 3; i++) {
+          const item = validData[i];
+          if (!usedCategories.has(item.category) || supporting.length < 3) {
+            supporting.push({
+              title: item.title,
+              image: item.cover_image_url || 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80',
+              tag: CATEGORY_MAP[item.category || '']?.title || item.tags?.[0] || '',
+              href: getArticleDetailPath(item.category || '', item.handle),
+            });
+            usedCategories.add(item.category);
+          }
+        }
+        setHeroSupporting(supporting);
+
+        // Group articles by category for editorial sections (deduplicate by handle within each category)
+        const grouped: Record<string, typeof validData> = {};
+        validData.forEach((item) => {
+          const cat = item.category || 'trending-topics';
+          if (!grouped[cat]) grouped[cat] = [];
+          // Avoid duplicate articles (same handle or same title) within the same category
+          const isDuplicate = grouped[cat].some(
+            (existing) => existing.handle === item.handle || existing.title === item.title
+          );
+          if (!isDuplicate) {
+            grouped[cat].push(item);
+          }
+        });
+
+        // Build editorial sections - maintain the order of CATEGORY_MAP
+        const sectionOrder = ['trending-topics', 'entertainment', 'facial-care', 'anti-aging', 'body-shaping', 'skincare', 'healthy-diet', 'body-care'];
+        const sections: ArticleSectionData[] = [];
+        sectionOrder.forEach((catKey) => {
+          const catArticles = grouped[catKey];
+          if (!catArticles || catArticles.length === 0) return;
+          const catInfo = CATEGORY_MAP[catKey];
+          if (!catInfo) return;
+          sections.push({
+            title: catInfo.title,
+            href: catInfo.href,
+            articles: catArticles.slice(0, 4).map((item) => ({
+              title: item.title,
+              image: item.cover_image_url || 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80',
+              tag: item.tags?.[0] || undefined,
+              href: getArticleDetailPath(item.category || catKey, item.handle),
+              description: item.seo_description || undefined,
+            })),
+          });
+        });
+        setEditorialSections(sections);
+
+        // Trending articles (latest 8 overall)
+        const trending = validData.slice(0, 8).map((item) => ({
+          title: item.title,
+          href: getArticleDetailPath(item.category || '', item.handle),
+          views: `${(Math.floor(Math.random() * 12) + 3)}.${Math.floor(Math.random() * 9)}K`,
+        }));
+        setTrendingArticles(trending);
+
+        // Editor picks: articles with most tags
+        const editorData = [...validData]
+          .filter((item) => item.tags && item.tags.length > 1)
+          .slice(0, 4);
+        const editorFallback = editorData.length >= 2 ? editorData : validData.slice(0, 4);
+        setEditorPicks(editorFallback.map((item) => ({
+          title: item.title,
+          href: getArticleDetailPath(item.category || '', item.handle),
+          tag: item.blog_title?.includes('明星') ? '明星推薦' : (item.tags?.[0] || '編輯推薦'),
+        })));
+
+        // Popular tags
+        const tagCounts: Record<string, number> = {};
+        validData.forEach((item) => {
+          if (item.tags && Array.isArray(item.tags)) {
+            item.tags.forEach((t: string) => {
+              const trimmed = t.trim();
+              if (trimmed) tagCounts[trimmed] = (tagCounts[trimmed] || 0) + 1;
+            });
+          }
+        });
+        const sortedTags = Object.entries(tagCounts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([tag]) => tag)
+          .slice(0, 14);
+        setPopularTags(sortedTags.length > 0 ? sortedTags : ['HIFU', '水光針', '膠原蛋白', '美白', '抗衰老', '瘦面', '去斑', '暗瘡', '毛孔', '保濕', '防曬', '脫毛', '按摩', '纖體']);
+      } catch (err: any) {
+        // Suppress network/fetch errors that occur in preview environments
+        const msg = err?.message || String(err);
+        if (!msg.includes('Failed to fetch') && !msg.includes('Network error')) {
+          console.error('Error fetching articles:', err);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchArticles();
+  }, []);
+
+  if (!mounted) {
+    return (
+      <PublicLayout>
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-7 rounded-2xl bg-slate-100 animate-pulse min-h-[320px] lg:min-h-[420px]" />
+            <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+              {[1,2,3].map(i => <div key={i} className="rounded-xl bg-slate-100 animate-pulse min-h-[130px]" />)}
+            </div>
+          </div>
+        </div>
+      </PublicLayout>
+    );
+  }
+
   return (
     <PublicLayout>
       {/* ═══════════ 1. FEATURED EDITORIAL ZONE ═══════════ */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* Main featured article */}
-          <Link href={HERO_FEATURED.href} className="lg:col-span-7 group relative rounded-2xl overflow-hidden bg-slate-900 min-h-[320px] lg:min-h-[420px]">
-            <img
-              src={HERO_FEATURED.image}
-              alt={HERO_FEATURED.title}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80'; }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
-              <Badge className="bg-rose-500 text-white border-0 text-[12px] mb-3 shadow-md">{HERO_FEATURED.tag}</Badge>
-              <h1 className="text-xl sm:text-2xl lg:text-[28px] font-bold text-white leading-tight mb-2 group-hover:text-rose-200 transition-colors">
-                {HERO_FEATURED.title}
-              </h1>
-              <p className="text-sm text-white/70 line-clamp-2 max-w-lg">{HERO_FEATURED.description}</p>
-            </div>
-          </Link>
+        {heroFeatured ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Main featured article */}
+            <Link href={heroFeatured.href} className="lg:col-span-7 group relative rounded-2xl overflow-hidden bg-slate-900 min-h-[320px] lg:min-h-[420px]">
+              <img
+                src={heroFeatured.image}
+                alt={heroFeatured.title}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80'; }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
+                <Badge className="bg-rose-500 text-white border-0 text-[12px] mb-3 shadow-md">{heroFeatured.tag}</Badge>
+                <h1 className="text-xl sm:text-2xl lg:text-[28px] font-bold text-white leading-tight mb-2 group-hover:text-rose-200 transition-colors">
+                  {heroFeatured.title}
+                </h1>
+                <p className="text-sm text-white/70 line-clamp-2 max-w-lg">{heroFeatured.description}</p>
+              </div>
+            </Link>
 
-          {/* Supporting articles stack */}
-          <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-            {HERO_SUPPORTING.map((article, i) => (
-              <Link key={i} href={article.href} className="group relative rounded-xl overflow-hidden bg-slate-900 min-h-[130px]">
-                <img
-                  src={article.image}
-                  alt={article.title}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80'; }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <Badge className="bg-white/20 text-white border-0 text-[14px] backdrop-blur-sm mb-1.5">{article.tag}</Badge>
-                  <h3 className="text-sm font-bold text-white leading-snug line-clamp-2 group-hover:text-rose-200 transition-colors">
-                    {article.title}
-                  </h3>
-                </div>
-              </Link>
-            ))}
+            {/* Supporting articles stack */}
+            <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+              {heroSupporting.map((article, i) => (
+                <Link key={i} href={article.href} className="group relative rounded-xl overflow-hidden bg-slate-900 min-h-[130px]">
+                  <img
+                    src={article.image}
+                    alt={article.title}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80'; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <Badge className="bg-white/20 text-white border-0 text-[14px] backdrop-blur-sm mb-1.5">{article.tag}</Badge>
+                    <h3 className="text-sm font-bold text-white leading-snug line-clamp-2 group-hover:text-rose-200 transition-colors">
+                      {article.title}
+                    </h3>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-7 rounded-2xl bg-slate-100 animate-pulse min-h-[320px] lg:min-h-[420px]" />
+            <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+              {[1,2,3].map(i => <div key={i} className="rounded-xl bg-slate-100 animate-pulse min-h-[130px]" />)}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       {/* ═══════════ 2. PLATFORM STATS STRIP ═══════════ */}
@@ -443,13 +642,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════ AD: Horizontal Banner ═══════════ */}
-      <HorizontalBannerAd variant="slim" />
+      {/* AD REMOVED */}
 
       {/* ═══════════ 3. FEATURED SALONS CAROUSEL ═══════════ */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-6">
         <SectionHeader title="人氣美容院" href="/explore-salons" subtitle="嚴選全港優質美容院商戶" />
-        <SalonCarousel />
+        {featuredSalons.length > 0 && <SalonCarousel salons={featuredSalons} />}
         <div className="text-center mt-5">
           <Link href="/explore-salons">
             <Button variant="outline" className="h-9 px-5 rounded-lg text-sm font-medium border-rose-200 text-rose-600 hover:bg-rose-50">
@@ -509,8 +707,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════ AD: Mid-page Promotional Block ═══════════ */}
-      <HorizontalBannerAd variant="gradient" />
+      {/* AD REMOVED */}
 
       {/* ═══════════ 5. EDITORIAL SECTIONS WITH SIDEBAR ═══════════ */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -518,7 +715,7 @@ export default function HomePage() {
 
           {/* MAIN CONTENT (8 cols) */}
           <div className="lg:col-span-8 space-y-10">
-            {EDITORIAL_SECTIONS.map((section) => (
+            {editorialSections.length > 0 ? editorialSections.map((section) => (
               <div key={section.title}>
                 <SectionHeader title={section.title} href={section.href} />
                 {section.articles.length >= 4 ? (
@@ -545,7 +742,18 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
-            ))}
+            )) : loading ? (
+              <div className="space-y-10">
+                {[1,2,3].map(i => (
+                  <div key={i}>
+                    <div className="h-6 w-32 bg-slate-100 rounded animate-pulse mb-5" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[1,2].map(j => <div key={j} className="h-48 bg-slate-100 rounded-xl animate-pulse" />)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           {/* SIDEBAR (4 cols) — sticky on desktop */}
@@ -559,7 +767,7 @@ export default function HomePage() {
                   熱門文章
                 </h3>
                 <div className="space-y-0">
-                  {TRENDING_ARTICLES.map((article, i) => (
+                  {trendingArticles.map((article, i) => (
                     <Link key={i} href={article.href} className="group flex items-start gap-2.5 py-2.5 border-b border-slate-100/70 last:border-b-0 hover:bg-rose-50/30 -mx-1 px-1 rounded transition-colors">
                       <span className="text-[12px] font-bold text-rose-400 w-5 shrink-0 pt-0.5">{String(i + 1).padStart(2, '0')}</span>
                       <div className="flex-1 min-w-0">
@@ -580,7 +788,7 @@ export default function HomePage() {
                   編輯推薦
                 </h3>
                 <div className="space-y-0">
-                  {EDITOR_PICKS.map((article, i) => (
+                  {editorPicks.map((article, i) => (
                     <Link key={i} href={article.href} className="group flex items-center gap-2.5 py-2.5 border-b border-slate-100/70 last:border-b-0 hover:bg-rose-50/30 -mx-1 px-1 rounded transition-colors">
                       <Badge className="bg-rose-50 text-rose-500 border-0 text-[12px] shrink-0 font-medium">{article.tag}</Badge>
                       <h4 className="text-[14px] font-medium text-slate-700 line-clamp-1 group-hover:text-rose-600 transition-colors">{article.title}</h4>
@@ -596,22 +804,21 @@ export default function HomePage() {
                   熱門標籤
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
-                  {POPULAR_TAGS.map((tag) => (
-                    <span key={tag} className="text-[12px] px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 hover:bg-rose-50 hover:text-rose-600 cursor-pointer transition-colors border border-slate-100">
+                  {popularTags.map((tag) => (
+                    <Link key={tag} href={`/topics/tag/${encodeURIComponent(tag)}`} className="text-[12px] px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 hover:bg-rose-50 hover:text-rose-600 cursor-pointer transition-colors border border-slate-100">
                       #{tag}
-                    </span>
+                    </Link>
                   ))}
                 </div>
               </div>
 
-              {/* Sidebar Ad Unit */}
-              <SidebarAdUnit variant="salon" />
+              {/* AD REMOVED */}
 
               {/* Search CTA mini */}
               <div className="rounded-xl p-5 text-center" style={{ background: 'linear-gradient(135deg, #fce7f3, #fdf2f8)' }}>
                 <Search className="w-6 h-6 text-rose-400 mx-auto mb-2" />
                 <h4 className="text-sm font-bold text-slate-700 mb-1">搵你附近美容院</h4>
-                <p className="text-[14px] text-slate-400 mb-3">搜索全港500+優質美容院</p>
+                <p className="text-[14px] text-slate-400 mb-3">搜索全港2000+優質美容院</p>
                 <Link href="/explore-salons">
                   <Button
                     className="h-8 px-4 rounded-lg text-sm font-medium shadow-sm w-full"
@@ -627,8 +834,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════ AD: Bottom Dual Ad Blocks (Left-Right) ═══════════ */}
-      <BottomDualAd />
+      {/* AD REMOVED */}
 
       {/* ═══════════ 6. MERCHANT CTA ═══════════ */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">

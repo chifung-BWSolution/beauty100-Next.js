@@ -249,6 +249,22 @@ export const SalonProfileVersion = {
     if (error) throw error;
     return {};
   },
+
+  createPublicSuggestion: async (payload: Record<string, unknown>) => {
+    const { data, error } = await supabase
+      .from('salon_profile_versions')
+      .insert({
+        ...payload,
+        submission_type: 'public_suggestion',
+        status: 'pending_approval',
+        created_date: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
 };
 
 // ─── UserActivityLog ──────────────────────────────────────────────────────────
@@ -302,6 +318,7 @@ export const functionsApi = {
       inviteAdminUser: 'supabase-functions-invite-admin-user',
       checkShopifyHandle: 'supabase-functions-shopify-check-handle',
       refreshShopifyToken: 'supabase-functions-shopify-refresh-token',
+      resetUserPassword: 'supabase-functions-reset-user-password',
     };
     const slug = slugMap[name] || name;
 
