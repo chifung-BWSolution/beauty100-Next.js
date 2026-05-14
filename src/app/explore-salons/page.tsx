@@ -11,7 +11,7 @@ import PublicLayout from '@/components/public/PublicLayout';
 import {
   Search, MapPin, Sparkles, X, Phone, Globe,
   Star, Store, ChevronLeft, ChevronRight, CheckCircle2,
-  ChevronDown, RotateCcw, Clock,
+  ChevronDown, RotateCcw, Clock, Lock, Wrench, AlertTriangle,
 } from 'lucide-react';
 
 const PAGE_SIZE = 12;
@@ -159,6 +159,11 @@ interface SalonProfile {
   office_hr_fri: string | null;
   office_hr_sat: string | null;
   office_hr_sun: string | null;
+  salon_status: string | null;
+  closed_date: string | null;
+  renovation_date: string | null;
+  reopened_date: string | null;
+  new_opening_date: string | null;
 }
 
 interface TagCategory {
@@ -220,7 +225,7 @@ export default function ExploreSalonsPage() {
         while (hasMore) {
           const { data, error } = await supabase
             .from('salon_profiles')
-            .select('id, salon_name, address, district, district_name, description, image_src, product_media, tags, selected_tags, highlight_tags, contact_number, whatsapp_number, website, is_active, product_type, created_by, office_hr_mon, office_hr_tue, office_hr_wed, office_hr_thu, office_hr_fri, office_hr_sat, office_hr_sun')
+            .select('id, salon_name, address, district, district_name, description, image_src, product_media, tags, selected_tags, highlight_tags, contact_number, whatsapp_number, website, is_active, product_type, created_by, office_hr_mon, office_hr_tue, office_hr_wed, office_hr_thu, office_hr_fri, office_hr_sat, office_hr_sun, salon_status, closed_date, renovation_date, reopened_date, new_opening_date')
             .or('is_active.eq.true,is_active.is.null')
             .order('salon_name')
             .range(from, from + FETCH_LIMIT - 1);
@@ -772,11 +777,31 @@ export default function ExploreSalonsPage() {
                           已認領
                         </div>
                       )}
+
+                      {/* Salon status badge - bottom left */}
+                      {salon.salon_status && salon.salon_status !== 'active' && (
+                        <div className={`absolute bottom-3 left-3 flex items-center gap-1 backdrop-blur-sm text-xs font-semibold px-2.5 py-1.5 rounded-full shadow-sm ${
+                          salon.salon_status === 'closed' 
+                            ? 'bg-red-500/90 text-white' 
+                            : salon.salon_status === 'renovation'
+                            ? 'bg-amber-500/90 text-white'
+                            : 'bg-slate-500/90 text-white'
+                        }`}>
+                          {salon.salon_status === 'closed' && <><Lock className="w-3 h-3" /> 已結業</>}
+                          {salon.salon_status === 'renovation' && <><Wrench className="w-3 h-3" /> 裝修中</>}
+                        </div>
+                      )}
                     </div>
 
                     {/* Content */}
                     <div className="p-4">
-                      <h3 className="font-bold text-slate-800 text-base mb-1.5 line-clamp-1 group-hover:text-rose-600 transition-colors">
+                      <h3 className={`font-bold text-base mb-1.5 line-clamp-1 transition-colors ${
+                        salon.salon_status === 'closed' 
+                          ? 'text-red-400 line-through' 
+                          : salon.salon_status === 'renovation'
+                          ? 'text-amber-600 group-hover:text-amber-700'
+                          : 'text-slate-800 group-hover:text-rose-600'
+                      }`}>
                         {salon.salon_name || '未命名美容院'}
                       </h3>
 

@@ -177,27 +177,87 @@ export default function AdminDashboardPage() {
   const handleApproveVersion = async (version: any, targetStatus = 'active') => {
     setProcessing(true);
     try {
-      const { profile_id, shopify_product_id, status, rejection_reason, id, created_date, updated_date, created_by, version_name, is_starred, ...profileData } = version;
+      const { profile_id, shopify_product_id, status, rejection_reason, id, created_date, updated_date, created_by, version_name, is_starred, submission_type, change_reason, submitter_name, submitter_email, submitter_phone, submitter_note, is_shop_owner, closed_date, renovation_date, reopened_date, new_opening_date, updated_at, ...profileData } = version;
+      const isPublicSuggestion = version.submission_type === 'public_suggestion';
+      
+      // For public suggestions, we need to fetch the current profile to merge data
+      let currentProfile: any = null;
+      if (isPublicSuggestion && profile_id) {
+        try {
+          const profiles = await base44.entities.SalonProfile.filter({ id: profile_id });
+          currentProfile = profiles[0] || null;
+        } catch (e) {
+          console.warn('Failed to load current profile for merge:', e);
+        }
+      }
+      
+      // Build the final profile data to save
+      let finalProfileData = { ...profileData };
+      
+      if (isPublicSuggestion && currentProfile) {
+        // For public suggestions: only override fields that have actual values
+        // Don't let empty fields from the public form overwrite existing data
+        const fieldsToMerge = [
+          'salon_name', 'contact_person', 'contact_number', 'whatsapp_number',
+          'email', 'address', 'district', 'website', 'tags', 'handle',
+          'seo_title', 'seo_description', 'description',
+          'office_hr_mon', 'office_hr_tue', 'office_hr_wed', 'office_hr_thu',
+          'office_hr_fri', 'office_hr_sat', 'office_hr_sun',
+        ];
+        
+        // Start from current profile data, then selectively override with non-empty submitted values
+        const mergedData: Record<string, any> = {};
+        fieldsToMerge.forEach(key => {
+          const submittedValue = profileData[key];
+          const currentValue = currentProfile[key];
+          // Only use submitted value if it's non-empty and different from current
+          if (submittedValue && submittedValue !== currentValue) {
+            mergedData[key] = submittedValue;
+          } else {
+            mergedData[key] = currentValue || '';
+          }
+        });
+        
+        // For arrays (selected_tags, highlight_tags): only override if submitted has values
+        if (Array.isArray(profileData.selected_tags) && profileData.selected_tags.length > 0) {
+          mergedData.selected_tags = profileData.selected_tags;
+        } else {
+          mergedData.selected_tags = currentProfile.selected_tags || [];
+        }
+        if (Array.isArray(profileData.highlight_tags) && profileData.highlight_tags.length > 0) {
+          mergedData.highlight_tags = profileData.highlight_tags;
+        } else {
+          mergedData.highlight_tags = currentProfile.highlight_tags || [];
+        }
+        
+        // For product_media: APPEND new photos to existing list (not replace)
+        const existingMedia = currentProfile.product_media || [];
+        const newMedia = profileData.product_media || [];
+        mergedData.product_media = [...existingMedia, ...newMedia];
+        
+        finalProfileData = mergedData;
+      }
+      
       let shopifySynced = false;
       if (shopify_product_id) {
         try {
-          const districtObj = districts.find((d: any) => d.name === profileData.district);
-          const selectedTagLabels = Array.isArray(profileData.selected_tags) && profileData.selected_tags.length > 0
-            ? profileData.selected_tags
-            : (profileData.tags ? profileData.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
-          const tags = buildShopifyTags(profileData.district, selectedTagLabels);
-          const highlightedService = Array.isArray(profileData.highlight_tags) ? profileData.highlight_tags : [];
+          const districtObj = districts.find((d: any) => d.name === finalProfileData.district);
+          const selectedTagLabels = Array.isArray(finalProfileData.selected_tags) && finalProfileData.selected_tags.length > 0
+            ? finalProfileData.selected_tags
+            : (finalProfileData.tags ? finalProfileData.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
+          const tags = buildShopifyTags(finalProfileData.district, selectedTagLabels);
+          const highlightedService = Array.isArray(finalProfileData.highlight_tags) ? finalProfileData.highlight_tags : [];
           const productData = {
-            id: shopify_product_id, status: targetStatus, title: profileData.salon_name,
-            body_html: profileData.description || '', description: profileData.description || '',
-            handle: profileData.handle || '', vendor: profileData.salon_name || '', product_type: '美容院',
-            tags, seo_title: profileData.seo_title || '', seo_description: profileData.seo_description || '',
-            email: profileData.email || '', contact_number: profileData.contact_number || '',
-            address: profileData.address || '', district_id: districtObj?.id || '',
-            office_hr_mon: profileData.office_hr_mon || '', office_hr_tue: profileData.office_hr_tue || '',
-            office_hr_wed: profileData.office_hr_wed || '', office_hr_thu: profileData.office_hr_thu || '',
-            office_hr_fri: profileData.office_hr_fri || '', office_hr_sat: profileData.office_hr_sat || '',
-            office_hr_sun: profileData.office_hr_sun || '', product_media: profileData.product_media || [],
+            id: shopify_product_id, status: targetStatus, title: finalProfileData.salon_name,
+            body_html: finalProfileData.description || '', description: finalProfileData.description || '',
+            handle: finalProfileData.handle || '', vendor: finalProfileData.salon_name || '', product_type: '美容院',
+            tags, seo_title: finalProfileData.seo_title || '', seo_description: finalProfileData.seo_description || '',
+            email: finalProfileData.email || '', contact_number: finalProfileData.contact_number || '',
+            address: finalProfileData.address || '', district_id: districtObj?.id || '',
+            office_hr_mon: finalProfileData.office_hr_mon || '', office_hr_tue: finalProfileData.office_hr_tue || '',
+            office_hr_wed: finalProfileData.office_hr_wed || '', office_hr_thu: finalProfileData.office_hr_thu || '',
+            office_hr_fri: finalProfileData.office_hr_fri || '', office_hr_sat: finalProfileData.office_hr_sat || '',
+            office_hr_sun: finalProfileData.office_hr_sun || '', product_media: finalProfileData.product_media || [],
             metafields: [{ namespace: 'custom', key: 'highlighted_service', type: 'list.single_line_text_field', value: JSON.stringify(highlightedService) }],
           };
           const res = await base44.functions.invoke('shopifyData', { type: 'update_product', product: productData });
@@ -215,7 +275,24 @@ export default function AdminDashboardPage() {
           } catch (e) {}
         }
       }
-      await base44.entities.SalonProfile.update(profile_id, { ...profileData, shopify_sync_pending: false, shopify_synced: shopifySynced });
+      // Determine salon_status based on change_reason for public suggestions
+      const statusFields: Record<string, any> = {};
+      if (isPublicSuggestion && version.change_reason) {
+        const reasonToStatus: Record<string, string> = {
+          closed: 'closed',
+          renovation: 'renovation',
+          reopened: 'active',
+          new_opening: 'active',
+        };
+        if (reasonToStatus[version.change_reason]) {
+          statusFields.salon_status = reasonToStatus[version.change_reason];
+        }
+        if (closed_date) statusFields.closed_date = closed_date;
+        if (renovation_date) statusFields.renovation_date = renovation_date;
+        if (reopened_date) statusFields.reopened_date = reopened_date;
+        if (new_opening_date) statusFields.new_opening_date = new_opening_date;
+      }
+      await base44.entities.SalonProfile.update(profile_id, { ...finalProfileData, ...statusFields, shopify_sync_pending: false, shopify_synced: shopifySynced });
       await base44.entities.SalonProfileVersion.update(version.id, { status: 'approved' });
       try {
         const user = await base44.auth.me();

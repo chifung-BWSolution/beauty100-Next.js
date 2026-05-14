@@ -39,9 +39,9 @@ export default function PublicFooter() {
   return (
     <footer className="border-t border-rose-100/50" style={{ background: 'linear-gradient(180deg, rgba(253,242,248,0.3) 0%, rgba(253,242,248,0.8) 100%)' }}>
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
+        <div className="flex flex-col md:flex-row justify-between gap-8">
+          {/* Brand & Contact - wider left section */}
+          <div className="md:max-w-[480px] flex-shrink-0">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Image
                 src="/images/beauty-100_logo.png"
@@ -54,12 +54,46 @@ export default function PublicFooter() {
             <p className="text-sm text-slate-400 leading-relaxed mb-4">
               香港最全面的美容資訊平台，為你搜羅全港優質美容院及最新美容資訊。
             </p>
-            <div className="space-y-2">
-              <a href="mailto:info@beauty100-magazine.com" className="flex items-center gap-2 text-sm text-slate-400 hover:text-rose-500 transition-colors">
-                <Mail className="w-3.5 h-3.5" />
-                info@beauty100-magazine.com
-              </a>
+
+            {/* 2 columns for contact info */}
+            <div className="grid grid-cols-2 gap-6 text-sm text-slate-400">
+              <div className="whitespace-nowrap">
+                <p className="font-semibold text-slate-700 text-xs uppercase tracking-wider mb-1">廣告熱線</p>
+                <p>
+                  Whatsapp{" "}
+                  <a href="https://wa.me/85268589265" target="_blank" rel="noopener noreferrer" className="hover:text-rose-500 transition-colors">
+                    +852 6858 9265
+                  </a>
+                </p>
+                <p>
+                  <a href="mailto:media@beauty100-magazine.com" className="hover:text-rose-500 transition-colors whitespace-nowrap">
+                    media@beauty100-magazine.com
+                  </a>
+                </p>
+              </div>
+              <div className="whitespace-nowrap">
+                <p className="font-semibold text-slate-700 text-xs uppercase tracking-wider mb-1">意見及查詢</p>
+                <p>
+                  Hotline{" "}
+                  <a href="tel:+85221857377" className="hover:text-rose-500 transition-colors">
+                    +852 2185 7377
+                  </a>
+                </p>
+                <p>
+                  Whatsapp{" "}
+                  <a href="https://wa.me/85268589265" target="_blank" rel="noopener noreferrer" className="hover:text-rose-500 transition-colors">
+                    +852 6858 9265
+                  </a>
+                </p>
+                <p>
+                  <a href="mailto:info@beauty100-magazine.com" className="hover:text-rose-500 transition-colors whitespace-nowrap">
+                    info@beauty100-magazine.com
+                  </a>
+                </p>
+              </div>
             </div>
+
+            {/* Social Icons */}
             <div className="flex items-center gap-3 mt-4">
               <a
                 href="https://www.instagram.com/beauty100.magazine/"

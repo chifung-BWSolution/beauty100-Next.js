@@ -12,7 +12,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { Search, Store, RefreshCw, ExternalLink, User, Eye, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Loader2, Globe, AlertTriangle, MapPin, Phone, Mail, MessageCircle, Clock, Tag, Image as ImageIcon, FileText, Hash, Calendar, Info, Copy, Check } from 'lucide-react';
+import { Search, Store, RefreshCw, ExternalLink, User, Eye, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Loader2, Globe, AlertTriangle, MapPin, Phone, Mail, MessageCircle, Clock, Tag, Image as ImageIcon, FileText, Hash, Calendar, Info, Copy, Check, Lock, Wrench } from 'lucide-react';
 import ShopifyAPI from '@/api/shopify';
 import SalonOwnerModal from '@/components/admin/SalonOwnerModal';
 import { toast } from 'sonner';
@@ -120,6 +120,30 @@ export default function AdminSalonsPage() {
   const [shopifyDetailError, setShopifyDetailError] = useState<string | null>(null);
   const [cachedRawData, setCachedRawData] = useState<any>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const handleUpdateSalonStatus = async (profileId: string, newStatus: string) => {
+    setUpdatingStatus(true);
+    try {
+      const updates: Record<string, any> = { salon_status: newStatus, updated_at: new Date().toISOString() };
+      if (newStatus === 'active') {
+        updates.closed_date = null;
+        updates.renovation_date = null;
+      }
+      const { error } = await supabase.from('salon_profiles').update(updates).eq('id', profileId);
+      if (error) throw error;
+      toast.success(`已更新美容院狀態為「${newStatus === 'active' ? '營業中' : newStatus === 'closed' ? '已結業' : newStatus === 'renovation' ? '裝修中' : newStatus}」`);
+      // Refresh detail view
+      if (viewDetailsSalon?.profile) {
+        setViewDetailsSalon({ ...viewDetailsSalon, profile: { ...viewDetailsSalon.profile, salon_status: newStatus } });
+      }
+    } catch (e: any) {
+      console.error('Failed to update salon status:', e);
+      toast.error('更新狀態失敗：' + (e.message || '未知錯誤'));
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   useEffect(() => { loadData(); }, []);
 
@@ -499,6 +523,13 @@ export default function AdminSalonsPage() {
                             <option value="draft">Draft</option>
                             <option value="archived">Archived</option>
                           </select>
+                          {salon.profile?.salon_status && salon.profile.salon_status !== 'active' && (
+                            <span className={`inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded-full mt-1 ${
+                              salon.profile.salon_status === 'closed' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
+                            }`}>
+                              {salon.profile.salon_status === 'closed' ? '🔒 已結業' : '🔧 裝修中'}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </TableCell>
@@ -667,6 +698,14 @@ export default function AdminSalonsPage() {
                       {viewDetailsSalon.claimStatus === 'claimed' && <Badge className="bg-emerald-100 text-emerald-700 border-0">✅ 已認領</Badge>}
                       {viewDetailsSalon.claimStatus === 'pending' && <Badge className="bg-amber-100 text-amber-700 border-0">⏳ 待審核</Badge>}
                       {viewDetailsSalon.claimStatus === 'unclaimed' && <Badge className="bg-slate-100 text-slate-500 border-0">未認領</Badge>}
+                      {profile?.salon_status && profile.salon_status !== 'active' && (
+                        <Badge className={profile.salon_status === 'closed' ? 'bg-red-100 text-red-700 border-0' : profile.salon_status === 'renovation' ? 'bg-amber-100 text-amber-700 border-0' : 'bg-slate-100 text-slate-600 border-0'}>
+                          {profile.salon_status === 'closed' ? '🔒 已結業' : profile.salon_status === 'renovation' ? '🔧 裝修中' : profile.salon_status}
+                        </Badge>
+                      )}
+                      {profile && !profile.salon_status && (
+                        <Badge className="bg-slate-50 text-slate-400 border border-dashed border-slate-300">狀態: active (默認)</Badge>
+                      )}
                     </div>
                     {/* Quick links */}
                     <div className="flex gap-2 mt-3">
@@ -705,6 +744,67 @@ export default function AdminSalonsPage() {
                 <div className="flex items-center justify-center py-3 gap-2 text-slate-500 bg-blue-50/50">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-sm">正在從 Shopify 載入最新資料...</span>
+                </div>
+              )}
+
+              {/* 美容院狀態管理 */}
+              {profile && (
+                <div className="p-6">
+                  <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                    <Store className="w-4 h-4 text-pink-500" />美容院狀態
+                  </h4>
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-sm text-slate-600">目前狀態：</span>
+                      <Badge className={
+                        profile.salon_status === 'closed' ? 'bg-red-100 text-red-700 border-0' :
+                        profile.salon_status === 'renovation' ? 'bg-amber-100 text-amber-700 border-0' :
+                        'bg-emerald-100 text-emerald-700 border-0'
+                      }>
+                        {profile.salon_status === 'closed' ? '🔒 已結業' : profile.salon_status === 'renovation' ? '🔧 裝修中' : '✅ 營業中'}
+                      </Badge>
+                      {profile.closed_date && profile.salon_status === 'closed' && (
+                        <span className="text-xs text-red-500">結業日期：{new Date(profile.closed_date).toLocaleDateString('zh-HK')}</span>
+                      )}
+                      {profile.renovation_date && profile.salon_status === 'renovation' && (
+                        <span className="text-xs text-amber-500">裝修日期：{new Date(profile.renovation_date).toLocaleDateString('zh-HK')}</span>
+                      )}
+                      {profile.reopened_date && profile.salon_status === 'renovation' && (
+                        <span className="text-xs text-amber-500">· 預計重開：{new Date(profile.reopened_date).toLocaleDateString('zh-HK')}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-slate-500">快速設定：</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`text-xs h-7 ${profile.salon_status === 'active' || !profile.salon_status ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : ''}`}
+                        disabled={updatingStatus || profile.salon_status === 'active' || !profile.salon_status}
+                        onClick={() => handleUpdateSalonStatus(profile.id, 'active')}
+                      >
+                        ✅ 營業中
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`text-xs h-7 ${profile.salon_status === 'renovation' ? 'bg-amber-50 border-amber-300 text-amber-700' : ''}`}
+                        disabled={updatingStatus || profile.salon_status === 'renovation'}
+                        onClick={() => handleUpdateSalonStatus(profile.id, 'renovation')}
+                      >
+                        🔧 裝修中
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`text-xs h-7 ${profile.salon_status === 'closed' ? 'bg-red-50 border-red-300 text-red-700' : ''}`}
+                        disabled={updatingStatus || profile.salon_status === 'closed'}
+                        onClick={() => handleUpdateSalonStatus(profile.id, 'closed')}
+                      >
+                        🔒 已結業
+                      </Button>
+                      {updatingStatus && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+                    </div>
+                  </div>
                 </div>
               )}
 

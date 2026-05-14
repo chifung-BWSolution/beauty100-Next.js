@@ -45,6 +45,28 @@ function DiffCell({ original, updated, changed }: { original: string; updated: s
   );
 }
 
+/**
+ * For public suggestions, determine if a field was actually changed.
+ * A field is only considered "changed" if:
+ * 1. The new value is non-empty (the submitter actually provided a value), AND
+ * 2. The new value differs from the original.
+ * This prevents empty/missing fields in public forms from being shown as "deleted".
+ */
+function isFieldActuallyChanged(version: any, profile: any, fieldKey: string, isPublicSuggestion: boolean): boolean {
+  const orig = profile?.[fieldKey] || '';
+  const upd = version[fieldKey] || '';
+  
+  if (isPublicSuggestion) {
+    // For public suggestions: only count as changed if the submitter provided a non-empty value
+    // that differs from the original. Empty/missing fields are NOT deletions.
+    if (!upd) return false;
+    return orig !== upd;
+  }
+  
+  // For merchant submissions: any difference counts (including clearing a field)
+  return orig !== upd;
+}
+
 interface VersionCompareModalProps {
   version: any;
   open: boolean;
@@ -82,11 +104,26 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
 
   if (!version) return null;
 
-  const changedFields = FIELDS.filter(f => (version[f.key] || '') !== (profile?.[f.key] || ''));
-  const descriptionChanged = (version.description || '') !== (profile?.description || '');
-  const mediaChanged = JSON.stringify(version.product_media || []) !== JSON.stringify(profile?.product_media || []);
-  const tagsChanged = JSON.stringify([...(version.selected_tags || [])].sort()) !== JSON.stringify([...(profile?.selected_tags || [])].sort());
-  const highlightChanged = JSON.stringify([...(version.highlight_tags || [])].sort()) !== JSON.stringify([...(profile?.highlight_tags || [])].sort());
+  const isPublic = version.submission_type === 'public_suggestion';
+  const changedFields = FIELDS.filter(f => isFieldActuallyChanged(version, profile, f.key, isPublic));
+  const descriptionChanged = isPublic
+    ? !!(version.description) && (version.description || '') !== (profile?.description || '')
+    : (version.description || '') !== (profile?.description || '');
+  
+  // For public suggestions with photos, check if there are NEW photos to add
+  // (public form photos are additive, not replacements)
+  const versionMedia = version.product_media || [];
+  const profileMedia = profile?.product_media || [];
+  const mediaChanged = isPublic
+    ? versionMedia.length > 0 // public suggestions: any photos means new photos to add
+    : JSON.stringify(versionMedia) !== JSON.stringify(profileMedia);
+  
+  const tagsChanged = isPublic
+    ? (version.selected_tags || []).length > 0 && JSON.stringify([...(version.selected_tags || [])].sort()) !== JSON.stringify([...(profile?.selected_tags || [])].sort())
+    : JSON.stringify([...(version.selected_tags || [])].sort()) !== JSON.stringify([...(profile?.selected_tags || [])].sort());
+  const highlightChanged = isPublic
+    ? (version.highlight_tags || []).length > 0 && JSON.stringify([...(version.highlight_tags || [])].sort()) !== JSON.stringify([...(profile?.highlight_tags || [])].sort())
+    : JSON.stringify([...(version.highlight_tags || [])].sort()) !== JSON.stringify([...(profile?.highlight_tags || [])].sort());
 
   function groupTagsByCategory(tags: string[]) {
     const grouped: Record<string, string[]> = {};
@@ -183,7 +220,12 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
                 {FIELDS.map(f => {
                   const orig = profile?.[f.key] || '';
                   const upd = version[f.key] || '';
-                  const changed = orig !== upd;
+                  const changed = isFieldActuallyChanged(version, profile, f.key, isPublic);
+                  
+                  // For public suggestions, skip fields that were not submitted (empty)
+                  // to avoid showing misleading "deleted" entries
+                  if (isPublic && !upd && !changed) return null;
+                  
                   return (
                     <div key={f.key} className={`grid grid-cols-3 px-4 py-2 items-start ${changed ? 'bg-amber-50/50' : ''}`}>
                       <span className={`text-sm font-medium pt-2 ${changed ? 'text-amber-700' : 'text-slate-500'}`}>{f.label}{changed && ' ✱'}</span>
@@ -221,19 +263,47 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
               <div className={`rounded-xl border overflow-hidden ${mediaChanged ? 'border-amber-200' : ''}`}>
                 <div className={`px-4 py-2 text-sm font-semibold ${mediaChanged ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-500'}`}>
                   產品相片{mediaChanged && ' ✱ 已更改'}
+                  {isPublic && versionMedia.length > 0 && (
+                    <span className="ml-2 text-xs font-normal text-blue-600">（公眾建議：新相片會加入現有相片列表）</span>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 divide-x">
                   <div className="p-3">
-                    <p className="text-sm text-slate-400 mb-2">現有 ({profile?.product_media?.length || 0})</p>
+                    <p className="text-sm text-slate-400 mb-2">現有 ({profileMedia.length})</p>
                     <div className="flex gap-1.5 flex-wrap">
-                      {(profile?.product_media || []).map((url: string, i: number) => <img key={i} src={url} alt="" className="w-14 h-14 object-cover rounded-lg" />)}
+                      {profileMedia.map((url: string, i: number) => <img key={i} src={url} alt="" className="w-14 h-14 object-cover rounded-lg" />)}
                     </div>
                   </div>
                   <div className={`p-3 ${mediaChanged ? 'bg-amber-50/30' : ''}`}>
-                    <p className="text-sm text-slate-400 mb-2">申請更新 ({version.product_media?.length || 0})</p>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {(version.product_media || []).map((url: string, i: number) => <img key={i} src={url} alt="" className="w-14 h-14 object-cover rounded-lg" />)}
-                    </div>
+                    {isPublic && versionMedia.length > 0 ? (
+                      <>
+                        <p className="text-sm text-slate-400 mb-2">新增相片 ({versionMedia.length})</p>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {versionMedia.map((url: string, i: number) => (
+                            <div key={i} className="relative">
+                              <img src={url} alt="" className="w-14 h-14 object-cover rounded-lg ring-2 ring-emerald-300" />
+                              <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center">+</span>
+                            </div>
+                          ))}
+                        </div>
+                        {profileMedia.length > 0 && (
+                          <div className="mt-3 pt-2 border-t border-slate-200">
+                            <p className="text-xs text-slate-400 mb-1">批准後完整列表 ({profileMedia.length + versionMedia.length})</p>
+                            <div className="flex gap-1 flex-wrap">
+                              {profileMedia.map((url: string, i: number) => <img key={`existing-${i}`} src={url} alt="" className="w-10 h-10 object-cover rounded opacity-60" />)}
+                              {versionMedia.map((url: string, i: number) => <img key={`new-${i}`} src={url} alt="" className="w-10 h-10 object-cover rounded ring-1 ring-emerald-300" />)}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-slate-400 mb-2">申請更新 ({version.product_media?.length || 0})</p>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {(version.product_media || []).map((url: string, i: number) => <img key={i} src={url} alt="" className="w-14 h-14 object-cover rounded-lg" />)}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

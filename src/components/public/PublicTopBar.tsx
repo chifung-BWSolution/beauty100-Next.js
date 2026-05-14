@@ -36,7 +36,7 @@ export default function PublicTopBar() {
             </Link>
             <span className="text-white/30">|</span>
             <Link
-              href="/login"
+              href="/merchant"
               className="flex items-center gap-1 text-white/80 hover:text-white transition-colors"
             >
               <Store className="w-3 h-3" />

@@ -10,7 +10,7 @@ import Link from 'next/link';
 import {
   MapPin, Phone, Globe, Clock, Star, Store,
   ChevronLeft, CheckCircle2, MessageCircle, Mail,
-  User, Sparkles, Image as ImageIcon, X,
+  User, Sparkles, Image as ImageIcon, X, Lock, Wrench, AlertTriangle,
 } from 'lucide-react';
 
 interface SalonProfile {
@@ -43,6 +43,11 @@ interface SalonProfile {
   created_date: string | null;
   storefront_photo: string | null;
   namecard_photo: string | null;
+  salon_status: string | null;
+  closed_date: string | null;
+  renovation_date: string | null;
+  reopened_date: string | null;
+  new_opening_date: string | null;
 }
 
 const DAY_KEYS = ['office_hr_mon', 'office_hr_tue', 'office_hr_wed', 'office_hr_thu', 'office_hr_fri', 'office_hr_sat', 'office_hr_sun'] as const;
@@ -256,7 +261,59 @@ export default function SalonDetailPage() {
               已認領
             </div>
           )}
+
+          {/* Status badge on image */}
+          {salon.salon_status && salon.salon_status !== 'active' && (
+            <div className={`absolute bottom-4 left-4 flex items-center gap-1.5 backdrop-blur-sm text-sm font-semibold px-4 py-2 rounded-full shadow-md ${
+              salon.salon_status === 'closed'
+                ? 'bg-red-500/90 text-white'
+                : salon.salon_status === 'renovation'
+                ? 'bg-amber-500/90 text-white'
+                : 'bg-slate-500/90 text-white'
+            }`}>
+              {salon.salon_status === 'closed' && <><Lock className="w-4 h-4" /> 已結業</>}
+              {salon.salon_status === 'renovation' && <><Wrench className="w-4 h-4" /> 裝修中</>}
+            </div>
+          )}
         </div>
+
+        {/* Salon Status Banner */}
+        {salon.salon_status && salon.salon_status !== 'active' && (
+          <div className={`rounded-xl p-4 mb-4 flex items-start gap-3 ${
+            salon.salon_status === 'closed'
+              ? 'bg-red-50 border border-red-200'
+              : salon.salon_status === 'renovation'
+              ? 'bg-amber-50 border border-amber-200'
+              : 'bg-slate-50 border border-slate-200'
+          }`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+              salon.salon_status === 'closed' ? 'bg-red-100' : salon.salon_status === 'renovation' ? 'bg-amber-100' : 'bg-slate-100'
+            }`}>
+              {salon.salon_status === 'closed' ? (
+                <Lock className="w-5 h-5 text-red-500" />
+              ) : salon.salon_status === 'renovation' ? (
+                <Wrench className="w-5 h-5 text-amber-500" />
+              ) : (
+                <AlertTriangle className="w-5 h-5 text-slate-500" />
+              )}
+            </div>
+            <div>
+              <p className={`font-semibold text-sm ${
+                salon.salon_status === 'closed' ? 'text-red-700' : salon.salon_status === 'renovation' ? 'text-amber-700' : 'text-slate-700'
+              }`}>
+                {salon.salon_status === 'closed' && '此美容院已結業'}
+                {salon.salon_status === 'renovation' && '此美容院正在裝修中'}
+              </p>
+              <p className={`text-xs mt-0.5 ${
+                salon.salon_status === 'closed' ? 'text-red-500' : salon.salon_status === 'renovation' ? 'text-amber-500' : 'text-slate-500'
+              }`}>
+                {salon.salon_status === 'closed' && salon.closed_date && `結業日期：${new Date(salon.closed_date).toLocaleDateString('zh-HK')}`}
+                {salon.salon_status === 'renovation' && salon.renovation_date && `裝修開始日期：${new Date(salon.renovation_date).toLocaleDateString('zh-HK')}`}
+                {salon.salon_status === 'renovation' && salon.reopened_date && ` · 預計重開日期：${new Date(salon.reopened_date).toLocaleDateString('zh-HK')}`}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Salon Name & District */}
         <div className="mb-6">
