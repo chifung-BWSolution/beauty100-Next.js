@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         // Don't set user yet - wait for fetchFullUser to get role from DB
-        fetchFullUser(session.user as UserProfile).finally(() => {
+        fetchFullUser(session.user as unknown as UserProfile).finally(() => {
           clearTimeout(timeout);
           safeFinish();
         });
