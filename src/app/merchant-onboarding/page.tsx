@@ -25,10 +25,12 @@ export default function MerchantOnboardingPage() {
 
     let cancelled = false;
 
-    supabase
-      .from('salon_applications')
-      .select('id, status')
-      .eq('created_by', user.id)
+    Promise.resolve(
+      supabase
+        .from('salon_applications')
+        .select('id, status')
+        .eq('created_by', user.id)
+    )
       .then(({ data: applications }) => {
         if (cancelled) return;
         const allApplications = applications || [];
