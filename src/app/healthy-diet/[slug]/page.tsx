@@ -103,7 +103,16 @@ function safeParseJson(value: any): any {
 function extractTextFromRichText(data: any): string[] {
   if (data && typeof data === 'object' && data.type === 'root' && Array.isArray(data.children)) {
     const texts: string[] = [];
-    function extractFromNode(node: any) {
+    const extractChildrenText = (children: any[]): string => {
+      if (!Array.isArray(children)) return '';
+      return children.map((child: any) => {
+        if (typeof child === 'string') return child;
+        if (child?.type === 'text' && child?.value) return child.value;
+        if (child?.children) return extractChildrenText(child.children);
+        return '';
+      }).join('');
+    };
+    const extractFromNode = (node: any) => {
       if (typeof node === 'string') {
         texts.push(node);
         return;
@@ -121,16 +130,7 @@ function extractTextFromRichText(data: any): string[] {
       } else if (Array.isArray(node?.children)) {
         node.children.forEach(extractFromNode);
       }
-    }
-    function extractChildrenText(children: any[]): string {
-      if (!Array.isArray(children)) return '';
-      return children.map((child: any) => {
-        if (typeof child === 'string') return child;
-        if (child?.type === 'text' && child?.value) return child.value;
-        if (child?.children) return extractChildrenText(child.children);
-        return '';
-      }).join('');
-    }
+    };
     data.children.forEach(extractFromNode);
     return texts.filter(Boolean);
   }
