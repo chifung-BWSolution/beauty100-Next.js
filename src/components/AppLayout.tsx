@@ -25,11 +25,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
-    supabase
-      .from('salon_profiles')
-      .select('id')
-      .eq('created_by', user.id)
-      .limit(1)
+    Promise.resolve(
+      supabase
+        .from('salon_profiles')
+        .select('id')
+        .eq('created_by', user.id)
+        .limit(1)
+    )
       .then(({ data }) => {
         if (!cancelled) setHasApprovedProfile(!!(data && data.length > 0));
       })
