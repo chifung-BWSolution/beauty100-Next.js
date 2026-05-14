@@ -29,7 +29,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   React.useEffect(() => {
     import('@tinymce/tinymce-react').then((mod) => {
-      setEditor(() => mod.Editor);
+      setEditor(() => mod.Editor as unknown as React.ComponentType<any>);
     });
   }, []);
 
