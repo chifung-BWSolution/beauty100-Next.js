@@ -31,7 +31,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       .eq('created_by', user.id)
       .limit(1)
       .then(({ data }) => {
-        if (!cancelled) setHasApprovedProfile(data && data.length > 0);
+        if (!cancelled) setHasApprovedProfile(!!(data && data.length > 0));
       })
       .catch(() => {});
     return () => { cancelled = true; };
