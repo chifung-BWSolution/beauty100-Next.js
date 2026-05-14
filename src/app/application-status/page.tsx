@@ -22,19 +22,21 @@ export default function ApplicationStatusPage() {
     }
 
     let cancelled = false;
-    supabase
-      .from('salon_applications')
-      .select('*')
-      .eq('created_by', user.id)
-      .order('created_date', { ascending: false })
-      .then(({ data: applications }) => {
-        if (cancelled) return;
-        setAppList(applications || []);
-        setLoading(false);
-      })
-      .catch(() => {
+    (async () => {
+      try {
+        const { data: applications } = await supabase
+          .from('salon_applications')
+          .select('*')
+          .eq('created_by', user.id)
+          .order('created_date', { ascending: false });
+        if (!cancelled) {
+          setAppList(applications || []);
+          setLoading(false);
+        }
+      } catch {
         if (!cancelled) setLoading(false);
-      });
+      }
+    })();
 
     return () => { cancelled = true; };
   }, [user, isLoadingAuth, router]);
