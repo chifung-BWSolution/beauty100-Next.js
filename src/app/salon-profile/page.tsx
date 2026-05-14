@@ -26,10 +26,12 @@ export default function SalonProfilePage() {
     setIsAdmin(role === 'admin');
 
     let cancelled = false;
-    supabase
-      .from('salon_profiles')
-      .select('*')
-      .eq('created_by', user.id)
+    Promise.resolve(
+      supabase
+        .from('salon_profiles')
+        .select('*')
+        .eq('created_by', user.id)
+    )
       .then(({ data: profiles }) => {
         if (cancelled) return;
         setSalonList(profiles || []);
