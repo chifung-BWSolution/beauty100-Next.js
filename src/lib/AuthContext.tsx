@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (event === 'INITIAL_SESSION') return;
         // Re-fetch full profile whenever auth state changes (e.g. after sign-in)
         setIsLoadingAuth(true);
-        fetchFullUser((session?.user as UserProfile) || null).finally(() => {
+        fetchFullUser((session?.user as unknown as UserProfile) || null).finally(() => {
           setIsLoadingAuth(false);
         });
       });
