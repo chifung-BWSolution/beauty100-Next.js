@@ -33,15 +33,14 @@ export default function MerchantSignupPage() {
         : null;
 
       const { data: districtsRows } = await supabase
-        .from('shopify_products_cache')
-        .select('district_id, district_name')
-        .not('district_id', 'is', null)
-        .limit(200);
+        .from('salon_profiles')
+        .select('district_name')
+        .not('district_name', 'is', null);
 
-      const districtMap: Record<string, { id: string; name: string }> = {};
-      (districtsRows || []).forEach((r: any) => {
-        if (r.district_id) districtMap[r.district_id] = { id: r.district_id, name: r.district_name };
-      });
+      const uniqueDistricts = Array.from(
+        new Set((districtsRows || []).map((r: any) => r.district_name).filter(Boolean))
+      ) as string[];
+      const districtList = uniqueDistricts.sort().map((name) => ({ id: name, name }));
 
       setUserData({
         userEmail: session.user.email || '',
@@ -49,7 +48,7 @@ export default function MerchantSignupPage() {
         userId: session.user.id,
         applicationType,
         claimedSalonData,
-        initialDistricts: Object.values(districtMap),
+        initialDistricts: districtList,
       });
       setLoading(false);
     }).catch(() => router.replace('/login'));

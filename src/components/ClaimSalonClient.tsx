@@ -4,21 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Search, Store, Loader2, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { loadBeautyProductsFromCache } from '@/api/shopify';
 
 const PAGE_SIZE = 50;
 
-interface InitialDistrict {
-  id: string;
-  name: string;
-}
-
 interface Props {
-  initialDistricts: InitialDistrict[];
+  initialDistricts: string[];
 }
 
 export default function ClaimSalonClient({ initialDistricts }: Props) {
@@ -28,7 +21,7 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
   const [salons, setSalons] = useState<any[]>([]);
   const [selectedSalon, setSelectedSalon] = useState<any>(null);
   const [filtering, setFiltering] = useState(false);
-  const [districts, setDistricts] = useState<InitialDistrict[]>(initialDistricts);
+  const [districts, setDistricts] = useState<string[]>(initialDistricts);
   const [districtFilter, setDistrictFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingProgress, setLoadingProgress] = useState('');
@@ -37,50 +30,67 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
     fetchAvailableSalons();
   }, []);
 
-  const getClaimedProductIds = async () => {
-    try {
-      const [{ data: profiles }, { data: applications }] = await Promise.all([
-        supabase.from('salon_profiles').select('shopify_product_id').not('shopify_product_id', 'is', null),
-        supabase.from('salon_applications').select('shopify_product_id, status').eq('application_type', 'claim').neq('status', 'rejected'),
-      ]);
-      const profileIds = (profiles || []).map((p: any) => String(p.shopify_product_id));
-      const applicationIds = (applications || []).filter((a: any) => a.shopify_product_id).map((a: any) => String(a.shopify_product_id));
-      return Array.from(new Set([...profileIds, ...applicationIds]));
-    } catch {
-      return [];
-    }
-  };
-
   const fetchAvailableSalons = async () => {
     setFiltering(true);
     try {
       setLoadingProgress('從資料庫載入美容院...');
-      const [allProducts, claimedProductIds] = await Promise.all([
-        loadBeautyProductsFromCache(),
-        getClaimedProductIds(),
-      ]);
-      setLoadingProgress('');
 
-      // Build districts from fetched products if not already provided
-      if (initialDistricts.length === 0) {
-        const districtMap: Record<string, InitialDistrict> = {};
-        allProducts.forEach((p: any) => {
-          if (p.district_id) districtMap[p.district_id] = { id: p.district_id, name: p.district_name };
-        });
-        setDistricts(Object.values(districtMap));
+      // Fetch salons from salon_profiles that have no owner (created_by is null)
+      // These are unclaimed salons available for claiming
+      const FETCH_LIMIT = 1000;
+      let allSalons: any[] = [];
+      let from = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('salon_profiles')
+          .select('id, salon_name, district_name, image_src, address, product_media')
+          .is('created_by', null)
+          .or('is_active.eq.true,is_active.is.null')
+          .order('salon_name')
+          .range(from, from + FETCH_LIMIT - 1);
+
+        if (error) {
+          console.error('Error fetching salons:', error);
+          break;
+        }
+
+        if (data) {
+          allSalons = [...allSalons, ...data];
+          if (data.length < FETCH_LIMIT) {
+            hasMore = false;
+          } else {
+            from += FETCH_LIMIT;
+          }
+        } else {
+          hasMore = false;
+        }
       }
 
-      const available = allProducts
-        .filter((p: any) => !claimedProductIds.includes(String(p.id)))
-        .map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          vendor: p.vendor,
-          handle: p.handle,
-          image: p.image?.src || '',
-          district_id: p.district_id || null,
-          district_name: p.district_name || null,
-        }));
+      // Also exclude salons that have pending claim applications
+      const { data: pendingClaims } = await supabase
+        .from('salon_applications')
+        .select('salon_profile_id, shopify_product_id, status')
+        .eq('application_type', 'claim')
+        .neq('status', 'rejected');
+
+      const claimedSalonIds = new Set(
+        (pendingClaims || [])
+          .map((a: any) => a.salon_profile_id)
+          .filter(Boolean)
+      );
+
+      const available = allSalons.filter((s: any) => !claimedSalonIds.has(s.id));
+
+      // Build districts if not already provided
+      if (initialDistricts.length === 0) {
+        const uniqueDistricts = Array.from(
+          new Set(available.map((s: any) => s.district_name).filter(Boolean))
+        ) as string[];
+        setDistricts(uniqueDistricts.sort());
+      }
+
       setSalons(available);
     } catch {
       toast.error('無法取得美容院列表');
@@ -93,9 +103,8 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
 
   const filteredSalons = salons.filter((s) => {
     const matchSearch =
-      s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.vendor || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchDistrict = districtFilter === 'all' || s.district_id === districtFilter;
+      (s.salon_name || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchDistrict = districtFilter === 'all' || s.district_name === districtFilter;
     return matchSearch && matchDistrict;
   });
 
@@ -107,12 +116,26 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
     if (!selectedSalon) return;
     const salonData = encodeURIComponent(
       JSON.stringify({
-        salon_name: selectedSalon.title,
-        shopify_product_id: String(selectedSalon.id),
+        salon_name: selectedSalon.salon_name,
+        salon_profile_id: selectedSalon.id,
         district: selectedSalon.district_name || '',
       })
     );
     router.push(`/merchant-signup?type=claim&salon=${salonData}`);
+  };
+
+  // Get the first image from product_media or use image_src
+  const getSalonImage = (salon: any): string | null => {
+    if (salon.image_src) return salon.image_src;
+    if (salon.product_media) {
+      try {
+        const media = typeof salon.product_media === 'string' ? JSON.parse(salon.product_media) : salon.product_media;
+        if (Array.isArray(media) && media.length > 0) {
+          return media[0]?.src || media[0]?.url || null;
+        }
+      } catch {}
+    }
+    return null;
   };
 
   if (loading) {
@@ -144,7 +167,7 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
         >
           <option value="all">所有地區</option>
           {districts.map((d) => (
-            <option key={d.id} value={d.id}>{d.name}</option>
+            <option key={d} value={d}>{d}</option>
           ))}
         </select>
       </div>
@@ -158,38 +181,41 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
         <>
           <p className="text-sm text-slate-500 mb-4">共 {filteredSalons.length} 間可認領</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            {paginated.map((salon) => (
-              <div
-                key={salon.id}
-                onClick={() => setSelectedSalon(salon)}
-                className={`cursor-pointer rounded-2xl p-4 border-2 transition-all duration-200 hover:shadow-lg ${
-                  selectedSalon?.id === salon.id
-                    ? 'border-rose-400 bg-rose-50/50 shadow-md'
-                    : 'border-slate-100 bg-white hover:border-rose-200'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center shrink-0">
-                    {salon.image ? (
-                      <img src={salon.image} alt="" className="w-12 h-12 object-cover" />
-                    ) : (
-                      <Store className="w-6 h-6 text-pink-400" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 text-sm truncate">{salon.title}</p>
-                    {salon.district_name && (
-                      <p className="text-sm text-purple-500 mt-0.5">{salon.district_name}</p>
-                    )}
-                  </div>
-                  {selectedSalon?.id === salon.id && (
-                    <div className="w-5 h-5 rounded-full bg-rose-500 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm">✓</span>
+            {paginated.map((salon) => {
+              const image = getSalonImage(salon);
+              return (
+                <div
+                  key={salon.id}
+                  onClick={() => setSelectedSalon(salon)}
+                  className={`cursor-pointer rounded-2xl p-4 border-2 transition-all duration-200 hover:shadow-lg ${
+                    selectedSalon?.id === salon.id
+                      ? 'border-rose-400 bg-rose-50/50 shadow-md'
+                      : 'border-slate-100 bg-white hover:border-rose-200'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center shrink-0">
+                      {image ? (
+                        <img src={image} alt="" className="w-12 h-12 object-cover" />
+                      ) : (
+                        <Store className="w-6 h-6 text-pink-400" />
+                      )}
                     </div>
-                  )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-800 text-sm truncate">{salon.salon_name}</p>
+                      {salon.district_name && (
+                        <p className="text-sm text-purple-500 mt-0.5">{salon.district_name}</p>
+                      )}
+                    </div>
+                    {selectedSalon?.id === salon.id && (
+                      <div className="w-5 h-5 rounded-full bg-rose-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-sm">✓</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {paginated.length === 0 && (
               <div className="col-span-full text-center py-12">
                 <Store className="w-12 h-12 text-slate-200 mx-auto mb-3" />
@@ -227,7 +253,7 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
               <div className="bg-white rounded-2xl shadow-xl border border-rose-100 px-6 py-4 flex items-center gap-4 max-w-md w-full">
                 <div className="flex-1">
                   <p className="text-sm text-slate-400 mb-0.5">已選擇</p>
-                  <p className="font-semibold text-slate-800 truncate">{selectedSalon.title}</p>
+                  <p className="font-semibold text-slate-800 truncate">{selectedSalon.salon_name}</p>
                 </div>
                 <Button
                   onClick={handleClaim}

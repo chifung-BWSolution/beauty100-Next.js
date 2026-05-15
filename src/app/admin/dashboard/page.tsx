@@ -37,7 +37,6 @@ export default function AdminDashboardPage() {
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
-  const [approveStatus, setApproveStatus] = useState('active');
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [processing, setProcessing] = useState(false);
@@ -87,44 +86,12 @@ export default function AdminDashboardPage() {
     return [district, ...prefixedLabels].filter(Boolean);
   };
 
-  const handleApproveApp = async (app: any, targetStatus = 'active') => {
+  const handleApproveApp = async (app: any) => {
     setProcessing(true);
     try {
       await base44.entities.SalonApplication.update(app.id, { status: 'approved' });
       const existing = await base44.entities.SalonProfile.filter({ application_id: app.id });
       if (existing.length === 0) {
-        let shopifyProductId = app.shopify_product_id || '';
-        let shopifySynced = false;
-
-        if (app.application_type === 'new' && !shopifyProductId) {
-          try {
-            const districtObj = districts.find((d: any) => d.name === app.district);
-            const selectedTagLabels = Array.isArray(app.selected_tags) && app.selected_tags.length > 0
-              ? app.selected_tags
-              : (app.tags ? app.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
-            const tags = buildShopifyTags(app.district, selectedTagLabels);
-            const highlightedService = Array.isArray(app.highlight_tags) ? app.highlight_tags : [];
-            const metafields = highlightedService.length > 0 ? [{
-              namespace: 'custom', key: 'highlighted_service',
-              type: 'list.single_line_text_field', value: JSON.stringify(highlightedService),
-            }] : [];
-            const productData = {
-              title: app.salon_name, product_type: '美容院', vendor: app.salon_name, status: targetStatus,
-              tags, handle: '', body_html: '', seo_title: app.salon_name, seo_description: '',
-              email: app.email, contact_number: app.contact_number, address: app.address || '',
-              district_id: districtObj?.id || '',
-              office_hr_mon: '', office_hr_tue: '', office_hr_wed: '', office_hr_thu: '',
-              office_hr_fri: '', office_hr_sat: '', office_hr_sun: '',
-              product_media: [], metafields,
-            };
-            const res = await base44.functions.invoke('shopifyData', { type: 'create_product', product: productData });
-            if ((res as any).data?.product?.id) {
-              shopifyProductId = String((res as any).data.product.id);
-              shopifySynced = true;
-            }
-          } catch (err) { console.error('Failed to create product in Shopify:', err); }
-        }
-
         await base44.entities.SalonProfile.create({
           application_id: app.id, salon_name: app.salon_name, contact_person: app.contact_person || '',
           contact_number: app.contact_number, whatsapp_number: app.whatsapp_number || '',
@@ -136,8 +103,7 @@ export default function AdminDashboardPage() {
           office_hr_tue: app.office_hr_tue || '', office_hr_wed: app.office_hr_wed || '',
           office_hr_thu: app.office_hr_thu || '', office_hr_fri: app.office_hr_fri || '',
           office_hr_sat: app.office_hr_sat || '', office_hr_sun: app.office_hr_sun || '',
-          product_media: app.product_media || [], shopify_product_id: shopifyProductId,
-          shopify_synced: shopifySynced, is_active: true,
+          product_media: app.product_media || [], is_active: true,
         });
       }
       try {
@@ -175,9 +141,29 @@ export default function AdminDashboardPage() {
   };
 
   const handleApproveVersion = async (version: any, targetStatus = 'active') => {
+    if (!version || !version.profile_id) {
+      console.error('handleApproveVersion: version or profile_id is missing', version);
+      alert('無法批准：找不到版本資料或缺少 profile_id');
+      return;
+    }
     setProcessing(true);
     try {
-      const { profile_id, shopify_product_id, status, rejection_reason, id, created_date, updated_date, created_by, version_name, is_starred, submission_type, change_reason, submitter_name, submitter_email, submitter_phone, submitter_note, is_shop_owner, closed_date, renovation_date, reopened_date, new_opening_date, updated_at, ...profileData } = version;
+      // Fields that exist ONLY on salon_profile_versions and must not be sent to salon_profiles update
+      const VERSION_ONLY_KEYS = new Set([
+        'profile_id', 'shopify_product_id', 'status', 'rejection_reason', 'id',
+        'created_date', 'updated_date', 'created_by', 'created_by_email',
+        'version_name', 'is_starred', 'submission_type', 'change_reason',
+        'submitter_name', 'submitter_email', 'submitter_phone', 'submitter_note',
+        'is_shop_owner', 'closed_date', 'renovation_date', 'reopened_date',
+        'new_opening_date', 'updated_at', 'attachments',
+      ]);
+      const { profile_id, shopify_product_id, closed_date, renovation_date, reopened_date, new_opening_date } = version;
+      const profileData: Record<string, any> = {};
+      Object.entries(version).forEach(([key, value]) => {
+        if (!VERSION_ONLY_KEYS.has(key)) {
+          profileData[key] = value;
+        }
+      });
       const isPublicSuggestion = version.submission_type === 'public_suggestion';
       
       // For public suggestions, we need to fetch the current profile to merge data
@@ -303,7 +289,10 @@ export default function AdminDashboardPage() {
       } catch (e) { console.error('Failed to log activity', e); }
       await loadData();
       setShowVersionModal(false);
-    } catch (e) { console.error(e); }
+    } catch (e: any) {
+      console.error('handleApproveVersion error:', e);
+      alert(`批准失敗：${e?.message || JSON.stringify(e)}`);
+    }
     finally { setProcessing(false); }
   };
 
@@ -728,28 +717,12 @@ export default function AdminDashboardPage() {
         <DialogHeader><DialogTitle>批准申請</DialogTitle></DialogHeader>
         <div className="py-4">
           <p className="text-sm text-slate-600 mb-4">
-            即將批准 <strong>{selectedApp?.salon_name}</strong> 的申請。
-            {selectedApp?.application_type === 'new' && !selectedApp?.shopify_product_id && '系統將會在 Shopify 建立對應的產品。'}
+            即將批准 <strong>{selectedApp?.salon_name}</strong> 的申請。系統將會建立美容院資料檔案。
           </p>
-          {selectedApp?.application_type === 'new' && !selectedApp?.shopify_product_id && (
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-slate-700">Shopify 產品狀態</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="approveStatus" value="active" checked={approveStatus === 'active'} onChange={(e) => setApproveStatus(e.target.value)} className="text-pink-600 focus:ring-pink-500" />
-                  <span className="text-sm">Active (發佈)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="approveStatus" value="draft" checked={approveStatus === 'draft'} onChange={(e) => setApproveStatus(e.target.value)} className="text-pink-600 focus:ring-pink-500" />
-                  <span className="text-sm">Draft (草稿)</span>
-                </label>
-              </div>
-            </div>
-          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setShowApproveModal(false)}>取消</Button>
-          <Button onClick={() => handleApproveApp(selectedApp, approveStatus)} disabled={processing} className="bg-emerald-600 hover:bg-emerald-700">
+          <Button onClick={() => handleApproveApp(selectedApp)} disabled={processing} className="bg-emerald-600 hover:bg-emerald-700">
             {processing ? '處理中...' : '確認批准'}
           </Button>
         </DialogFooter>

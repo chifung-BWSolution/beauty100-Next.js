@@ -79,6 +79,7 @@ function getCoverStyleIndex(str: string): number {
 interface FeaturedSalon {
   id: string;
   name: string;
+  handle?: string;
   area: string;
   image: string | null;
   tags: string[];
@@ -254,7 +255,7 @@ function SalonCarousel({ salons }: { salons: FeaturedSalon[] }) {
           {salons.map((salon, i) => (
             <Link
               key={salon.id || i}
-              href={salon.id ? `/salon/${salon.id}` : '/explore-salons'}
+              href={salon.id ? `/salon/${salon.handle || salon.id}` : '/explore-salons'}
               className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100/80 shrink-0"
               style={{ width: `calc((100% - ${gapPx * (visibleCount - 1)}px) / ${visibleCount})` }}
             >
@@ -352,7 +353,7 @@ export default function HomePage() {
       try {
         const { data, error } = await supabase
           .from('salon_profiles')
-          .select('id, salon_name, district_name, image_src, product_media, selected_tags, highlight_tags, tags')
+          .select('id, salon_name, handle, district_name, image_src, product_media, selected_tags, highlight_tags, tags')
           .or('is_active.eq.true,is_active.is.null')
           .limit(8);
 
@@ -403,6 +404,7 @@ export default function HomePage() {
           return {
             id: s.id,
             name: s.salon_name || '美容院',
+            handle: s.handle || undefined,
             area,
             image,
             tags: filteredTags,

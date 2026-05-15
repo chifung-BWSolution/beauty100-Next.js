@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import PublicLayout from '@/components/public/PublicLayout';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import {
 interface SalonProfile {
   id: string;
   salon_name: string | null;
+  handle: string | null;
   address: string | null;
   district: string | null;
   district_name: string | null;
@@ -83,32 +84,119 @@ const removeTagPrefix = (tag: string): string => {
 
 export default function SalonDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const salonId = params?.id as string;
   const [salon, setSalon] = useState<SalonProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [tagCategoryMap, setTagCategoryMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!salonId) return;
     const fetchSalon = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('salon_profiles')
-        .select('*')
-        .eq('id', salonId)
-        .single();
+      // Decode the URL parameter in case it's percent-encoded (e.g. Chinese characters)
+      let decodedId = salonId;
+      try {
+        decodedId = decodeURIComponent(salonId);
+      } catch {
+        // Already decoded or invalid encoding, use as-is
+      }
+
+      // Check if it's a UUID pattern or a handle
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedId);
+      
+      let data: any = null;
+      let error: any = null;
+
+      if (isUuid) {
+        const res = await supabase
+          .from('salon_profiles')
+          .select('*')
+          .eq('id', decodedId)
+          .single();
+        data = res.data;
+        error = res.error;
+      }
+
+      // If not UUID or not found by ID, try by handle (case-insensitive)
+      if (!data) {
+        const res = await supabase
+          .from('salon_profiles')
+          .select('*')
+          .ilike('handle', decodedId)
+          .not('handle', 'is', null)
+          .limit(1);
+        if (res.data && res.data.length > 0) {
+          data = res.data[0];
+          error = null;
+        }
+      }
+
+      // If still not found, try by salon_name (for Chinese name URLs)
+      if (!data) {
+        const res = await supabase
+          .from('salon_profiles')
+          .select('*')
+          .eq('salon_name', decodedId)
+          .limit(1);
+        if (res.data && res.data.length > 0) {
+          data = res.data[0];
+          error = null;
+        }
+      }
 
       if (error || !data) {
         setNotFound(true);
       } else {
+        // If accessed by UUID but salon has a handle, redirect to handle URL
+        if (isUuid && data.handle) {
+          router.replace(`/salon/${data.handle}`);
+          return;
+        }
         setSalon(data as SalonProfile);
       }
       setLoading(false);
     };
     fetchSalon();
-  }, [salonId]);
+  }, [salonId, router]);
+
+  // Fetch tag-to-category mapping from salon_tags table
+  useEffect(() => {
+    const fetchTagCategories = async () => {
+      const { data } = await supabase.from('salon_tags').select('label, category');
+      if (data) {
+        const map: Record<string, string> = {};
+        data.forEach((t: any) => { map[t.label] = t.category; });
+        setTagCategoryMap(map);
+      }
+    };
+    fetchTagCategories();
+  }, []);
+
+  // Set dynamic page title and meta description from SEO fields
+  useEffect(() => {
+    if (!salon) return;
+    const seoTitle = (salon as any).seo_title || salon.salon_name || '美容院詳情';
+    const seoDescription = (salon as any).seo_description || '';
+    
+    document.title = seoTitle;
+    
+    // Update meta description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', seoDescription);
+
+    return () => {
+      document.title = 'Beauty 100';
+    };
+  }, [salon]);
 
   if (loading) {
     return (
@@ -523,17 +611,34 @@ export default function SalonDetailPage() {
             'booking_': { prefix: 'booking_', label: '語言及預約', color: 'bg-blue-50 text-blue-700' },
           };
 
+          // Build reverse map: category label -> prefix key
+          const categoryLabelToPrefix: Record<string, string> = {};
+          Object.entries(TAG_CATEGORIES).forEach(([prefix, { label }]) => {
+            categoryLabelToPrefix[label] = prefix;
+          });
+
           const grouped: Record<string, string[]> = {};
           const uncategorized: string[] = [];
           
           allTags.forEach(tag => {
             let found = false;
+            // First: try matching by prefix (e.g., "face_深層清潔注氧")
             for (const [key, cat] of Object.entries(TAG_CATEGORIES)) {
               if (tag.startsWith(key)) {
                 if (!grouped[key]) grouped[key] = [];
                 grouped[key].push(tag);
                 found = true;
                 break;
+              }
+            }
+            // Second: try matching by label in tagCategoryMap (for tags stored without prefix)
+            if (!found && tagCategoryMap[tag]) {
+              const categoryLabel = tagCategoryMap[tag];
+              const prefixKey = categoryLabelToPrefix[categoryLabel];
+              if (prefixKey) {
+                if (!grouped[prefixKey]) grouped[prefixKey] = [];
+                grouped[prefixKey].push(tag);
+                found = true;
               }
             }
             if (!found) uncategorized.push(tag);

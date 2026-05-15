@@ -384,6 +384,7 @@ export type Database = {
           namecard_photo: string | null
           rejection_reason: string | null
           salon_name: string | null
+          salon_profile_id: string | null
           shopify_product_id: string | null
           status: string | null
           storefront_photo: string | null
@@ -406,6 +407,7 @@ export type Database = {
           namecard_photo?: string | null
           rejection_reason?: string | null
           salon_name?: string | null
+          salon_profile_id?: string | null
           shopify_product_id?: string | null
           status?: string | null
           storefront_photo?: string | null
@@ -428,6 +430,7 @@ export type Database = {
           namecard_photo?: string | null
           rejection_reason?: string | null
           salon_name?: string | null
+          salon_profile_id?: string | null
           shopify_product_id?: string | null
           status?: string | null
           storefront_photo?: string | null
@@ -1096,7 +1099,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_unstarred_versions: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never

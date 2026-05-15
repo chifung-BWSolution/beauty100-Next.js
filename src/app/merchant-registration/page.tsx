@@ -12,6 +12,8 @@ import {
   Store,
   ClipboardList,
   ShoppingBag,
+  Instagram,
+  Youtube,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import MerchantCTABanner from "@/components/MerchantCTABanner";
@@ -60,16 +62,16 @@ export default function MerchantRegistrationPage() {
             <a href="/merchant-registration" className="text-pink-500 font-medium text-sm">
               商戶註冊
             </a>
-            <a href="#" className="text-gray-700 font-medium text-sm hover:text-pink-500">
+            <a href="/merchant-marketing" className="text-gray-700 font-medium text-sm hover:text-pink-500">
               宣傳營銷
             </a>
-            <a href="#" className="text-gray-700 font-medium text-sm hover:text-pink-500">
+            <a href="/merchant-consulting" className="text-gray-700 font-medium text-sm hover:text-pink-500">
               創業顧問
             </a>
-            <a href="#" className="text-gray-700 font-medium text-sm hover:text-pink-500">
+            <a href="/merchant-cooperation" className="text-gray-700 font-medium text-sm hover:text-pink-500">
               商務合作
             </a>
-            <a href="#" className="text-gray-700 font-medium text-sm hover:text-pink-500">
+            <a href="/merchant-contact" className="text-gray-700 font-medium text-sm hover:text-pink-500">
               聯絡我們
             </a>
           </div>
@@ -87,6 +89,33 @@ export default function MerchantRegistrationPage() {
         <p className="text-pink-500 font-bold text-lg">
           推廣期間限時免商戶註冊費，享專屬宣傳優惠
         </p>
+      </section>
+
+      {/* Navigation Tabs */}
+      <section className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { title: "商戶註冊", desc: "即時解鎖專屬優勢", href: "/merchant-registration", active: true },
+            { title: "宣傳營銷", desc: "提升品牌曝光效能", href: "/merchant-marketing" },
+            { title: "創業顧問", desc: "專業開業策略指導", href: "/merchant-consulting" },
+            { title: "商務合作", desc: "探索多元合作機會", href: "/merchant-cooperation" },
+          ].map((item, i) => (
+            <a
+              key={i}
+              href={item.href}
+              className={`text-center cursor-pointer rounded-lg p-4 transition-colors ${
+                item.active
+                  ? "bg-pink-50 border border-pink-200"
+                  : "hover:bg-gray-50"
+              }`}
+            >
+              <h3 className={`font-bold text-base mb-1 ${item.active ? "text-pink-500" : ""}`}>
+                {item.title}
+              </h3>
+              <p className="text-gray-500 text-xs">{item.desc}</p>
+            </a>
+          ))}
+        </div>
       </section>
 
       {/* Hero Section - 加入 Beauty100 生態 */}
@@ -115,7 +144,7 @@ export default function MerchantRegistrationPage() {
           {/* Card 1 */}
           <div className="relative rounded-2xl overflow-hidden h-[320px] group">
             <img
-              src="https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=600&q=80"
+              src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=600&q=80"
               alt="商戶登記"
               className="w-full h-full object-cover"
             />
@@ -153,7 +182,7 @@ export default function MerchantRegistrationPage() {
           {/* Card 3 */}
           <div className="relative rounded-2xl overflow-hidden h-[320px] group">
             <img
-              src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&q=80"
+              src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=600&q=80"
               alt="錄入門店"
               className="w-full h-full object-cover"
             />
@@ -195,7 +224,7 @@ export default function MerchantRegistrationPage() {
           {/* Image card */}
           <div className="rounded-2xl overflow-hidden h-[250px]">
             <img
-              src="https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=600&q=80"
+              src="https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?w=600&q=80"
               alt="美容院"
               className="w-full h-full object-cover"
             />
@@ -226,8 +255,8 @@ export default function MerchantRegistrationPage() {
           {/* Middle image */}
           <div className="rounded-2xl overflow-hidden h-[250px]">
             <img
-              src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600&q=80"
-              alt="美容服務"
+              src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=600&q=80"
+               alt="美容服務"
               className="w-full h-full object-cover"
             />
           </div>
@@ -313,7 +342,7 @@ export default function MerchantRegistrationPage() {
           </div>
           <div className="rounded-2xl overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=600&q=80"
+              src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&q=80"
               alt="美容專業"
               className="w-full h-[400px] object-cover rounded-2xl"
             />
@@ -506,6 +535,27 @@ export default function MerchantRegistrationPage() {
                     </a>
                   </p>
                 </div>
+              </div>
+
+              <div className="flex items-center gap-3 mt-4">
+                <a
+                  href="https://www.instagram.com/beauty100.magazine/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-pink-500/30 flex items-center justify-center text-gray-400 hover:text-pink-400 transition-all"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-4 h-4" />
+                </a>
+                <a
+                  href="https://www.youtube.com/@beauty100magazine"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-pink-500/30 flex items-center justify-center text-gray-400 hover:text-pink-400 transition-all"
+                  aria-label="YouTube"
+                >
+                  <Youtube className="w-4 h-4" />
+                </a>
               </div>
             </div>
 

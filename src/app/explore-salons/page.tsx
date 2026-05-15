@@ -225,7 +225,7 @@ export default function ExploreSalonsPage() {
         while (hasMore) {
           const { data, error } = await supabase
             .from('salon_profiles')
-            .select('id, salon_name, address, district, district_name, description, image_src, product_media, tags, selected_tags, highlight_tags, contact_number, whatsapp_number, website, is_active, product_type, created_by, office_hr_mon, office_hr_tue, office_hr_wed, office_hr_thu, office_hr_fri, office_hr_sat, office_hr_sun, salon_status, closed_date, renovation_date, reopened_date, new_opening_date')
+            .select('id, salon_name, handle, address, district, district_name, description, image_src, product_media, tags, selected_tags, highlight_tags, contact_number, whatsapp_number, website, is_active, product_type, created_by, office_hr_mon, office_hr_tue, office_hr_wed, office_hr_thu, office_hr_fri, office_hr_sat, office_hr_sun, salon_status, closed_date, renovation_date, reopened_date, new_opening_date')
             .or('is_active.eq.true,is_active.is.null')
             .order('salon_name')
             .range(from, from + FETCH_LIMIT - 1);
@@ -706,7 +706,7 @@ export default function ExploreSalonsPage() {
                 return (
                   <div
                     key={salon.id}
-                    onClick={() => router.push(`/salon/${salon.id}`)}
+                    onClick={() => router.push(`/salon/${salon.handle || salon.id}`)}
                     className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 isolate will-change-transform block cursor-pointer"
                     style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.8)', borderRadius: '1rem' }}
                   >

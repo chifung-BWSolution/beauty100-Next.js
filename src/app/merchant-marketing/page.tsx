@@ -141,19 +141,19 @@ export default function MerchantMarketingPage() {
               宣傳營銷
             </a>
             <a
-              href="#"
+              href="/merchant-consulting"
               className="text-gray-700 font-medium text-sm hover:text-pink-500"
             >
               創業顧問
             </a>
             <a
-              href="#"
+              href="/merchant-cooperation"
               className="text-gray-700 font-medium text-sm hover:text-pink-500"
             >
               商務合作
             </a>
             <a
-              href="#"
+              href="/merchant-contact"
               className="text-gray-700 font-medium text-sm hover:text-pink-500"
             >
               聯絡我們
@@ -171,7 +171,7 @@ export default function MerchantMarketingPage() {
       {/* Hero Section */}
       <section className="relative h-[400px] flex items-center justify-center overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&q=80"
+          src="https://images.unsplash.com/photo-1607004468138-e7e23ea26947?w=1400&q=80"
           alt="Marketing"
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -240,7 +240,7 @@ export default function MerchantMarketingPage() {
 
           <div className="rounded-2xl overflow-hidden shadow-lg">
             <img
-              src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600&q=80"
+              src="https://images.unsplash.com/photo-1556745757-8d76bdb6984b?w=600&q=80"
               alt="Business Team"
               className="w-full h-[450px] object-cover"
             />
@@ -321,8 +321,8 @@ export default function MerchantMarketingPage() {
       </section>
 
       {/* Navigation Tabs */}
-      <section className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-4 gap-4 border-b border-gray-200 pb-6">
+      <section className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             {
               title: "商戶註冊",
@@ -335,21 +335,19 @@ export default function MerchantMarketingPage() {
               href: "/merchant-marketing",
               active: true,
             },
-            { title: "創業顧問", desc: "專業開業策略指導", href: "#" },
-            { title: "商務合作", desc: "探索多方合作機會", href: "#" },
+            { title: "創業顧問", desc: "專業開業策略指導", href: "/merchant-consulting" },
+            { title: "商務合作", desc: "探索多元合作機會", href: "/merchant-cooperation" },
           ].map((item, i) => (
             <a
               key={i}
               href={item.href}
-              className={`text-center cursor-pointer hover:bg-pink-50 rounded-lg p-4 transition-colors ${
-                item.active ? "border-b-2 border-pink-500" : ""
+              className={`text-center cursor-pointer rounded-lg p-4 transition-colors ${
+                item.active
+                  ? "bg-pink-50 border border-pink-200"
+                  : "hover:bg-gray-50"
               }`}
             >
-              <h3
-                className={`font-bold text-base mb-1 ${
-                  item.active ? "text-pink-500" : ""
-                }`}
-              >
+              <h3 className={`font-bold text-base mb-1 ${item.active ? "text-pink-500" : ""}`}>
                 {item.title}
               </h3>
               <p className="text-gray-500 text-xs">{item.desc}</p>
@@ -375,7 +373,7 @@ export default function MerchantMarketingPage() {
               icon: <Store className="w-6 h-6 text-pink-500" />,
               title: "門店推廣",
               desc: "建立專屬店舖頁面及資訊系列，針對香港及大灣區客戶投放，系統自動優化，提升區域知名度。",
-              img: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80",
+              img: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=400&q=80",
             },
             {
               icon: <Package className="w-6 h-6 text-pink-500" />,
@@ -455,7 +453,7 @@ export default function MerchantMarketingPage() {
           </div>
           <div className="rounded-2xl overflow-hidden shadow-lg">
             <img
-              src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=600&q=80"
+              src="https://images.unsplash.com/photo-1523263685509-57c1d050d19b?w=600&q=80"
               alt="推廣服務"
               className="w-full h-[350px] object-cover"
             />

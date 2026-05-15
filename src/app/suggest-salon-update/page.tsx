@@ -82,11 +82,11 @@ export default function SuggestSalonUpdatePage() {
     setSearching(true);
     try {
       const { data } = await supabase
-        .from('shopify_products_cache')
-        .select('id, title, district_name, handle, image_src')
-        .ilike('title', `%${term}%`)
+        .from('salon_profiles')
+        .select('id, salon_name, district_name, image_src')
+        .ilike('salon_name', `%${term}%`)
         .limit(10);
-      setSearchResults(data || []);
+      setSearchResults((data || []).map((s: any) => ({ ...s, title: s.salon_name })));
       setShowDropdown((data || []).length > 0);
     } catch {
       setSearchResults([]);
@@ -124,12 +124,12 @@ export default function SuggestSalonUpdatePage() {
     setSearchResults([]);
     setShowDropdown(false);
 
-    // Pre-fill form data from salon profile if available
+    // Pre-fill form data from salon profile directly (since we already queried salon_profiles)
     try {
       const { data: profile } = await supabase
         .from('salon_profiles')
         .select('contact_number, email, website, description, address, district')
-        .eq('shopify_product_id', String(salon.id))
+        .eq('id', salon.id)
         .single();
 
       if (profile) {

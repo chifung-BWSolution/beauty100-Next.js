@@ -43,7 +43,7 @@ export default function ApplicationStatusPage() {
 
   if (isLoadingAuth || !user) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="w-8 h-8 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin" />
       </div>
     );
@@ -75,10 +75,7 @@ export default function ApplicationStatusPage() {
   }
 
   return (
-    <div
-      className="p-4 md:p-8 min-h-screen"
-      style={{ background: 'linear-gradient(160deg, #fdf2f8 0%, #faf5ff 50%, #f0f9ff 100%)' }}
-    >
+    <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>

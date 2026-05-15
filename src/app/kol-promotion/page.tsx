@@ -143,7 +143,7 @@ export default function KolPromotionPage() {
   };
 
   return (
-      <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-rose-50">
+      <div className="min-h-full bg-gradient-to-b from-purple-50 via-white to-rose-50">
         {/* Hero Section */}
         <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8 text-center">
           <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full text-sm font-medium mb-4">

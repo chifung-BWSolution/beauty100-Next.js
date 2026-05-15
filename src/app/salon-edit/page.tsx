@@ -12,12 +12,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import DistrictSelect from '@/components/DistrictSelect';
-import { Store, Save, MapPin, Tag, Clock, Image, Globe, ArrowLeft, History, Send, CheckCircle, Star, RotateCcw, Info } from 'lucide-react';
+import { Store, Save, MapPin, Tag, Clock, Image, Globe, ArrowLeft, History, Send, CheckCircle, Star, RotateCcw, Info, Eye } from 'lucide-react';
 import FileUpload from '@/components/FileUpload';
 import OpeningHoursEditor from '@/components/salon/OpeningHoursEditor';
 import ProductMediaUpload from '@/components/salon/ProductMediaUpload';
 import RichTextEditor from '@/components/salon/RichTextEditor';
 import TagSelector from '@/components/salon/TagSelector';
+import SalonPreviewModal from '@/components/salon/SalonPreviewModal';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -139,6 +140,7 @@ function SalonEditContent() {
   const [editingVersionName, setEditingVersionName] = useState<string | null>(null);
   const [versionNameInput, setVersionNameInput] = useState('');
   const [togglingStarId, setTogglingStarId] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (isLoadingAuth) return;
@@ -263,9 +265,13 @@ function SalonEditContent() {
     setCheckingHandle(true);
     setHandleError('');
     try {
-      const result = await ShopifyAPI.checkHandle(finalHandle, profile?.shopify_product_id || null);
-      if ((result as any).exists) {
-        setHandleError('此網址代碼 (URL Handle) 已被其他產品使用，請輸入另一個代碼。');
+      let handleQuery = supabase.from('salon_profiles').select('id', { count: 'exact', head: true }).eq('handle', finalHandle);
+      if (profileId) {
+        handleQuery = handleQuery.neq('id', profileId);
+      }
+      const { count } = await handleQuery;
+      if (count && count > 0) {
+        setHandleError('此網址代碼 (URL Handle) 已被其他美容院使用，請輸入另一個代碼。');
       }
     } catch (e) { console.error(e); }
     finally { setCheckingHandle(false); }
@@ -320,9 +326,14 @@ function SalonEditContent() {
 
       const finalHandle = slugify(formData.handle);
       if (finalHandle) {
-        const handleCheck = await ShopifyAPI.checkHandle(finalHandle, profile?.shopify_product_id || null);
-        if ((handleCheck as any).exists) {
-          toast.error('此網址代碼 (URL Handle) 已被其他產品使用，請輸入另一個代碼。');
+        // Check handle uniqueness against local database
+        let handleQuery = supabase.from('salon_profiles').select('id', { count: 'exact', head: true }).eq('handle', finalHandle);
+        if (profileId) {
+          handleQuery = handleQuery.neq('id', profileId);
+        }
+        const { count: handleCount } = await handleQuery;
+        if (handleCount && handleCount > 0) {
+          toast.error('此網址代碼 (URL Handle) 已被其他美容院使用，請輸入另一個代碼。');
           setSubmitting(false);
           return;
         }
@@ -423,9 +434,14 @@ function SalonEditContent() {
               </div>
               <h2 className="text-xl font-semibold text-slate-800 mb-2">資料更新審核中</h2>
               <p className="text-slate-500 text-sm mb-6">您提交的資料正由管理員審核，審核完成後才可再次編輯。</p>
-              <Button variant="outline" onClick={() => setShowHistory(true)} className="gap-2">
-                <History className="w-4 h-4" />查看歷史版本
-              </Button>
+              <div className="flex gap-3 justify-center">
+                <Button variant="outline" onClick={() => setShowPreview(true)} className="gap-2">
+                  <Eye className="w-4 h-4" />預覽頁面
+                </Button>
+                <Button variant="outline" onClick={() => setShowHistory(true)} className="gap-2">
+                  <History className="w-4 h-4" />查看歷史版本
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -441,6 +457,12 @@ function SalonEditContent() {
             />
           </DialogContent>
         </Dialog>
+        <SalonPreviewModal
+          open={showPreview}
+          onClose={() => setShowPreview(false)}
+          formData={formData}
+          profileId={profileId || undefined}
+        />
       </div>
     );
   }
@@ -634,9 +656,14 @@ function SalonEditContent() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <Button variant="outline" onClick={handleSaveDraft} disabled={saving} className="gap-2 h-11 sm:h-auto">
-            {saving ? <><div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div><span className="hidden sm:inline">儲存中...</span></> : <><Save className="w-4 h-4" /><span className="hidden sm:inline">儲存草稿</span></>}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleSaveDraft} disabled={saving} className="gap-2 h-11 sm:h-auto">
+              {saving ? <><div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div><span className="hidden sm:inline">儲存中...</span></> : <><Save className="w-4 h-4" /><span className="hidden sm:inline">儲存草稿</span></>}
+            </Button>
+            <Button variant="outline" onClick={() => setShowPreview(true)} className="gap-2 h-11 sm:h-auto">
+              <Eye className="w-4 h-4" /><span className="hidden sm:inline">預覽</span>
+            </Button>
+          </div>
           <Button onClick={handleSubmit} disabled={submitting || !!pendingVersion || !!handleError || checkingHandle} className="h-11 sm:h-auto sm:px-8 bg-blue-600 hover:bg-blue-700 gap-2">
             {submitting ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span className="hidden sm:inline">提交中...</span></> : <><Send className="w-4 h-4" /><span className="hidden sm:inline">提交審核</span></>}
           </Button>
@@ -657,6 +684,14 @@ function SalonEditContent() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Preview Modal */}
+      <SalonPreviewModal
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+        formData={formData}
+        profileId={profileId || undefined}
+      />
     </div>
   );
 }

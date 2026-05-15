@@ -55,13 +55,13 @@ export default function MerchantPage() {
             <a href="/merchant-marketing" className="text-gray-700 font-medium text-sm hover:text-pink-500">
               宣傳營銷
             </a>
-            <a href="#" className="text-gray-700 font-medium text-sm hover:text-pink-500">
+            <a href="/merchant-consulting" className="text-gray-700 font-medium text-sm hover:text-pink-500">
               創業顧問
             </a>
-            <a href="#" className="text-gray-700 font-medium text-sm hover:text-pink-500">
+            <a href="/merchant-cooperation" className="text-gray-700 font-medium text-sm hover:text-pink-500">
               商務合作
             </a>
-            <a href="#" className="text-gray-700 font-medium text-sm hover:text-pink-500">
+            <a href="/merchant-contact" className="text-gray-700 font-medium text-sm hover:text-pink-500">
               聯絡我們
             </a>
           </div>
@@ -77,7 +77,7 @@ export default function MerchantPage() {
       {/* Hero Section */}
       <section className="relative h-[400px] flex items-center justify-center overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=1400&q=80"
+          src="https://images.unsplash.com/photo-1600948836101-f9ffda59d250?w=1400&q=80"
           alt="Beauty Salon"
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -98,7 +98,7 @@ export default function MerchantPage() {
           {[
             { title: "商戶註冊", desc: "即時解鎖專屬優勢", href: "/merchant-registration" },
             { title: "宣傳營銷", desc: "提升品牌曝光效能", href: "/merchant-marketing" },
-            { title: "創業顧問", desc: "專業開業策略指導", href: "#" },
+            { title: "創業顧問", desc: "專業開業策略指導", href: "/merchant-consulting" },
             { title: "商務合作", desc: "探索多方合作機會", href: "#" },
           ].map((item, i) => (
             <a
@@ -213,7 +213,7 @@ export default function MerchantPage() {
 
           <div className="rounded-2xl overflow-hidden shadow-lg">
             <img
-              src="https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=600&q=80"
+              src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=600&q=80"
               alt="美容院服務"
               className="w-full h-[380px] object-cover"
             />
@@ -259,32 +259,38 @@ export default function MerchantPage() {
       {/* 專業資源 Section */}
       <section className="bg-gradient-to-br from-pink-50 to-purple-50 py-16">
         <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left side - cards */}
-            <div className="space-y-4">
-              <div className="bg-gradient-to-r from-pink-400 to-pink-500 rounded-2xl p-6 text-white">
-                <h4 className="font-bold text-lg mb-2">市場數據支援</h4>
-                <p className="text-sm text-white/90 leading-relaxed">
-                  重取每月更新的開業動態、客戶趨勢及人口統計分析，助您作出明智決策。
-                </p>
-              </div>
-              <div className="bg-gradient-to-r from-pink-400 to-pink-500 rounded-2xl p-6 text-white">
-                <h4 className="font-bold text-lg mb-2">美容業生態整合</h4>
-                <p className="text-sm text-white/90 leading-relaxed">
-                  連結 KOL 推廣、品牌設計及儀器推薦，構建完整 O2O 生態系統。
-                </p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Card 1 */}
+            <div className="bg-gradient-to-r from-pink-400 to-pink-500 rounded-2xl p-6 text-white">
+              <h4 className="font-bold text-lg mb-2">專業資源</h4>
+              <p className="text-sm text-white/90 leading-relaxed">
+                享用創業顧問、牌照申請指南及管理系統，涵蓋品牌定位、室內設計及工程項目，確保業務順利開展。
+              </p>
             </div>
-
-            {/* Right side */}
-            <div className="space-y-4">
-              <div className="bg-gradient-to-r from-purple-400 to-purple-500 rounded-2xl p-6 text-white">
-                <h4 className="font-bold text-lg mb-2">美容儀器信息</h4>
-                <p className="text-sm text-white/90 leading-relaxed">
-                  提供最新的美容儀器推薦及技術趨勢資報，助您維持行業領先地位並引入創新解決方案。
-                </p>
-              </div>
-              <div className="bg-white rounded-2xl p-6 border border-gray-100">
+            {/* Card 2 */}
+            <div className="bg-gradient-to-r from-purple-400 to-purple-500 rounded-2xl p-6 text-white">
+              <h4 className="font-bold text-lg mb-2">美容儀器信息</h4>
+              <p className="text-sm text-white/90 leading-relaxed">
+                提供最新的美容儀器推薦及技術趨勢資報，助您維持行業領先地位並引入創新解決方案。
+              </p>
+            </div>
+            {/* Card 3 */}
+            <div className="bg-gradient-to-r from-pink-400 to-pink-500 rounded-2xl p-6 text-white">
+              <h4 className="font-bold text-lg mb-2">市場數據支援</h4>
+              <p className="text-sm text-white/90 leading-relaxed">
+                重取每月更新的開業動態、客戶趨勢及人口統計分析，助您作出明智決策。
+              </p>
+            </div>
+            {/* Card 4 */}
+            <div className="bg-gradient-to-r from-pink-400 to-pink-500 rounded-2xl p-6 text-white">
+              <h4 className="font-bold text-lg mb-2">美容業生態整合</h4>
+              <p className="text-sm text-white/90 leading-relaxed">
+                連結 KOL 推廣、品牌設計及儀器推薦，構建完整 O2O 生態系統。
+              </p>
+            </div>
+            {/* WhatsApp CTA */}
+            <div className="md:col-span-2 flex justify-center">
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 inline-flex flex-col items-center">
                 <h4 className="font-bold text-lg mb-3">想了解更多？</h4>
                 <a
                   href={whatsappLink || "https://wa.me/85268589265"}
@@ -306,7 +312,7 @@ export default function MerchantPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div className="rounded-2xl overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=600&q=80"
+              src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80"
               alt="數據分析"
               className="w-full h-[400px] object-cover rounded-2xl"
             />

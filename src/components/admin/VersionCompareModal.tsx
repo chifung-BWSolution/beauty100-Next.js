@@ -1,12 +1,22 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+
+const CHANGE_REASON_LABELS: Record<string, string> = {
+  new_opening: '🆕 新開張',
+  closed: '🔒 結業',
+  renovation: '🔧 裝修',
+  reopened: '🔄 重開',
+  update_info: '📝 更新資料',
+  upload_photo: '📷 上載相片',
+};
 
 const FIELDS = [
   { key: 'salon_name', label: '美容院名稱' },
@@ -139,7 +149,7 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden" style={{ display: 'flex', flexDirection: 'column' }} onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             資料更新審核
@@ -156,7 +166,8 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
             <Loader2 className="w-6 h-6 animate-spin text-pink-500" />
           </div>
         ) : (
-          <div className="space-y-5">
+          <>
+          <div className="space-y-5 flex-1 overflow-y-auto min-h-0 pr-1">
             {/* Public suggestion info banner */}
             {version.submission_type === 'public_suggestion' && (
               <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4 space-y-3">
@@ -165,7 +176,7 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
                     <Badge className="bg-blue-100 text-blue-700 border-0">📋 公眾建議</Badge>
                     {version.change_reason && (
                       <Badge variant="outline" className="text-sm">
-                        {({ new_opening: '🆕 新開張', closed: '🔒 結業', renovation: '🔧 裝修', reopened: '🔄 重開', update_info: '📝 更新資料', upload_photo: '📷 上載相片' } as Record<string, string>)[version.change_reason] || version.change_reason}
+                        {CHANGE_REASON_LABELS[version.change_reason] || version.change_reason}
                       </Badge>
                     )}
                     {version.is_shop_owner && (
@@ -276,7 +287,7 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
                   </div>
                   <div className={`p-3 ${mediaChanged ? 'bg-amber-50/30' : ''}`}>
                     {isPublic && versionMedia.length > 0 ? (
-                      <>
+                      <React.Fragment>
                         <p className="text-sm text-slate-400 mb-2">新增相片 ({versionMedia.length})</p>
                         <div className="flex gap-1.5 flex-wrap">
                           {versionMedia.map((url: string, i: number) => (
@@ -295,42 +306,48 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
                             </div>
                           </div>
                         )}
-                      </>
+                      </React.Fragment>
                     ) : (
-                      <>
+                      <React.Fragment>
                         <p className="text-sm text-slate-400 mb-2">申請更新 ({version.product_media?.length || 0})</p>
                         <div className="flex gap-1.5 flex-wrap">
                           {(version.product_media || []).map((url: string, i: number) => <img key={i} src={url} alt="" className="w-14 h-14 object-cover rounded-lg" />)}
                         </div>
-                      </>
+                      </React.Fragment>
                     )}
                   </div>
                 </div>
               </div>
             )}
 
-            <DialogFooter className="gap-3 pt-2 flex-col sm:flex-row items-center justify-between">
-              <div className="flex gap-4 items-center w-full sm:w-auto mb-3 sm:mb-0 bg-slate-50 px-3 py-2 rounded-lg">
-                <label className="text-sm font-medium text-slate-700">更新後狀態:</label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="versionStatus" value="active" checked={approveStatus === 'active'} onChange={(e) => setApproveStatus(e.target.value)} />
-                  <span className="text-sm">Active</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="versionStatus" value="draft" checked={approveStatus === 'draft'} onChange={(e) => setApproveStatus(e.target.value)} />
-                  <span className="text-sm">Draft</span>
-                </label>
-              </div>
-              <div className="flex gap-3 w-full sm:w-auto justify-end">
-                <Button variant="outline" onClick={onReject} className="border-red-200 text-red-600 hover:bg-red-50">
-                  <XCircle className="w-4 h-4 mr-2" />拒絕
-                </Button>
-                <Button onClick={() => onApprove(approveStatus)} disabled={processing} className="bg-emerald-600 hover:bg-emerald-700">
-                  {processing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />處理中...</> : <><CheckCircle className="w-4 h-4 mr-2" />批准並更新資料</>}
-                </Button>
-              </div>
-            </DialogFooter>
           </div>
+
+          <DialogFooter className="gap-3 pt-4 flex-col sm:flex-row items-center justify-between border-t mt-4 shrink-0 relative z-10">
+            <div className="flex gap-4 items-center w-full sm:w-auto mb-3 sm:mb-0 bg-slate-50 px-3 py-2 rounded-lg">
+              <label className="text-sm font-medium text-slate-700">更新後狀態:</label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="versionStatus" value="active" checked={approveStatus === 'active'} onChange={(e) => setApproveStatus(e.target.value)} />
+                <span className="text-sm">Active</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="versionStatus" value="draft" checked={approveStatus === 'draft'} onChange={(e) => setApproveStatus(e.target.value)} />
+                <span className="text-sm">Draft</span>
+              </label>
+            </div>
+            <div className="flex gap-3 w-full sm:w-auto justify-end">
+              <Button type="button" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onReject(); }} className="border-red-200 text-red-600 hover:bg-red-50">
+                <XCircle className="w-4 h-4 mr-2" />拒絕
+              </Button>
+              <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onApprove(approveStatus); }} disabled={processing} className="bg-emerald-600 hover:bg-emerald-700">
+                {processing ? (
+                  <span className="flex items-center"><Loader2 className="w-4 h-4 mr-2 animate-spin" />處理中...</span>
+                ) : (
+                  <span className="flex items-center"><CheckCircle className="w-4 h-4 mr-2" />批准並更新資料</span>
+                )}
+              </Button>
+            </div>
+          </DialogFooter>
+          </>
         )}
       </DialogContent>
     </Dialog>

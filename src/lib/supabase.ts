@@ -23,13 +23,7 @@ export const supabase = createClient(supabaseUrl || 'https://placeholder.supabas
         }));
       }
       return fetch(...args).catch((err) => {
-        // Suppress network errors that would bubble as unhandled in cross-origin contexts
-        if (err instanceof TypeError && (err.message === 'Failed to fetch' || err.message.includes('Failed to fetch'))) {
-          return new Response(JSON.stringify([]), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
+        console.error('[Supabase fetch error]', err?.message || err);
         throw err;
       });
     },

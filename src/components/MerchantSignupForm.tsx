@@ -21,6 +21,7 @@ interface ClaimedSalonData {
   whatsapp_number?: string;
   district?: string;
   shopify_product_id?: string;
+  salon_profile_id?: string;
 }
 
 interface Props {
@@ -57,6 +58,7 @@ export default function MerchantSignupForm({
     namecard_photo: '',
     br_document: '',
     shopify_product_id: claimedSalonData?.shopify_product_id || '',
+    salon_profile_id: claimedSalonData?.salon_profile_id || null,
   });
 
   const handleChange = (field: string, value: string) => {
@@ -72,12 +74,15 @@ export default function MerchantSignupForm({
         await supabase.auth.updateUser({ data: { full_name: fullName } });
       }
 
-      const { error } = await supabase.from('salon_applications').insert({
+      const insertData: Record<string, unknown> = {
         ...formData,
         status: 'pending',
         application_type: applicationType,
-        created_by: userId,
-      });
+      };
+      if (userId) insertData.created_by = userId;
+      if (!formData.salon_profile_id) delete insertData.salon_profile_id;
+
+      const { error } = await supabase.from('salon_applications').insert(insertData);
       if (error) throw error;
 
       // Log user activity

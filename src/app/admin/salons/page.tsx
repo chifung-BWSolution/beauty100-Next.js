@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +11,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { Search, Store, RefreshCw, ExternalLink, User, Eye, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Loader2, Globe, AlertTriangle, MapPin, Phone, Mail, MessageCircle, Clock, Tag, Image as ImageIcon, FileText, Hash, Calendar, Info, Copy, Check, Lock, Wrench } from 'lucide-react';
-import ShopifyAPI from '@/api/shopify';
+import { Search, Store, RefreshCw, ExternalLink, User, Eye, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Loader2, Globe, MapPin, Phone, Mail, MessageCircle, Clock, Tag, Image as ImageIcon, FileText, Calendar, Copy, Check } from 'lucide-react';
 import SalonOwnerModal from '@/components/admin/SalonOwnerModal';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { loadBeautyProductsFromCache, syncShopifyProductsToCache } from '@/api/shopify';
 
 const REGION_GROUPS = [
   { region: '香港島', emoji: '🏙️', districts: ['中環', '上環', '灣仔', '銅鑼灣', '北角', '鰂魚涌', '天后', '炮台山', '柴灣', '西灣河', '西營盤', '香港仔', '堅尼地城', '半山區', '跑馬地'] },
@@ -38,69 +35,8 @@ function groupDistricts(districts: any[]) {
 
 const PAGE_SIZE = 50;
 
-// Smart link button: active → storefront URL, draft → fetch real preview URL on demand
-function PreviewLinkButton({ salon }: { salon: any }) {
-  const [loading, setLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  const handleClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    // For active products, go directly to the storefront
-    if (salon.status === 'active' && salon.handle) {
-      window.open(`https://2btwx1-uz.myshopify.com/products/${salon.handle}`, '_blank');
-      return;
-    }
-
-    // For draft products, fetch the real preview URL from Shopify
-    if (previewUrl) {
-      window.open(previewUrl, '_blank');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const numericId = String(salon.id).replace(/.*\//, '');
-      const result = await ShopifyAPI.getProductPreviewUrl(numericId);
-      const url = (result as any)?.previewUrl || (result as any)?.adminUrl || null;
-      if (url) {
-        setPreviewUrl(url);
-        window.open(url, '_blank');
-      } else {
-        // Fallback to admin URL
-        window.open(`https://2btwx1-uz.myshopify.com/admin/products/${numericId}`, '_blank');
-      }
-    } catch (err) {
-      console.error('Failed to fetch preview URL:', err);
-      // Fallback to admin URL
-      const numericId = String(salon.id).replace(/.*\//, '');
-      window.open(`https://2btwx1-uz.myshopify.com/admin/products/${numericId}`, '_blank');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className={`h-8 w-8 ${salon.status === 'active' ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50' : 'text-blue-500 hover:text-blue-600 hover:bg-blue-50'}`}
-      onClick={handleClick}
-      disabled={loading}
-      title={salon.status === 'active' ? '查看上架頁面' : '預覽草稿'}
-    >
-      {loading ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
-      ) : (
-        <ExternalLink className="w-4 h-4" />
-      )}
-    </Button>
-  );
-}
-
 export default function AdminSalonsPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [salons, setSalons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [claimFilter, setClaimFilter] = useState('all');
@@ -109,16 +45,9 @@ export default function AdminSalonsPage() {
   const [selectedSalon, setSelectedSalon] = useState<any>(null);
   const [viewDetailsSalon, setViewDetailsSalon] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loadingProgress, setLoadingProgress] = useState('');
-  const [syncing, setSyncing] = useState(false);
-  const [sortField, setSortField] = useState('created_at');
+  const [sortField, setSortField] = useState('created_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [labelCategoryMap, setLabelCategoryMap] = useState<Record<string, string>>({});
-  const [shopifyDetailLoading, setShopifyDetailLoading] = useState(false);
-  const [shopifyDetailData, setShopifyDetailData] = useState<any>(null);
-  const [shopifyMetafields, setShopifyMetafields] = useState<any[]>([]);
-  const [shopifyDetailError, setShopifyDetailError] = useState<string | null>(null);
-  const [cachedRawData, setCachedRawData] = useState<any>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
@@ -133,10 +62,10 @@ export default function AdminSalonsPage() {
       const { error } = await supabase.from('salon_profiles').update(updates).eq('id', profileId);
       if (error) throw error;
       toast.success(`已更新美容院狀態為「${newStatus === 'active' ? '營業中' : newStatus === 'closed' ? '已結業' : newStatus === 'renovation' ? '裝修中' : newStatus}」`);
-      // Refresh detail view
-      if (viewDetailsSalon?.profile) {
-        setViewDetailsSalon({ ...viewDetailsSalon, profile: { ...viewDetailsSalon.profile, salon_status: newStatus } });
+      if (viewDetailsSalon) {
+        setViewDetailsSalon({ ...viewDetailsSalon, salon_status: newStatus });
       }
+      setSalons(prev => prev.map(s => s.id === profileId ? { ...s, salon_status: newStatus } : s));
     } catch (e: any) {
       console.error('Failed to update salon status:', e);
       toast.error('更新狀態失敗：' + (e.message || '未知錯誤'));
@@ -147,130 +76,142 @@ export default function AdminSalonsPage() {
 
   useEffect(() => { loadData(); }, []);
 
-  const fetchAllBeautyProducts = async () => {
-    setLoadingProgress('從資料庫載入美容院...');
-    try {
-      const products = await loadBeautyProductsFromCache();
-      return products;
-    } catch (err) {
-      console.warn('Failed to load beauty products:', err instanceof Error ? err.message : err);
-      return [];
-    } finally {
-      setLoadingProgress('');
-    }
-  };
-
-  const handleSyncShopify = async () => {
-    setSyncing(true);
-    setLoadingProgress('同步 Shopify 資料中...');
-    try {
-      const result = await syncShopifyProductsToCache();
-      toast.success(`同步完成！共 ${result.synced} 間美容院`);
-      await loadData();
-    } catch (error) {
-      console.error('Sync error:', error);
-      toast.error('同步失敗，請稍後再試');
-    } finally {
-      setSyncing(false);
-      setLoadingProgress('');
-    }
-  };
-
   const loadData = async () => {
     setLoading(true);
     try {
-      const [beautyProductsResult, profilesResult, applicationsResult, usersResult, districtsResult, tagsResult] = await Promise.allSettled([
-        fetchAllBeautyProducts(),
-        base44.entities.SalonProfile.list(),
-        base44.entities.SalonApplication.list(),
-        base44.functions.invoke('listUsers', {}),
-        supabase.from('shopify_products_cache').select('district_id, district_name').not('district_id', 'is', null),
-        supabase.from('salon_tags').select('label, category'),
-      ]);
+      // Check auth session first
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        console.warn('No active session - salon_profiles query may return empty due to RLS');
+      }
 
-      const beautyProducts = beautyProductsResult.status === 'fulfilled' ? beautyProductsResult.value : [];
-      const profiles = profilesResult.status === 'fulfilled' ? profilesResult.value : [];
-      const applications = applicationsResult.status === 'fulfilled' ? applicationsResult.value : [];
-      const users = usersResult.status === 'fulfilled' ? usersResult.value : null;
-      const districtsRows = districtsResult.status === 'fulfilled' ? (districtsResult.value as any)?.data || [] : [];
+      // Fetch all salon profiles with pagination
+      const FETCH_LIMIT = 1000;
+      let allProfiles: any[] = [];
+      let from = 0;
+      let hasMore = true;
 
-      if (tagsResult.status === 'fulfilled' && (tagsResult.value as any)?.data) {
+      while (hasMore) {
+        const { data, error, count } = await supabase
+          .from('salon_profiles')
+          .select('id, salon_name, address, district, district_name, description, image_src, product_media, tags, selected_tags, highlight_tags, seo_title, seo_description, contact_number, whatsapp_number, contact_person, email, website, is_active, product_type, created_by, office_hr_mon, office_hr_tue, office_hr_wed, office_hr_thu, office_hr_fri, office_hr_sat, office_hr_sun, salon_status, closed_date, renovation_date, reopened_date, new_opening_date, created_date, updated_at, shopify_product_id, handle', { count: 'exact' })
+          .order('created_date', { ascending: false })
+          .range(from, from + FETCH_LIMIT - 1);
+
+        if (error) {
+          console.error('Error fetching salon_profiles:', error);
+          toast.error('載入美容院資料失敗：' + (error.message || '未知錯誤'));
+          break;
+        }
+        if (data && data.length > 0) {
+          allProfiles = [...allProfiles, ...data];
+          from += FETCH_LIMIT;
+          if (data.length < FETCH_LIMIT) hasMore = false;
+        } else {
+          if (from === 0) {
+            console.warn('salon_profiles returned empty. Count:', count, 'Session:', sessionData?.session?.user?.email);
+          }
+          hasMore = false;
+        }
+      }
+
+      // Fetch applications for claim status
+      const { data: applications } = await supabase
+        .from('salon_applications')
+        .select('id, salon_profile_id, application_type, status, contact_person, created_by')
+        .eq('application_type', 'claim');
+
+      // Fetch users to map user IDs to emails
+      const { data: usersData } = await supabase.from('users').select('id, email, full_name');
+      const userMap: Record<string, { email: string; full_name: string }> = {};
+      (usersData || []).forEach((u: any) => {
+        userMap[u.id] = { email: u.email || '', full_name: u.full_name || '' };
+      });
+
+      // Fetch tags for category mapping
+      const { data: tagsData } = await supabase.from('salon_tags').select('label, category');
+      if (tagsData) {
         const lcMap: Record<string, string> = {};
-        (tagsResult.value as any).data.forEach((t: any) => { lcMap[t.label] = t.category; });
+        tagsData.forEach((t: any) => { lcMap[t.label] = t.category; });
         setLabelCategoryMap(lcMap);
       }
 
-      // Build unique districts list from cache
+      // Build districts list from profiles
       const districtMap: Record<string, any> = {};
-      districtsRows.forEach((r: any) => {
-        if (r.district_id) districtMap[r.district_id] = { id: r.district_id, name: r.district_name };
+      allProfiles.forEach((p: any) => {
+        const dName = p.district_name || p.district;
+        if (dName) {
+          districtMap[dName] = { id: dName, name: dName };
+        }
       });
-      const districtsList = Object.values(districtMap);
-      setDistricts(districtsList);
+      setDistricts(Object.values(districtMap));
 
-      const userByEmail: Record<string, string> = {};
-      ((users as any)?.data?.users || []).forEach((u: any) => { userByEmail[u.email] = u.full_name || u.email; });
+      // Build application map by salon_profile_id
+      const applicationByProfileId: Record<string, any> = {};
+      (applications || []).forEach((a: any) => {
+        if (a.salon_profile_id) applicationByProfileId[String(a.salon_profile_id)] = a;
+      });
 
-      const profileByShopifyId: Record<string, any> = {};
-      (profiles as any[]).forEach(p => { if (p.shopify_product_id) profileByShopifyId[String(p.shopify_product_id)] = p; });
-
-      const applicationByShopifyId: Record<string, any> = {};
-      (applications as any[]).forEach(a => { if (a.shopify_product_id && a.application_type === 'claim') applicationByShopifyId[String(a.shopify_product_id)] = a; });
-
-      const merged = (beautyProducts as any[]).map(product => {
-        const pid = String(product.id);
-        const profile = profileByShopifyId[pid];
-        const application = applicationByShopifyId[pid];
+      // Map profiles to display items
+      const mapped = allProfiles.map((profile: any) => {
+        const application = applicationByProfileId[String(profile.id)];
 
         let claimStatus = 'unclaimed';
         let ownerEmail = null;
         let ownerName = null;
 
-        if (profile) {
+        if (profile.created_by) {
           claimStatus = 'claimed';
-          ownerEmail = profile.created_by;
-          ownerName = profile.contact_person || userByEmail[profile.created_by] || profile.created_by;
+          const user = userMap[profile.created_by];
+          ownerEmail = user?.email || profile.email || null;
+          ownerName = profile.contact_person || user?.full_name || ownerEmail || '(未知用戶)';
         } else if (application && application.status !== 'rejected') {
           claimStatus = application.status === 'approved' ? 'claimed' : 'pending';
-          ownerEmail = application.created_by;
-          ownerName = application.contact_person || userByEmail[application.created_by] || application.created_by;
+          const user = userMap[application.created_by];
+          ownerEmail = user?.email || null;
+          ownerName = application.contact_person || user?.full_name || ownerEmail || '(未知用戶)';
         }
 
+        // Get first image
+        const image = profile.image_src || (profile.product_media && profile.product_media.length > 0 ? profile.product_media[0]?.src || profile.product_media[0] : '');
+
         return {
-          id: product.id, title: product.title, vendor: product.vendor, handle: product.handle,
-          status: product.status, tags: product.tags, product_type: product.product_type,
-          created_at: product.created_at, image: product.image?.src || product.images?.[0]?.src || '',
-          district_id: product.district_id || null, district_name: product.district_name || null,
-          claimStatus, ownerEmail, ownerName, profile,
+          ...profile,
+          title: profile.salon_name || '(未命名)',
+          image,
+          claimStatus,
+          ownerEmail,
+          ownerName,
         };
       });
 
-      setProducts(merged);
-    } catch (error) {
+      setSalons(mapped);
+    } catch (error: any) {
       console.error('Error loading data:', error);
+      toast.error('載入資料時發生錯誤：' + (error?.message || '未知錯誤'));
     } finally {
       setLoading(false);
     }
   };
 
-  const filtered = products.filter(p => {
+  const filtered = salons.filter(p => {
     const matchSearch =
-      p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.vendor || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.district_name || p.district || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.ownerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.ownerEmail || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.profile?.contact_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.profile?.email || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (p.contact_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchClaim = claimFilter === 'all' || p.claimStatus === claimFilter;
-    const matchDistrict = districtFilter === 'all' || p.district_id === districtFilter || p.district_name === districtFilter;
+    const matchDistrict = districtFilter === 'all' || p.district_name === districtFilter || p.district === districtFilter;
     return matchSearch && matchClaim && matchDistrict;
   });
 
   const sorted = [...filtered].sort((a, b) => {
     let aVal: any, bVal: any;
     if (sortField === 'title') { aVal = a.title?.toLowerCase() || ''; bVal = b.title?.toLowerCase() || ''; }
-    else if (sortField === 'created_at') { aVal = new Date(a.created_at || 0).getTime(); bVal = new Date(b.created_at || 0).getTime(); }
-    else if (sortField === 'district') { aVal = a.district_name?.toLowerCase() || ''; bVal = b.district_name?.toLowerCase() || ''; }
+    else if (sortField === 'created_date') { aVal = new Date(a.created_date || 0).getTime(); bVal = new Date(b.created_date || 0).getTime(); }
+    else if (sortField === 'district') { aVal = (a.district_name || a.district || '').toLowerCase(); bVal = (b.district_name || b.district || '').toLowerCase(); }
     else if (sortField === 'claimStatus') { aVal = a.claimStatus || ''; bVal = b.claimStatus || ''; }
     if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
     if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
@@ -292,79 +233,6 @@ export default function AdminSalonsPage() {
   const safePage = Math.min(currentPage, totalPages);
   const paginated = sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  const handleStatusChange = async (salon: any, newStatus: string) => {
-    try {
-      const res = await base44.functions.invoke('shopifyData', { type: 'update_product', product: { id: salon.id, status: newStatus } });
-      if ((res as any).data?.error) throw new Error((res as any).data.error);
-      setProducts(prev => prev.map(p => p.id === salon.id ? { ...p, status: newStatus } : p));
-      toast.success('狀態已更新');
-    } catch (err) {
-      console.error('Failed to update status:', err);
-      toast.error('狀態更新失敗');
-    }
-  };
-
-  const handleViewDetails = async (salon: any) => {
-    setViewDetailsSalon(salon);
-    setShopifyDetailData(null);
-    setShopifyMetafields([]);
-    setShopifyDetailError(null);
-    setCachedRawData(null);
-    setShopifyDetailLoading(true);
-
-    let hasCachedData = false;
-
-    // Step 1: Try loading from local DB cache (raw_data column) — instant, no edge function needed
-    try {
-      const { data: cacheRow, error: cacheErr } = await supabase
-        .from('shopify_products_cache')
-        .select('raw_data')
-        .eq('id', String(salon.id))
-        .single();
-
-      if (!cacheErr && cacheRow?.raw_data) {
-        const raw = typeof cacheRow.raw_data === 'string' ? JSON.parse(cacheRow.raw_data) : cacheRow.raw_data;
-        setCachedRawData(raw);
-        hasCachedData = true;
-        // Use cached data as initial detail data
-        const product = raw.product || raw;
-        if (product) {
-          setShopifyDetailData(product);
-        }
-      }
-    } catch (cacheLoadErr) {
-      console.warn('Failed to load raw_data from cache:', cacheLoadErr);
-    }
-
-    // Step 2: Try Shopify API for latest data + metafields
-    try {
-      const numericId = String(salon.id).replace(/.*\//, '');
-      const [productRes, metafieldsRes] = await Promise.allSettled([
-        ShopifyAPI.getProduct(numericId),
-        ShopifyAPI.getProductMetafields(numericId),
-      ]);
-      if (productRes.status === 'fulfilled' && (productRes.value as any)?.product) {
-        setShopifyDetailData((productRes.value as any).product);
-      } else if (productRes.status === 'rejected') {
-        console.warn('Shopify getProduct failed:', productRes.reason);
-        setShopifyDetailError(hasCachedData
-          ? '無法從 Shopify 載入最新資料，顯示快取版本'
-          : '無法從 Shopify 載入產品詳情（Edge Function 可能需要更新）'
-        );
-      }
-      if (metafieldsRes.status === 'fulfilled') {
-        setShopifyMetafields((metafieldsRes.value as any)?.metafields || []);
-      } else {
-        console.warn('Shopify getProductMetafields failed:', metafieldsRes.reason);
-      }
-    } catch (err) {
-      console.error('Failed to load Shopify details:', err);
-      setShopifyDetailError(`Shopify API 呼叫失敗: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setShopifyDetailLoading(false);
-    }
-  };
-
   const handleCopyText = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
@@ -372,12 +240,11 @@ export default function AdminSalonsPage() {
   };
 
   const stats = {
-    total: products.length,
-    claimed: products.filter(p => p.claimStatus === 'claimed').length,
-    pending: products.filter(p => p.claimStatus === 'pending').length,
-    unclaimed: products.filter(p => p.claimStatus === 'unclaimed').length,
+    total: salons.length,
+    claimed: salons.filter(p => p.claimStatus === 'claimed').length,
+    pending: salons.filter(p => p.claimStatus === 'pending').length,
+    unclaimed: salons.filter(p => p.claimStatus === 'unclaimed').length,
   };
-
   const ClaimBadge = ({ status }: { status: string }) => {
     if (status === 'claimed') return <Badge className="bg-emerald-100 text-emerald-700 border-0">已認領</Badge>;
     if (status === 'pending') return <Badge className="bg-amber-100 text-amber-700 border-0">待審核</Badge>;
@@ -389,7 +256,7 @@ export default function AdminSalonsPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full"></div>
-          {loadingProgress && <p className="text-sm text-slate-500">{loadingProgress}</p>}
+          <p className="text-sm text-slate-500">從資料庫載入美容院...</p>
         </div>
       </div>
     );
@@ -400,15 +267,11 @@ export default function AdminSalonsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">所有美容院</h1>
-          <p className="text-slate-500">從資料庫快取載入，可手動同步 Shopify 最新資料</p>
+          <p className="text-slate-500">從 salon_profiles 載入所有美容院資料</p>
         </div>
         <div className="flex gap-2 self-start sm:self-auto">
           <Button variant="outline" onClick={loadData} disabled={loading} className="gap-2 border-pink-200 text-pink-600 hover:bg-pink-50">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />重新整理
-          </Button>
-          <Button onClick={handleSyncShopify} disabled={syncing || loading} className="gap-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white">
-            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? '同步中...' : '同步 Shopify'}
           </Button>
         </div>
       </div>
@@ -498,8 +361,9 @@ export default function AdminSalonsPage() {
                     認領狀態 <SortIcon field="claimStatus" />
                   </TableHead>
                   <TableHead className="font-semibold whitespace-nowrap">負責人</TableHead>
-                  <TableHead className="font-semibold whitespace-nowrap cursor-pointer select-none hover:bg-slate-100" onClick={() => handleSort('created_at')}>
-                    建立日期 <SortIcon field="created_at" />
+                  <TableHead className="font-semibold whitespace-nowrap">美容院狀態</TableHead>
+                  <TableHead className="font-semibold whitespace-nowrap cursor-pointer select-none hover:bg-slate-100" onClick={() => handleSort('created_date')}>
+                    建立日期 <SortIcon field="created_date" />
                   </TableHead>
                   <TableHead className="font-semibold text-right whitespace-nowrap">操作</TableHead>
                 </TableRow>
@@ -514,26 +378,10 @@ export default function AdminSalonsPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-medium text-slate-800 break-words">{salon.title}</p>
-                          <select
-                            value={salon.status}
-                            onChange={(e) => handleStatusChange(salon, e.target.value)}
-                            className={`text-sm mt-1 rounded border px-1.5 py-0.5 focus:outline-none cursor-pointer ${salon.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : salon.status === 'draft' ? 'bg-slate-50 text-slate-700 border-slate-200' : 'bg-red-50 text-red-700 border-red-200'}`}
-                          >
-                            <option value="active">Active</option>
-                            <option value="draft">Draft</option>
-                            <option value="archived">Archived</option>
-                          </select>
-                          {salon.profile?.salon_status && salon.profile.salon_status !== 'active' && (
-                            <span className={`inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded-full mt-1 ${
-                              salon.profile.salon_status === 'closed' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
-                            }`}>
-                              {salon.profile.salon_status === 'closed' ? '🔒 已結業' : '🔧 裝修中'}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate-600 whitespace-normal text-sm">{salon.district_name || '-'}</TableCell>
+                    <TableCell className="text-slate-600 whitespace-normal text-sm">{salon.district_name || salon.district || '-'}</TableCell>
                     <TableCell className="whitespace-normal"><ClaimBadge status={salon.claimStatus} /></TableCell>
                     <TableCell className="whitespace-normal">
                       {salon.ownerEmail ? (
@@ -542,23 +390,38 @@ export default function AdminSalonsPage() {
                         </button>
                       ) : <span className="text-slate-400 text-sm">-</span>}
                     </TableCell>
+                    <TableCell className="whitespace-normal">
+                      <Badge className={
+                        salon.salon_status === 'closed' ? 'bg-red-100 text-red-600 border-0' :
+                        salon.salon_status === 'renovation' ? 'bg-amber-100 text-amber-600 border-0' :
+                        'bg-emerald-100 text-emerald-700 border-0'
+                      }>
+                        {salon.salon_status === 'closed' ? '🔒 已結業' : salon.salon_status === 'renovation' ? '🔧 裝修中' : '✅ 營業中'}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-slate-500 text-sm whitespace-nowrap">
-                      {salon.created_at ? new Date(salon.created_at).toLocaleDateString('zh-HK', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-'}
+                      {salon.created_date ? new Date(salon.created_date).toLocaleDateString('zh-HK', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleViewDetails(salon)} className="text-pink-600 hover:bg-pink-50">
+                        <Button variant="ghost" size="sm" onClick={() => setViewDetailsSalon(salon)} className="text-pink-600 hover:bg-pink-50">
                           <Eye className="w-4 h-4 mr-1" />詳情
                         </Button>
-                        {(salon.handle || salon.id) && (
-                          <PreviewLinkButton salon={salon} />
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                          onClick={() => window.open(`/salon/${salon.handle || salon.id}`, '_blank')}
+                          title="查看公開頁面"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
                 {paginated.length === 0 && (
-                  <TableRow><TableCell colSpan={6} className="text-center py-12">
+                  <TableRow><TableCell colSpan={7} className="text-center py-12">
                     <Store className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <p className="text-slate-500">找不到美容院</p>
                   </TableCell></TableRow>
@@ -577,19 +440,14 @@ export default function AdminSalonsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-slate-800 truncate">{salon.title}</p>
-                      {salon.district_name && <p className="text-sm text-purple-500">{salon.district_name}</p>}
+                      {(salon.district_name || salon.district) && <p className="text-sm text-purple-500">{salon.district_name || salon.district}</p>}
                     </div>
                     <ClaimBadge status={salon.claimStatus} />
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleViewDetails(salon)} className="flex-1 text-pink-600 hover:bg-pink-50">
+                    <Button variant="outline" size="sm" onClick={() => setViewDetailsSalon(salon)} className="flex-1 text-pink-600 hover:bg-pink-50">
                       <Eye className="w-4 h-4 mr-1" />詳情
                     </Button>
-                    {(salon.handle || salon.id) && (
-                      <div className="flex-1">
-                        <PreviewLinkButton salon={salon} />
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -636,42 +494,35 @@ export default function AdminSalonsPage() {
             <DialogTitle className="text-xl">美容院詳情</DialogTitle>
           </DialogHeader>
           {viewDetailsSalon && (() => {
-            const profile = viewDetailsSalon.profile;
-            const mfMap: Record<string, string> = {};
-            shopifyMetafields.forEach((mf: any) => { mfMap[`${mf.namespace}.${mf.key}`] = mf.value; });
-            const getMetafield = (ns: string, key: string) => mfMap[`${ns}.${key}`] || '';
+            const salon = viewDetailsSalon;
 
             const DAY_LABELS: Record<string, string> = {
               office_hr_mon: '星期一', office_hr_tue: '星期二', office_hr_wed: '星期三',
               office_hr_thu: '星期四', office_hr_fri: '星期五', office_hr_sat: '星期六', office_hr_sun: '星期日',
             };
 
-            const seoTitle = profile?.seo_title || getMetafield('global', 'title_tag') || shopifyDetailData?.title || '';
-            const seoDescription = profile?.seo_description || getMetafield('global', 'description_tag') || '';
-            const address = profile?.address || getMetafield('custom', 'address') || '';
-            const district = profile?.district || '';
-            const description = profile?.description || shopifyDetailData?.body_html || '';
-            const selectedTags = profile?.selected_tags || [];
-            const highlightTags = profile?.highlight_tags || [];
+            const seoTitle = salon.seo_title || '';
+            const seoDescription = salon.seo_description || '';
+            const address = salon.address || '';
+            const district = salon.district || salon.district_name || '';
+            const description = salon.description || '';
+            const selectedTags = salon.selected_tags || [];
+            const highlightTags = salon.highlight_tags || [];
             const openingHours: Record<string, string> = {};
             Object.keys(DAY_LABELS).forEach(key => {
-              openingHours[key] = profile?.[key] || getMetafield('custom', key) || '';
+              openingHours[key] = salon[key] || '';
             });
             const hasOpeningHours = Object.values(openingHours).some(v => v);
 
-            // Images: prefer shopifyDetailData, fallback to cached raw_data
-            const images = shopifyDetailData?.images || cachedRawData?.images || cachedRawData?.product?.images || [];
+            // Images from product_media
+            const images = salon.product_media || [];
 
             // Contact info
-            const contactPerson = profile?.contact_person || '';
-            const contactNumber = profile?.contact_number || '';
-            const whatsappNumber = profile?.whatsapp_number || '';
-            const email = profile?.email || '';
-            const website = profile?.website || '';
-
-            // Shopify IDs
-            const shopifyProductId = String(viewDetailsSalon.id);
-            const numericId = shopifyProductId.replace(/.*\//, '');
+            const contactPerson = salon.contact_person || '';
+            const contactNumber = salon.contact_number || '';
+            const whatsappNumber = salon.whatsapp_number || '';
+            const email = salon.email || '';
+            const website = salon.website || '';
 
             return (
             <div className="divide-y">
@@ -679,8 +530,8 @@ export default function AdminSalonsPage() {
               <div className="p-6 bg-gradient-to-r from-pink-50 to-purple-50">
                 <div className="flex items-start gap-4">
                   <div className="w-24 h-24 rounded-xl overflow-hidden bg-white shadow-sm shrink-0 border">
-                    {viewDetailsSalon.image ? (
-                      <img src={viewDetailsSalon.image} alt="" className="w-full h-full object-cover" />
+                    {salon.image ? (
+                      <img src={salon.image} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-slate-50">
                         <Store className="w-10 h-10 text-slate-300" />
@@ -688,125 +539,94 @@ export default function AdminSalonsPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-bold text-slate-800 truncate">{viewDetailsSalon.title}</h3>
-                    {viewDetailsSalon.vendor && (
-                      <p className="text-sm text-slate-500 mt-0.5">{viewDetailsSalon.vendor}</p>
+                    <h3 className="text-xl font-bold text-slate-800 truncate">{salon.title}</h3>
+                    {salon.product_type && (
+                      <p className="text-sm text-slate-500 mt-0.5">{salon.product_type}</p>
                     )}
                     <div className="flex gap-2 mt-2 flex-wrap">
-                      <Badge variant="outline" className={viewDetailsSalon.status === 'active' ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-slate-100 border-slate-300 text-slate-600'}>{viewDetailsSalon.status}</Badge>
-                      {viewDetailsSalon.product_type && <Badge variant="outline" className="bg-blue-50 border-blue-200 text-blue-700">{viewDetailsSalon.product_type}</Badge>}
-                      {viewDetailsSalon.claimStatus === 'claimed' && <Badge className="bg-emerald-100 text-emerald-700 border-0">✅ 已認領</Badge>}
-                      {viewDetailsSalon.claimStatus === 'pending' && <Badge className="bg-amber-100 text-amber-700 border-0">⏳ 待審核</Badge>}
-                      {viewDetailsSalon.claimStatus === 'unclaimed' && <Badge className="bg-slate-100 text-slate-500 border-0">未認領</Badge>}
-                      {profile?.salon_status && profile.salon_status !== 'active' && (
-                        <Badge className={profile.salon_status === 'closed' ? 'bg-red-100 text-red-700 border-0' : profile.salon_status === 'renovation' ? 'bg-amber-100 text-amber-700 border-0' : 'bg-slate-100 text-slate-600 border-0'}>
-                          {profile.salon_status === 'closed' ? '🔒 已結業' : profile.salon_status === 'renovation' ? '🔧 裝修中' : profile.salon_status}
-                        </Badge>
-                      )}
-                      {profile && !profile.salon_status && (
-                        <Badge className="bg-slate-50 text-slate-400 border border-dashed border-slate-300">狀態: active (默認)</Badge>
-                      )}
+                      <Badge className={
+                        salon.salon_status === 'closed' ? 'bg-red-100 text-red-700 border-0' :
+                        salon.salon_status === 'renovation' ? 'bg-amber-100 text-amber-700 border-0' :
+                        'bg-emerald-100 text-emerald-700 border-0'
+                      }>
+                        {salon.salon_status === 'closed' ? '🔒 已結業' : salon.salon_status === 'renovation' ? '🔧 裝修中' : '✅ 營業中'}
+                      </Badge>
+                      {salon.claimStatus === 'claimed' && <Badge className="bg-emerald-100 text-emerald-700 border-0">✅ 已認領</Badge>}
+                      {salon.claimStatus === 'pending' && <Badge className="bg-amber-100 text-amber-700 border-0">⏳ 待審核</Badge>}
+                      {salon.claimStatus === 'unclaimed' && <Badge className="bg-slate-100 text-slate-500 border-0">未認領</Badge>}
                     </div>
                     {/* Quick links */}
                     <div className="flex gap-2 mt-3">
-                      {viewDetailsSalon.handle && (
-                        <a href={`https://2btwx1-uz.myshopify.com/products/${viewDetailsSalon.handle}`} target="_blank" rel="noopener noreferrer">
-                          <Button variant="outline" size="sm" className="text-sm gap-1 h-7">
-                            <ExternalLink className="w-3 h-3" />Shopify 頁面
-                          </Button>
-                        </a>
-                      )}
-                      <Button variant="outline" size="sm" className="text-sm gap-1 h-7" onClick={() => handleCopyText(numericId, 'id')}>
+                      <Button variant="outline" size="sm" className="text-sm gap-1 h-7" onClick={() => window.open(`/salon/${salon.id}`, '_blank')}>
+                        <ExternalLink className="w-3 h-3" />查看公開頁面
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-sm gap-1 h-7" onClick={() => handleCopyText(salon.id, 'id')}>
                         {copiedField === 'id' ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                        ID: {numericId}
+                        ID: {String(salon.id).slice(0, 8)}...
                       </Button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Error Banner */}
-              {shopifyDetailError && !shopifyDetailLoading && (
-                <div className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-amber-800">{shopifyDetailError}</p>
-                    <p className="text-sm text-amber-600 mt-1">顯示嘅資料來自本地快取{cachedRawData ? '（已有快取資料）' : '（無快取資料）'}</p>
-                    <Button variant="outline" size="sm" className="mt-2 text-sm h-7" onClick={() => handleViewDetails(viewDetailsSalon)}>
-                      <RefreshCw className="w-3 h-3 mr-1" />重試
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Loading indicator at top */}
-              {shopifyDetailLoading && (
-                <div className="flex items-center justify-center py-3 gap-2 text-slate-500 bg-blue-50/50">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">正在從 Shopify 載入最新資料...</span>
-                </div>
-              )}
-
               {/* 美容院狀態管理 */}
-              {profile && (
-                <div className="p-6">
-                  <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                    <Store className="w-4 h-4 text-pink-500" />美容院狀態
-                  </h4>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-sm text-slate-600">目前狀態：</span>
-                      <Badge className={
-                        profile.salon_status === 'closed' ? 'bg-red-100 text-red-700 border-0' :
-                        profile.salon_status === 'renovation' ? 'bg-amber-100 text-amber-700 border-0' :
-                        'bg-emerald-100 text-emerald-700 border-0'
-                      }>
-                        {profile.salon_status === 'closed' ? '🔒 已結業' : profile.salon_status === 'renovation' ? '🔧 裝修中' : '✅ 營業中'}
-                      </Badge>
-                      {profile.closed_date && profile.salon_status === 'closed' && (
-                        <span className="text-xs text-red-500">結業日期：{new Date(profile.closed_date).toLocaleDateString('zh-HK')}</span>
-                      )}
-                      {profile.renovation_date && profile.salon_status === 'renovation' && (
-                        <span className="text-xs text-amber-500">裝修日期：{new Date(profile.renovation_date).toLocaleDateString('zh-HK')}</span>
-                      )}
-                      {profile.reopened_date && profile.salon_status === 'renovation' && (
-                        <span className="text-xs text-amber-500">· 預計重開：{new Date(profile.reopened_date).toLocaleDateString('zh-HK')}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-500">快速設定：</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={`text-xs h-7 ${profile.salon_status === 'active' || !profile.salon_status ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : ''}`}
-                        disabled={updatingStatus || profile.salon_status === 'active' || !profile.salon_status}
-                        onClick={() => handleUpdateSalonStatus(profile.id, 'active')}
-                      >
-                        ✅ 營業中
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={`text-xs h-7 ${profile.salon_status === 'renovation' ? 'bg-amber-50 border-amber-300 text-amber-700' : ''}`}
-                        disabled={updatingStatus || profile.salon_status === 'renovation'}
-                        onClick={() => handleUpdateSalonStatus(profile.id, 'renovation')}
-                      >
-                        🔧 裝修中
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={`text-xs h-7 ${profile.salon_status === 'closed' ? 'bg-red-50 border-red-300 text-red-700' : ''}`}
-                        disabled={updatingStatus || profile.salon_status === 'closed'}
-                        onClick={() => handleUpdateSalonStatus(profile.id, 'closed')}
-                      >
-                        🔒 已結業
-                      </Button>
-                      {updatingStatus && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
-                    </div>
+              <div className="p-6">
+                <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                  <Store className="w-4 h-4 text-pink-500" />美容院狀態
+                </h4>
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-sm text-slate-600">目前狀態：</span>
+                    <Badge className={
+                      salon.salon_status === 'closed' ? 'bg-red-100 text-red-700 border-0' :
+                      salon.salon_status === 'renovation' ? 'bg-amber-100 text-amber-700 border-0' :
+                      'bg-emerald-100 text-emerald-700 border-0'
+                    }>
+                      {salon.salon_status === 'closed' ? '🔒 已結業' : salon.salon_status === 'renovation' ? '🔧 裝修中' : '✅ 營業中'}
+                    </Badge>
+                    {salon.closed_date && salon.salon_status === 'closed' && (
+                      <span className="text-xs text-red-500">結業日期：{new Date(salon.closed_date).toLocaleDateString('zh-HK')}</span>
+                    )}
+                    {salon.renovation_date && salon.salon_status === 'renovation' && (
+                      <span className="text-xs text-amber-500">裝修日期：{new Date(salon.renovation_date).toLocaleDateString('zh-HK')}</span>
+                    )}
+                    {salon.reopened_date && salon.salon_status === 'renovation' && (
+                      <span className="text-xs text-amber-500">· 預計重開：{new Date(salon.reopened_date).toLocaleDateString('zh-HK')}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-500">快速設定：</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`text-xs h-7 ${salon.salon_status === 'active' || !salon.salon_status ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : ''}`}
+                      disabled={updatingStatus || salon.salon_status === 'active' || !salon.salon_status}
+                      onClick={() => handleUpdateSalonStatus(salon.id, 'active')}
+                    >
+                      ✅ 營業中
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`text-xs h-7 ${salon.salon_status === 'renovation' ? 'bg-amber-50 border-amber-300 text-amber-700' : ''}`}
+                      disabled={updatingStatus || salon.salon_status === 'renovation'}
+                      onClick={() => handleUpdateSalonStatus(salon.id, 'renovation')}
+                    >
+                      🔧 裝修中
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`text-xs h-7 ${salon.salon_status === 'closed' ? 'bg-red-50 border-red-300 text-red-700' : ''}`}
+                      disabled={updatingStatus || salon.salon_status === 'closed'}
+                      onClick={() => handleUpdateSalonStatus(salon.id, 'closed')}
+                    >
+                      🔒 已結業
+                    </Button>
+                    {updatingStatus && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* 聯絡資料 */}
               <div className="p-6">
@@ -858,11 +678,11 @@ export default function AdminSalonsPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-slate-500 text-sm mb-1">地區</p>
-                      <p className="font-medium">{district || viewDetailsSalon.district_name || '-'}</p>
+                      <p className="font-medium">{district || '-'}</p>
                     </div>
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-slate-500 text-sm mb-1">網址代碼</p>
-                      <p className="font-medium text-sm break-all">{viewDetailsSalon.handle || '-'}</p>
+                      <p className="font-medium text-sm break-all">{salon.handle || '-'}</p>
                     </div>
                   </div>
                 </div>
@@ -879,7 +699,7 @@ export default function AdminSalonsPage() {
               )}
 
               {/* 服務標籤 */}
-              {(selectedTags.length > 0 || viewDetailsSalon.tags) && (
+              {(selectedTags.length > 0 || salon.tags) && (
                 <div className="p-6">
                   <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <Tag className="w-4 h-4 text-pink-500" />服務標籤
@@ -893,7 +713,7 @@ export default function AdminSalonsPage() {
                           {category && <span className="text-slate-400 ml-1">({category})</span>}
                         </Badge>
                       );
-                    }) : (viewDetailsSalon.tags || '').split(',').filter(Boolean).map((tag: string, idx: number) => (
+                    }) : (salon.tags || '').split(',').filter(Boolean).map((tag: string, idx: number) => (
                       <Badge key={idx} variant="outline" className="text-sm">{tag.trim()}</Badge>
                     ))}
                   </div>
@@ -941,18 +761,18 @@ export default function AdminSalonsPage() {
                 <div className="p-6">
                   <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <ImageIcon className="w-4 h-4 text-pink-500" />美容院頁面媒體 ({images.length})
-                    {!shopifyDetailData && cachedRawData && (
-                      <Badge variant="outline" className="text-[14px] ml-1 text-amber-600 border-amber-200 bg-amber-50">快取</Badge>
-                    )}
                   </h4>
                   <div className="grid grid-cols-4 gap-2">
-                    {images.slice(0, 12).map((img: any, idx: number) => (
-                      <a key={idx} href={img.src} target="_blank" rel="noopener noreferrer" className="block">
-                        <div className="aspect-square rounded-lg overflow-hidden bg-slate-100 hover:ring-2 ring-pink-300 transition-all cursor-pointer">
-                          <img src={img.src} alt={`圖片 ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
-                        </div>
-                      </a>
-                    ))}
+                    {images.slice(0, 12).map((img: any, idx: number) => {
+                      const imgSrc = typeof img === 'string' ? img : img?.src || img?.url || '';
+                      return (
+                        <a key={idx} href={imgSrc} target="_blank" rel="noopener noreferrer" className="block">
+                          <div className="aspect-square rounded-lg overflow-hidden bg-slate-100 hover:ring-2 ring-pink-300 transition-all cursor-pointer">
+                            <img src={imgSrc} alt={`圖片 ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                          </div>
+                        </a>
+                      );
+                    })}
                     {images.length > 12 && (
                       <div className="aspect-square rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 text-sm">
                         +{images.length - 12} 更多
@@ -962,28 +782,8 @@ export default function AdminSalonsPage() {
                 </div>
               )}
 
-              {/* Metafields（如有） */}
-              {shopifyMetafields.length > 0 && (
-                <div className="p-6">
-                  <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                    <Hash className="w-4 h-4 text-purple-500" />Shopify Metafields ({shopifyMetafields.length})
-                  </h4>
-                  <div className="grid grid-cols-1 gap-2 text-sm max-h-60 overflow-y-auto">
-                    {shopifyMetafields.map((mf: any, idx: number) => (
-                      <div key={idx} className="bg-purple-50/50 rounded-lg p-3 border border-purple-100">
-                        <div className="flex items-center justify-between">
-                          <p className="text-purple-600 text-sm font-mono">{mf.namespace}.{mf.key}</p>
-                          <Badge variant="outline" className="text-[14px] text-purple-500 border-purple-200">{mf.type}</Badge>
-                        </div>
-                        <p className="font-medium mt-1 text-sm break-all">{typeof mf.value === 'string' && mf.value.length > 200 ? mf.value.slice(0, 200) + '...' : String(mf.value)}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Owner 資訊 */}
-              {(viewDetailsSalon.ownerEmail || viewDetailsSalon.ownerName) && (
+              {(salon.ownerEmail || salon.ownerName) && (
                 <div className="p-6">
                   <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <User className="w-4 h-4 text-pink-500" />擁有者資料
@@ -991,36 +791,24 @@ export default function AdminSalonsPage() {
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-slate-500 text-sm mb-1">擁有者名稱</p>
-                      <p className="font-medium">{viewDetailsSalon.ownerName || '-'}</p>
+                      <p className="font-medium">{salon.ownerName || '-'}</p>
                     </div>
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-slate-500 text-sm mb-1">擁有者電郵</p>
-                      <p className="font-medium text-sm truncate">{viewDetailsSalon.ownerEmail || '-'}</p>
+                      <p className="font-medium text-sm truncate">{salon.ownerEmail || '-'}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Shopify 數據來源 + 建立時間 */}
+              {/* 建立時間 */}
               <div className="p-6 bg-slate-50/50">
                 <div className="flex items-center justify-between text-sm text-slate-400">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      建立時間：{new Date(viewDetailsSalon.created_at).toLocaleString('zh-HK')}
-                    </span>
-                    {shopifyDetailData && !shopifyDetailError && (
-                      <Badge variant="outline" className="text-[14px] text-emerald-600 border-emerald-200 bg-emerald-50">
-                        ✓ Shopify API 已連線
-                      </Badge>
-                    )}
-                    {shopifyDetailError && cachedRawData && (
-                      <Badge variant="outline" className="text-[14px] text-amber-600 border-amber-200 bg-amber-50">
-                        ⚠ 使用本地快取資料
-                      </Badge>
-                    )}
-                  </div>
-                  <span>Shopify ID: {numericId}</span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    建立時間：{salon.created_date ? new Date(salon.created_date).toLocaleString('zh-HK') : '-'}
+                  </span>
+                  <span>Profile ID: {salon.id}</span>
                 </div>
               </div>
             </div>

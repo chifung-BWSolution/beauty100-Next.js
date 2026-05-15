@@ -57,8 +57,11 @@ export default function Sidebar({ userRole: userRoleProp, hasApprovedProfile, is
     };
     fetchPending();
 
-    return () => { cancelled = true; };
-  }, [userRole]);
+    // Re-fetch when navigating back to sidebar (e.g. after approving)
+    const interval = setInterval(fetchPending, 30000);
+
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [userRole, pathname]);
 
   const isActive = (path: string) => pathname.includes(path);
 
