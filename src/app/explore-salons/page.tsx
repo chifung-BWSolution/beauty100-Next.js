@@ -137,6 +137,7 @@ function getCoverStyleIndex(str: string): number {
 interface SalonProfile {
   id: string;
   salon_name: string | null;
+  handle: string | null;
   address: string | null;
   district: string | null;
   district_name: string | null;
