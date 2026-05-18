@@ -137,11 +137,9 @@ export default function RootLayout({
             }),
           }}
         />
-        {/* @ts-expect-error Async Server Component */}
         <TrackingScripts />
       </head>
       <body className={`${notoSansTC.variable} ${notoSansTC.className}`}>
-        {/* @ts-expect-error Async Server Component */}
         <TrackingNoscriptBody />
         <ErrorBoundaryScript />
         <AuthProvider>
