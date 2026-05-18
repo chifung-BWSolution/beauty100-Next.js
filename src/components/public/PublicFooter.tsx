@@ -93,8 +93,14 @@ export default function PublicFooter() {
               </div>
             </div>
 
+            {/* Address */}
+            <div className="flex items-start gap-2 mt-4 text-sm text-slate-400">
+              <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-slate-400" />
+              <p>荃灣青山公路459-469號華力工業中心5字樓E室</p>
+            </div>
+
             {/* Social Icons */}
-            <div className="flex items-center gap-3 mt-4">
+            <div className="flex items-center gap-3 mt-3">
               <a
                 href="https://www.instagram.com/beauty100.magazine/"
                 target="_blank"

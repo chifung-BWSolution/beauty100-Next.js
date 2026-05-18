@@ -16,6 +16,8 @@ export default function ErrorBoundaryScript() {
       if (
         firstArg.includes('Failed to fetch') ||
         firstArg.includes('Fetch request failed') ||
+        firstArg.includes('[Supabase fetch') ||
+        firstArg.includes('Supabase fetch') ||
         (firstArg.includes('TypeError') && firstArg.includes('fetch'))
       ) {
         return; // Suppress network fetch errors from devtools/extensions

@@ -9,6 +9,7 @@ import {
   Instagram,
   Youtube,
   MessageCircle,
+  MapPin,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import MerchantCTABanner from "@/components/MerchantCTABanner";
@@ -416,7 +417,13 @@ export default function MerchantPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 mt-4">
+              {/* Address */}
+              <div className="flex items-start gap-2 mt-4 text-sm text-gray-400">
+                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" />
+                <p>荃灣青山公路459-469號華力工業中心5字樓E室</p>
+              </div>
+
+              <div className="flex items-center gap-3 mt-3">
                 <a
                   href="https://www.instagram.com/beauty100.magazine/"
                   target="_blank"

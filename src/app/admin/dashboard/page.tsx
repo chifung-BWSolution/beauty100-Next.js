@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Search, Eye, CheckCircle, XCircle, FileText, Store, Phone, Mail, Globe, MapPin, ExternalLink
+  Search, Eye, CheckCircle, XCircle, FileText, Store, Phone, Mail, Globe, MapPin, ExternalLink, History, Loader2
 } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +40,9 @@ export default function AdminDashboardPage() {
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [historyVersions, setHistoryVersions] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -49,13 +52,13 @@ export default function AdminDashboardPage() {
         base44.entities.SalonApplication.list('-created_date'),
         base44.entities.SalonProfileVersion.filter({ status: 'pending_approval' }),
         base44.functions.invoke('listUsers', {}),
-        base44.functions.invoke('shopifyData', { type: 'districts' }),
+        supabase.from('districts').select('id, name').order('sort_order', { ascending: true }),
         supabase.from('salon_tags').select('label, category'),
       ]);
 
       setApplications(appsResult.status === 'fulfilled' ? appsResult.value : []);
       setProfileVersions(versionsResult.status === 'fulfilled' ? versionsResult.value : []);
-      setDistricts(districtsResult.status === 'fulfilled' ? (districtsResult.value as any)?.data?.districts || [] : []);
+      setDistricts(districtsResult.status === 'fulfilled' ? (districtsResult.value as any)?.data || [] : []);
 
       if (tagsResult.status === 'fulfilled' && (tagsResult.value as any)?.data) {
         const lcMap: Record<string, string> = {};
@@ -76,6 +79,26 @@ export default function AdminDashboardPage() {
       setLoading(false);
     }
   };
+
+  const loadHistory = useCallback(async () => {
+    if (historyLoaded) return;
+    setHistoryLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('salon_profile_versions')
+        .select('*')
+        .in('status', ['approved', 'rejected'])
+        .order('updated_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      setHistoryVersions(data || []);
+      setHistoryLoaded(true);
+    } catch (e) {
+      console.error('Error loading history:', e);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [historyLoaded]);
 
   const buildShopifyTags = (district: string, selectedTagLabels: string[]) => {
     const prefixedLabels = selectedTagLabels.map(label => {
@@ -141,11 +164,43 @@ export default function AdminDashboardPage() {
   };
 
   const handleApproveVersion = async (version: any, targetStatus = 'active') => {
-    if (!version || !version.profile_id) {
-      console.error('handleApproveVersion: version or profile_id is missing', version);
-      alert('無法批准：找不到版本資料或缺少 profile_id');
+    if (!version) {
+      console.error('handleApproveVersion: version is missing', version);
+      alert('無法批准：找不到版本資料');
       return;
     }
+    
+    // Try to resolve profile_id if missing but salon exists
+    if (!version.profile_id) {
+      let resolvedProfileId = null;
+      try {
+        // Try by shopify_product_id first
+        if (version.shopify_product_id) {
+          const profiles = await base44.entities.SalonProfile.filter({ shopify_product_id: version.shopify_product_id });
+          if (profiles.length > 0) resolvedProfileId = profiles[0].id;
+        }
+        // Fallback: try by salon_name
+        if (!resolvedProfileId && version.salon_name) {
+          const profiles = await base44.entities.SalonProfile.filter({ salon_name: version.salon_name });
+          if (profiles.length > 0) resolvedProfileId = profiles[0].id;
+        }
+      } catch (e) {
+        console.warn('Failed to resolve profile_id:', e);
+      }
+      if (resolvedProfileId) {
+        version.profile_id = resolvedProfileId;
+      }
+    }
+    
+    // For new_opening submissions without profile_id, we'll create a new profile
+    const isNewOpening = !version.profile_id && version.change_reason === 'new_opening';
+    
+    if (!version.profile_id && !isNewOpening) {
+      console.error('handleApproveVersion: profile_id is missing and not a new_opening', version);
+      alert('無法批准：缺少 profile_id（僅新開張可以在沒有 profile_id 的情況下批准）');
+      return;
+    }
+    
     setProcessing(true);
     try {
       // Fields that exist ONLY on salon_profile_versions and must not be sent to salon_profiles update
@@ -157,7 +212,8 @@ export default function AdminDashboardPage() {
         'is_shop_owner', 'closed_date', 'renovation_date', 'reopened_date',
         'new_opening_date', 'updated_at', 'attachments',
       ]);
-      const { profile_id, shopify_product_id, closed_date, renovation_date, reopened_date, new_opening_date } = version;
+      let { profile_id } = version;
+      const { shopify_product_id, closed_date, renovation_date, reopened_date, new_opening_date } = version;
       const profileData: Record<string, any> = {};
       Object.entries(version).forEach(([key, value]) => {
         if (!VERSION_ONLY_KEYS.has(key)) {
@@ -268,7 +324,7 @@ export default function AdminDashboardPage() {
           closed: 'closed',
           renovation: 'renovation',
           reopened: 'active',
-          new_opening: 'active',
+          new_opening: 'new_opening',
         };
         if (reasonToStatus[version.change_reason]) {
           statusFields.salon_status = reasonToStatus[version.change_reason];
@@ -278,13 +334,31 @@ export default function AdminDashboardPage() {
         if (reopened_date) statusFields.reopened_date = reopened_date;
         if (new_opening_date) statusFields.new_opening_date = new_opening_date;
       }
-      await base44.entities.SalonProfile.update(profile_id, { ...finalProfileData, ...statusFields, shopify_sync_pending: false, shopify_synced: shopifySynced });
-      await base44.entities.SalonProfileVersion.update(version.id, { status: 'approved' });
+      if (isNewOpening) {
+        // Create a new salon profile for new_opening submissions
+        // Ensure no owner is assigned - this is a public submission
+        const newProfile = await base44.entities.SalonProfile.create({
+          ...finalProfileData,
+          ...statusFields,
+          salon_status: 'new_opening',
+          created_by: null,
+          contact_person: null,
+          shopify_sync_pending: false,
+          shopify_synced: shopifySynced,
+        });
+        profile_id = newProfile.id;
+        // Update the version record with the new profile_id
+        await base44.entities.SalonProfileVersion.update(version.id, { status: 'approved', profile_id: newProfile.id });
+      } else {
+        await base44.entities.SalonProfile.update(profile_id, { ...finalProfileData, ...statusFields, shopify_sync_pending: false, shopify_synced: shopifySynced });
+        await base44.entities.SalonProfileVersion.update(version.id, { status: 'approved' });
+      }
       try {
         const user = await base44.auth.me();
         await base44.entities.UserActivityLog.create({
           user_email: (user as any).email, user_name: (user as any).full_name,
-          action: 'approve_profile_update', details: `批准了美容院資料更新：${version.salon_name}`
+          action: isNewOpening ? 'create_salon_profile' : 'approve_profile_update',
+          details: isNewOpening ? `批准新開張並建立美容院：${version.salon_name}` : `批准了美容院資料更新：${version.salon_name}`
         });
       } catch (e) { console.error('Failed to log activity', e); }
       await loadData();
@@ -366,6 +440,10 @@ export default function AdminDashboardPage() {
           <TabsTrigger value="edits">
             資料更新申請
             {profileVersions.length > 0 && <Badge className="ml-2 bg-fuchsia-600 text-white border-0 h-5 px-1.5 text-sm">{profileVersions.length}</Badge>}
+          </TabsTrigger>
+          <TabsTrigger value="history" onClick={() => loadHistory()}>
+            <History className="w-3.5 h-3.5 mr-1" />
+            歷史記錄
           </TabsTrigger>
         </TabsList>
 
@@ -597,6 +675,144 @@ export default function AdminDashboardPage() {
                   <div className="text-center py-12"><CheckCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" /><p className="text-slate-500">目前沒有待審核的資料更新</p></div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <Card className="border-0 shadow-sm">
+            <CardHeader><CardTitle className="text-lg">已處理的資料更新記錄</CardTitle></CardHeader>
+            <CardContent>
+              {historyLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 text-pink-500 animate-spin" />
+                  <span className="ml-2 text-slate-500">載入中...</span>
+                </div>
+              ) : historyVersions.length === 0 ? (
+                <div className="text-center py-12">
+                  <History className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-500">暫無歷史記錄</p>
+                </div>
+              ) : (
+                <>
+                  <div className="hidden md:block overflow-auto max-h-[60vh]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50">
+                          <TableHead className="font-semibold whitespace-nowrap">美容院</TableHead>
+                          <TableHead className="font-semibold whitespace-nowrap">來源</TableHead>
+                          <TableHead className="font-semibold whitespace-nowrap">更新類型</TableHead>
+                          <TableHead className="font-semibold whitespace-nowrap">提交者</TableHead>
+                          <TableHead className="font-semibold whitespace-nowrap">處理結果</TableHead>
+                          <TableHead className="font-semibold whitespace-nowrap">處理時間</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {historyVersions.map(v => {
+                          const isPublic = v.submission_type === 'public_suggestion';
+                          const changeReasonLabels: Record<string, string> = {
+                            new_opening: '🆕 新開張',
+                            closed: '🔒 結業',
+                            renovation: '🔧 裝修',
+                            reopened: '🔄 重開',
+                            update_info: '📝 更新資料',
+                            upload_photo: '📷 上載相片',
+                          };
+                          const reasonLabel = v.change_reason ? changeReasonLabels[v.change_reason] || v.change_reason : '-';
+                          return (
+                            <TableRow key={v.id} className="hover:bg-slate-50/50">
+                              <TableCell className="whitespace-normal">
+                                <p className="font-medium text-slate-800 break-words">{v.salon_name}</p>
+                                {v.submitter_note && <p className="text-xs text-slate-400 mt-0.5">備註：{v.submitter_note}</p>}
+                              </TableCell>
+                              <TableCell className="whitespace-normal">
+                                {isPublic ? (
+                                  <Badge className="bg-blue-100 text-blue-700 border-0">公眾</Badge>
+                                ) : (
+                                  <Badge className="bg-purple-100 text-purple-700 border-0">商戶</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="whitespace-normal text-sm">{reasonLabel}</TableCell>
+                              <TableCell className="whitespace-normal">
+                                {isPublic ? (
+                                  <div className="text-sm">
+                                    <p className="font-medium text-slate-700">{v.submitter_name || '-'}</p>
+                                    {v.submitter_email && <p className="text-xs text-slate-400">{v.submitter_email}</p>}
+                                    {v.submitter_phone && <p className="text-xs text-slate-400">{v.submitter_phone}</p>}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-slate-400 break-all">{v.created_by_email || '-'}</p>
+                                )}
+                              </TableCell>
+                              <TableCell className="whitespace-normal">
+                                {v.status === 'approved' ? (
+                                  <Badge className="bg-emerald-100 text-emerald-700 border-0">✓ 已批准</Badge>
+                                ) : (
+                                  <div>
+                                    <Badge className="bg-red-100 text-red-700 border-0">✗ 已拒絕</Badge>
+                                    {v.rejection_reason && <p className="text-xs text-red-500 mt-1">{v.rejection_reason}</p>}
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-slate-500 text-sm whitespace-normal">
+                                {v.updated_at ? format(new Date(v.updated_at), 'MM/dd/yyyy HH:mm') : '-'}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div className="md:hidden space-y-3">
+                    {historyVersions.map(v => {
+                      const isPublic = v.submission_type === 'public_suggestion';
+                      const changeReasonLabels: Record<string, string> = {
+                        new_opening: '🆕 新開張',
+                        closed: '🔒 結業',
+                        renovation: '🔧 裝修',
+                        reopened: '🔄 重開',
+                        update_info: '📝 更新資料',
+                        upload_photo: '📷 上載相片',
+                      };
+                      const reasonLabel = v.change_reason ? changeReasonLabels[v.change_reason] || v.change_reason : '';
+                      return (
+                        <Card key={v.id} className="border shadow-sm">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <p className="font-medium text-slate-800 mb-1">{v.salon_name}</p>
+                                <div className="flex gap-1.5 flex-wrap">
+                                  {isPublic ? (
+                                    <Badge className="bg-blue-100 text-blue-700 border-0 text-xs">公眾</Badge>
+                                  ) : (
+                                    <Badge className="bg-purple-100 text-purple-700 border-0 text-xs">商戶</Badge>
+                                  )}
+                                  {reasonLabel && <Badge variant="outline" className="text-xs">{reasonLabel}</Badge>}
+                                  {v.status === 'approved' ? (
+                                    <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">已批准</Badge>
+                                  ) : (
+                                    <Badge className="bg-red-100 text-red-700 border-0 text-xs">已拒絕</Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            {isPublic && v.submitter_name && (
+                              <p className="text-sm text-slate-500 mb-1">提交者：{v.submitter_name}</p>
+                            )}
+                            {v.submitter_note && (
+                              <p className="text-xs text-slate-400 mb-1">備註：{v.submitter_note}</p>
+                            )}
+                            {v.rejection_reason && (
+                              <p className="text-xs text-red-500 mb-1">拒絕原因：{v.rejection_reason}</p>
+                            )}
+                            <div className="text-sm text-slate-500">{v.updated_at ? format(new Date(v.updated_at), 'MM/dd HH:mm') : '-'}</div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

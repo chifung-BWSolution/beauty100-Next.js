@@ -54,6 +54,37 @@ interface SalonProfile {
 const DAY_KEYS = ['office_hr_mon', 'office_hr_tue', 'office_hr_wed', 'office_hr_thu', 'office_hr_fri', 'office_hr_sat', 'office_hr_sun'] as const;
 const DAY_LABELS = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
 
+// Status display helper: show 新開張/裝修/重開 only within 1 month, 結業 until reopened
+function shouldShowStatus(salon: { salon_status: string | null; closed_date: string | null; renovation_date: string | null; reopened_date: string | null; new_opening_date: string | null }): boolean {
+  if (!salon.salon_status || salon.salon_status === 'active') return false;
+  
+  const now = new Date();
+  const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  
+  if (salon.salon_status === 'closed') {
+    // Show 結業 until there's a reopened_date that has passed (meaning they reopened)
+    if (salon.reopened_date) {
+      const reopenedDate = new Date(salon.reopened_date);
+      if (reopenedDate <= now) return false;
+    }
+    return true;
+  }
+  
+  // For new_opening, renovation, reopened - only show if within 1 month
+  if (salon.salon_status === 'new_opening' && salon.new_opening_date) {
+    return new Date(salon.new_opening_date) >= oneMonthAgo;
+  }
+  if (salon.salon_status === 'renovation' && salon.renovation_date) {
+    return new Date(salon.renovation_date) >= oneMonthAgo;
+  }
+  if (salon.salon_status === 'reopened' && salon.reopened_date) {
+    return new Date(salon.reopened_date) >= oneMonthAgo;
+  }
+  
+  // If no date set, show by default
+  return true;
+}
+
 // Cover styles for salons without images
 const COVER_STYLES = [
   { bgImage: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80', overlayFrom: 'rgba(6,78,59,0.7)', overlayTo: 'rgba(13,148,136,0.5)', textColor: '#ffffff' },
@@ -201,7 +232,7 @@ export default function SalonDetailPage() {
   if (loading) {
     return (
       <PublicLayout>
-        <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="max-w-[1280px] mx-auto px-4 py-12">
           <div className="animate-pulse space-y-6">
             <div className="h-64 bg-rose-100/50 rounded-2xl" />
             <div className="h-8 bg-rose-100/60 rounded-lg w-1/3" />
@@ -297,7 +328,7 @@ export default function SalonDetailPage() {
 
   return (
     <PublicLayout>
-      <div className="max-w-4xl mx-auto px-4 py-6 pb-20">
+      <div className="max-w-[1280px] mx-auto px-4 py-6 pb-20">
         {/* Back button */}
         <Link
           href="/explore-salons"
@@ -307,7 +338,7 @@ export default function SalonDetailPage() {
           返回搜尋
         </Link>
 
-        {/* Hero Image */}
+        {/* Hero Image - Full Width */}
         <div className="relative rounded-2xl overflow-hidden h-64 sm:h-80 mb-6">
           {imgSrc ? (
             <img
@@ -351,58 +382,80 @@ export default function SalonDetailPage() {
           )}
 
           {/* Status badge on image */}
-          {salon.salon_status && salon.salon_status !== 'active' && (
+          {shouldShowStatus(salon) && (
             <div className={`absolute bottom-4 left-4 flex items-center gap-1.5 backdrop-blur-sm text-sm font-semibold px-4 py-2 rounded-full shadow-md ${
               salon.salon_status === 'closed'
                 ? 'bg-red-500/90 text-white'
                 : salon.salon_status === 'renovation'
                 ? 'bg-amber-500/90 text-white'
+                : salon.salon_status === 'new_opening'
+                ? 'bg-blue-500/90 text-white'
+                : salon.salon_status === 'reopened'
+                ? 'bg-green-500/90 text-white'
                 : 'bg-slate-500/90 text-white'
             }`}>
               {salon.salon_status === 'closed' && <><Lock className="w-4 h-4" /> 已結業</>}
               {salon.salon_status === 'renovation' && <><Wrench className="w-4 h-4" /> 裝修中</>}
+              {salon.salon_status === 'new_opening' && <><Sparkles className="w-4 h-4" /> 新開張</>}
+              {salon.salon_status === 'reopened' && <><Sparkles className="w-4 h-4" /> 重新開業</>}
             </div>
           )}
         </div>
 
         {/* Salon Status Banner */}
-        {salon.salon_status && salon.salon_status !== 'active' && (
+        {shouldShowStatus(salon) && (
           <div className={`rounded-xl p-4 mb-4 flex items-start gap-3 ${
             salon.salon_status === 'closed'
               ? 'bg-red-50 border border-red-200'
               : salon.salon_status === 'renovation'
               ? 'bg-amber-50 border border-amber-200'
+              : salon.salon_status === 'new_opening'
+              ? 'bg-blue-50 border border-blue-200'
+              : salon.salon_status === 'reopened'
+              ? 'bg-green-50 border border-green-200'
               : 'bg-slate-50 border border-slate-200'
           }`}>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-              salon.salon_status === 'closed' ? 'bg-red-100' : salon.salon_status === 'renovation' ? 'bg-amber-100' : 'bg-slate-100'
+              salon.salon_status === 'closed' ? 'bg-red-100' : salon.salon_status === 'renovation' ? 'bg-amber-100' : salon.salon_status === 'new_opening' ? 'bg-blue-100' : salon.salon_status === 'reopened' ? 'bg-green-100' : 'bg-slate-100'
             }`}>
               {salon.salon_status === 'closed' ? (
                 <Lock className="w-5 h-5 text-red-500" />
               ) : salon.salon_status === 'renovation' ? (
                 <Wrench className="w-5 h-5 text-amber-500" />
+              ) : salon.salon_status === 'new_opening' ? (
+                <Sparkles className="w-5 h-5 text-blue-500" />
+              ) : salon.salon_status === 'reopened' ? (
+                <Sparkles className="w-5 h-5 text-green-500" />
               ) : (
                 <AlertTriangle className="w-5 h-5 text-slate-500" />
               )}
             </div>
             <div>
               <p className={`font-semibold text-sm ${
-                salon.salon_status === 'closed' ? 'text-red-700' : salon.salon_status === 'renovation' ? 'text-amber-700' : 'text-slate-700'
+                salon.salon_status === 'closed' ? 'text-red-700' : salon.salon_status === 'renovation' ? 'text-amber-700' : salon.salon_status === 'new_opening' ? 'text-blue-700' : salon.salon_status === 'reopened' ? 'text-green-700' : 'text-slate-700'
               }`}>
                 {salon.salon_status === 'closed' && '此美容院已結業'}
                 {salon.salon_status === 'renovation' && '此美容院正在裝修中'}
+                {salon.salon_status === 'new_opening' && '🎉 此美容院為新開張'}
+                {salon.salon_status === 'reopened' && '🎉 此美容院已重新開業'}
               </p>
               <p className={`text-xs mt-0.5 ${
-                salon.salon_status === 'closed' ? 'text-red-500' : salon.salon_status === 'renovation' ? 'text-amber-500' : 'text-slate-500'
+                salon.salon_status === 'closed' ? 'text-red-500' : salon.salon_status === 'renovation' ? 'text-amber-500' : salon.salon_status === 'new_opening' ? 'text-blue-500' : salon.salon_status === 'reopened' ? 'text-green-500' : 'text-slate-500'
               }`}>
                 {salon.salon_status === 'closed' && salon.closed_date && `結業日期：${new Date(salon.closed_date).toLocaleDateString('zh-HK')}`}
                 {salon.salon_status === 'renovation' && salon.renovation_date && `裝修開始日期：${new Date(salon.renovation_date).toLocaleDateString('zh-HK')}`}
                 {salon.salon_status === 'renovation' && salon.reopened_date && ` · 預計重開日期：${new Date(salon.reopened_date).toLocaleDateString('zh-HK')}`}
+                {salon.salon_status === 'new_opening' && salon.new_opening_date && `開張日期：${new Date(salon.new_opening_date).toLocaleDateString('zh-HK')}`}
+                {salon.salon_status === 'reopened' && salon.reopened_date && `重開日期：${new Date(salon.reopened_date).toLocaleDateString('zh-HK')}`}
               </p>
             </div>
           </div>
         )}
 
+        {/* Two-column layout: Main content + Sidebar */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* ── Main Content Column ── */}
+          <div className="flex-1 min-w-0">
         {/* Salon Name & District */}
         <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">
@@ -572,135 +625,6 @@ export default function SalonDetailPage() {
           </div>
         )}
 
-        {/* Highlight Tags */}
-        {highlights.length > 0 && (
-          <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm mb-6">
-            <h2 className="text-base font-semibold text-slate-800 mb-3 flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-              主打服務
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {highlights.map(tag => (
-                <Badge
-                  key={tag}
-                  className="text-sm border-0 font-normal bg-amber-50 text-amber-700 px-3 py-1"
-                >
-                  <Star className="w-3 h-3 mr-1 fill-amber-400 text-amber-400" />
-                  {removeTagPrefix(tag)}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* All Tags - grouped by category */}
-        {allTags.length > 0 && (() => {
-          const TAG_CATEGORIES: Record<string, { prefix: string; label: string; color: string }> = {
-            'face_': { prefix: 'face_', label: '面部基礎護理', color: 'bg-pink-50 text-pink-700' },
-            'machine_': { prefix: 'machine_', label: '儀器醫美療程', color: 'bg-violet-50 text-violet-700' },
-            'body_': { prefix: 'body_', label: '身體護理', color: 'bg-emerald-50 text-emerald-700' },
-            'hair_': { prefix: 'hair_', label: '脫毛服務', color: 'bg-sky-50 text-sky-700' },
-            'semi-perm_': { prefix: 'semi-perm_', label: '半永久紋繡', color: 'bg-fuchsia-50 text-fuchsia-700' },
-            'eyes_': { prefix: 'eyes_', label: '眼睫服務', color: 'bg-indigo-50 text-indigo-700' },
-            'med_': { prefix: 'med_', label: '特殊專科護理', color: 'bg-red-50 text-red-700' },
-            'pay_': { prefix: 'pay_', label: '消費透明度', color: 'bg-amber-50 text-amber-700' },
-            'quali_': { prefix: 'quali_', label: '品質認證', color: 'bg-lime-50 text-lime-700' },
-            'seg_': { prefix: 'seg_', label: '客群特色', color: 'bg-orange-50 text-orange-700' },
-            'service_': { prefix: 'service_', label: '專業服務', color: 'bg-teal-50 text-teal-700' },
-            'amenities_': { prefix: 'amenities_', label: '便利設施', color: 'bg-cyan-50 text-cyan-700' },
-            'booking_': { prefix: 'booking_', label: '語言及預約', color: 'bg-blue-50 text-blue-700' },
-          };
-
-          // Build reverse map: category label -> prefix key
-          const categoryLabelToPrefix: Record<string, string> = {};
-          Object.entries(TAG_CATEGORIES).forEach(([prefix, { label }]) => {
-            categoryLabelToPrefix[label] = prefix;
-          });
-
-          const grouped: Record<string, string[]> = {};
-          const uncategorized: string[] = [];
-          
-          allTags.forEach(tag => {
-            let found = false;
-            // First: try matching by prefix (e.g., "face_深層清潔注氧")
-            for (const [key, cat] of Object.entries(TAG_CATEGORIES)) {
-              if (tag.startsWith(key)) {
-                if (!grouped[key]) grouped[key] = [];
-                grouped[key].push(tag);
-                found = true;
-                break;
-              }
-            }
-            // Second: try matching by label in tagCategoryMap (for tags stored without prefix)
-            if (!found && tagCategoryMap[tag]) {
-              const categoryLabel = tagCategoryMap[tag];
-              const prefixKey = categoryLabelToPrefix[categoryLabel];
-              if (prefixKey) {
-                if (!grouped[prefixKey]) grouped[prefixKey] = [];
-                grouped[prefixKey].push(tag);
-                found = true;
-              }
-            }
-            if (!found) uncategorized.push(tag);
-          });
-
-          const categoryOrder = ['face_', 'machine_', 'body_', 'hair_', 'semi-perm_', 'eyes_', 'med_', 'pay_', 'quali_', 'seg_', 'service_', 'amenities_', 'booking_'];
-
-          return (
-            <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm mb-6">
-              <h2 className="text-base font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-rose-400" />
-                服務標籤
-              </h2>
-              <div className="space-y-4">
-                {categoryOrder.filter(key => grouped[key]?.length > 0).map(key => {
-                  const cat = TAG_CATEGORIES[key];
-                  return (
-                    <div key={key}>
-                      <p className="text-xs font-semibold text-slate-500 mb-1.5">{cat.label}</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {grouped[key].map(tag => (
-                          <Badge
-                            key={tag}
-                            className={`text-xs border-0 font-normal px-2.5 py-0.5 ${
-                              highlights.includes(tag)
-                                ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
-                                : cat.color
-                            }`}
-                          >
-                            {highlights.includes(tag) && <Star className="w-2.5 h-2.5 mr-0.5 fill-amber-400 text-amber-400" />}
-                            {removeTagPrefix(tag)}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-                {uncategorized.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-slate-500 mb-1.5">其他</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {uncategorized.map(tag => (
-                        <Badge
-                          key={tag}
-                          className={`text-xs border-0 font-normal px-2.5 py-0.5 ${
-                            highlights.includes(tag)
-                              ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
-                              : 'bg-slate-50 text-slate-600'
-                          }`}
-                        >
-                          {highlights.includes(tag) && <Star className="w-2.5 h-2.5 mr-0.5 fill-amber-400 text-amber-400" />}
-                          {removeTagPrefix(tag)}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })()}
-
         {/* Media Gallery */}
         {mediaImages.length > 0 && (
           <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm mb-6">
@@ -802,6 +726,219 @@ export default function SalonDetailPage() {
             </div>
           </div>
         )}
+
+        {/* Highlight Tags + All Tags (shown in main column on mobile) */}
+        <div className="lg:hidden">
+          {highlights.length > 0 && (
+            <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm mb-6">
+              <h2 className="text-base font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                主打服務
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {highlights.map(tag => (
+                  <Badge
+                    key={tag}
+                    className="text-xs border-0 font-normal bg-amber-50 text-amber-700 px-2.5 py-1"
+                  >
+                    <Star className="w-3 h-3 mr-1 fill-amber-400 text-amber-400" />
+                    {removeTagPrefix(tag)}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {allTags.length > 0 && (() => {
+            const TAG_CATEGORIES: Record<string, { prefix: string; label: string; color: string }> = {
+              'face_': { prefix: 'face_', label: '面部基礎護理', color: 'bg-pink-50 text-pink-700' },
+              'machine_': { prefix: 'machine_', label: '儀器醫美療程', color: 'bg-violet-50 text-violet-700' },
+              'body_': { prefix: 'body_', label: '身體護理', color: 'bg-emerald-50 text-emerald-700' },
+              'hair_': { prefix: 'hair_', label: '脫毛服務', color: 'bg-sky-50 text-sky-700' },
+              'semi-perm_': { prefix: 'semi-perm_', label: '半永久紋繡', color: 'bg-fuchsia-50 text-fuchsia-700' },
+              'eyes_': { prefix: 'eyes_', label: '眼睫服務', color: 'bg-indigo-50 text-indigo-700' },
+              'med_': { prefix: 'med_', label: '特殊專科護理', color: 'bg-red-50 text-red-700' },
+              'pay_': { prefix: 'pay_', label: '消費透明度', color: 'bg-amber-50 text-amber-700' },
+              'quali_': { prefix: 'quali_', label: '品質認證', color: 'bg-lime-50 text-lime-700' },
+              'seg_': { prefix: 'seg_', label: '客群特色', color: 'bg-orange-50 text-orange-700' },
+              'service_': { prefix: 'service_', label: '專業服務', color: 'bg-teal-50 text-teal-700' },
+              'amenities_': { prefix: 'amenities_', label: '便利設施', color: 'bg-cyan-50 text-cyan-700' },
+              'booking_': { prefix: 'booking_', label: '語言及預約', color: 'bg-blue-50 text-blue-700' },
+            };
+            const categoryLabelToPrefix: Record<string, string> = {};
+            Object.entries(TAG_CATEGORIES).forEach(([prefix, { label }]) => { categoryLabelToPrefix[label] = prefix; });
+            const grouped: Record<string, string[]> = {};
+            const uncategorized: string[] = [];
+            allTags.forEach(tag => {
+              let found = false;
+              for (const [key] of Object.entries(TAG_CATEGORIES)) {
+                if (tag.startsWith(key)) { if (!grouped[key]) grouped[key] = []; grouped[key].push(tag); found = true; break; }
+              }
+              if (!found && tagCategoryMap[tag]) {
+                const categoryLabel = tagCategoryMap[tag];
+                const prefixKey = categoryLabelToPrefix[categoryLabel];
+                if (prefixKey) { if (!grouped[prefixKey]) grouped[prefixKey] = []; grouped[prefixKey].push(tag); found = true; }
+              }
+              if (!found) uncategorized.push(tag);
+            });
+            const categoryOrder = ['face_', 'machine_', 'body_', 'hair_', 'semi-perm_', 'eyes_', 'med_', 'pay_', 'quali_', 'seg_', 'service_', 'amenities_', 'booking_'];
+            return (
+              <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm mb-6">
+                <h2 className="text-base font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-rose-400" />
+                  服務標籤
+                </h2>
+                <div className="space-y-4">
+                  {categoryOrder.filter(key => grouped[key]?.length > 0).map(key => {
+                    const cat = TAG_CATEGORIES[key];
+                    return (
+                      <div key={key}>
+                        <p className="text-xs font-semibold text-slate-500 mb-1.5">{cat.label}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {grouped[key].map(tag => (
+                            <Badge key={tag} className={`text-xs border-0 font-normal px-2.5 py-1 ${highlights.includes(tag) ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' : cat.color}`}>
+                              {highlights.includes(tag) && <Star className="w-3 h-3 mr-1 fill-amber-400 text-amber-400" />}
+                              {removeTagPrefix(tag)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {uncategorized.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 mb-1.5">其他</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {uncategorized.map(tag => (
+                          <Badge key={tag} className={`text-xs border-0 font-normal px-2.5 py-1 ${highlights.includes(tag) ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' : 'bg-slate-50 text-slate-600'}`}>
+                            {highlights.includes(tag) && <Star className="w-3 h-3 mr-1 fill-amber-400 text-amber-400" />}
+                            {removeTagPrefix(tag)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+          </div>
+          {/* ── Desktop Sidebar ── */}
+          <aside className="hidden lg:block w-[300px] shrink-0">
+            <div className="space-y-5">
+            {/* Highlight Tags */}
+            {highlights.length > 0 && (
+              <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
+                <h2 className="text-base font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  主打服務
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {highlights.map(tag => (
+                    <Badge
+                      key={tag}
+                      className="text-xs border-0 font-normal bg-amber-50 text-amber-700 px-2.5 py-1"
+                    >
+                      <Star className="w-3 h-3 mr-1 fill-amber-400 text-amber-400" />
+                      {removeTagPrefix(tag)}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* All Tags - grouped by category */}
+            {allTags.length > 0 && (() => {
+              const TAG_CATEGORIES: Record<string, { prefix: string; label: string; color: string }> = {
+                'face_': { prefix: 'face_', label: '面部基礎護理', color: 'bg-pink-50 text-pink-700' },
+                'machine_': { prefix: 'machine_', label: '儀器醫美療程', color: 'bg-violet-50 text-violet-700' },
+                'body_': { prefix: 'body_', label: '身體護理', color: 'bg-emerald-50 text-emerald-700' },
+                'hair_': { prefix: 'hair_', label: '脫毛服務', color: 'bg-sky-50 text-sky-700' },
+                'semi-perm_': { prefix: 'semi-perm_', label: '半永久紋繡', color: 'bg-fuchsia-50 text-fuchsia-700' },
+                'eyes_': { prefix: 'eyes_', label: '眼睫服務', color: 'bg-indigo-50 text-indigo-700' },
+                'med_': { prefix: 'med_', label: '特殊專科護理', color: 'bg-red-50 text-red-700' },
+                'pay_': { prefix: 'pay_', label: '消費透明度', color: 'bg-amber-50 text-amber-700' },
+                'quali_': { prefix: 'quali_', label: '品質認證', color: 'bg-lime-50 text-lime-700' },
+                'seg_': { prefix: 'seg_', label: '客群特色', color: 'bg-orange-50 text-orange-700' },
+                'service_': { prefix: 'service_', label: '專業服務', color: 'bg-teal-50 text-teal-700' },
+                'amenities_': { prefix: 'amenities_', label: '便利設施', color: 'bg-cyan-50 text-cyan-700' },
+                'booking_': { prefix: 'booking_', label: '語言及預約', color: 'bg-blue-50 text-blue-700' },
+              };
+              const categoryLabelToPrefix: Record<string, string> = {};
+              Object.entries(TAG_CATEGORIES).forEach(([prefix, { label }]) => { categoryLabelToPrefix[label] = prefix; });
+              const grouped: Record<string, string[]> = {};
+              const uncategorized: string[] = [];
+              allTags.forEach(tag => {
+                let found = false;
+                for (const [key] of Object.entries(TAG_CATEGORIES)) {
+                  if (tag.startsWith(key)) { if (!grouped[key]) grouped[key] = []; grouped[key].push(tag); found = true; break; }
+                }
+                if (!found && tagCategoryMap[tag]) {
+                  const categoryLabel = tagCategoryMap[tag];
+                  const prefixKey = categoryLabelToPrefix[categoryLabel];
+                  if (prefixKey) { if (!grouped[prefixKey]) grouped[prefixKey] = []; grouped[prefixKey].push(tag); found = true; }
+                }
+                if (!found) uncategorized.push(tag);
+              });
+              const categoryOrder = ['face_', 'machine_', 'body_', 'hair_', 'semi-perm_', 'eyes_', 'med_', 'pay_', 'quali_', 'seg_', 'service_', 'amenities_', 'booking_'];
+              return (
+                <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm">
+                  <h2 className="text-base font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-rose-400" />
+                    服務標籤
+                  </h2>
+                  <div className="space-y-4">
+                    {categoryOrder.filter(key => grouped[key]?.length > 0).map(key => {
+                      const cat = TAG_CATEGORIES[key];
+                      return (
+                        <div key={key}>
+                          <p className="text-xs font-semibold text-slate-500 mb-1.5">{cat.label}</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {grouped[key].map(tag => (
+                              <Badge
+                                key={tag}
+                                className={`text-xs border-0 font-normal px-2.5 py-1 ${
+                                  highlights.includes(tag)
+                                    ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+                                    : cat.color
+                                }`}
+                              >
+                                {highlights.includes(tag) && <Star className="w-3 h-3 mr-1 fill-amber-400 text-amber-400" />}
+                                {removeTagPrefix(tag)}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {uncategorized.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-slate-500 mb-1.5">其他</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {uncategorized.map(tag => (
+                            <Badge
+                              key={tag}
+                              className={`text-xs border-0 font-normal px-2.5 py-1 ${
+                                highlights.includes(tag)
+                                  ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+                                  : 'bg-slate-50 text-slate-600'
+                              }`}
+                            >
+                              {highlights.includes(tag) && <Star className="w-3 h-3 mr-1 fill-amber-400 text-amber-400" />}
+                              {removeTagPrefix(tag)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+            </div>
+          </aside>
+        </div>
       </div>
     </PublicLayout>
   );

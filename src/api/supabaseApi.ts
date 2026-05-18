@@ -154,12 +154,14 @@ export const SalonProfile = {
   create: async (payload: Record<string, unknown>) => {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
+    // Only auto-set created_by if not explicitly provided in payload (including null)
+    const hasCreatedBy = 'created_by' in payload;
     const { data, error } = await supabase
       .from('salon_profiles')
       .insert({
         ...payload,
-        created_by: user?.id,
-        created_by_email: user?.email,
+        created_by: hasCreatedBy ? payload.created_by : user?.id,
+        created_by_email: hasCreatedBy ? payload.created_by_email || null : user?.email,
         created_date: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })

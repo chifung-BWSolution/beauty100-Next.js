@@ -93,32 +93,65 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
   const [labelCategoryMap, setLabelCategoryMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (version?.profile_id && open) {
+    if (!open || !version) return;
+    
+    const loadProfile = async () => {
       setLoadingProfile(true);
-      Promise.all([
-        base44.entities.SalonProfile.filter({ id: version.profile_id }),
-        supabase.from('salon_tags').select('label, category'),
-      ])
-        .then(([profileRes, tagsRes]) => {
-          setProfile(profileRes[0] || null);
-          if (tagsRes.data) {
-            const lcMap: Record<string, string> = {};
-            tagsRes.data.forEach((t: any) => { lcMap[t.label] = t.category; });
-            setLabelCategoryMap(lcMap);
-          }
-        })
-        .catch(() => {})
-        .finally(() => setLoadingProfile(false));
+      try {
+        let profileRes: any[] = [];
+        
+        // Try loading by profile_id first
+        if (version.profile_id) {
+          profileRes = await base44.entities.SalonProfile.filter({ id: version.profile_id });
+        }
+        
+        // Fallback: if no profile found and we have shopify_product_id, try that
+        if (profileRes.length === 0 && version.shopify_product_id) {
+          profileRes = await base44.entities.SalonProfile.filter({ shopify_product_id: version.shopify_product_id });
+        }
+        
+        // Fallback: if still no profile found, try matching by salon_name
+        if (profileRes.length === 0 && version.salon_name) {
+          profileRes = await base44.entities.SalonProfile.filter({ salon_name: version.salon_name });
+        }
+        
+        setProfile(profileRes[0] || null);
+        
+        // Load tags
+        const { data: tagsData } = await supabase.from('salon_tags').select('label, category');
+        if (tagsData) {
+          const lcMap: Record<string, string> = {};
+          tagsData.forEach((t: any) => { lcMap[t.label] = t.category; });
+          setLabelCategoryMap(lcMap);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    
+    if (version.profile_id || version.shopify_product_id || version.salon_name) {
+      loadProfile();
     }
-  }, [version?.profile_id, open]);
+  }, [version?.profile_id, version?.shopify_product_id, version?.salon_name, open]);
 
   if (!version) return null;
 
   const isPublic = version.submission_type === 'public_suggestion';
-  const changedFields = FIELDS.filter(f => isFieldActuallyChanged(version, profile, f.key, isPublic));
-  const descriptionChanged = isPublic
-    ? !!(version.description) && (version.description || '') !== (profile?.description || '')
-    : (version.description || '') !== (profile?.description || '');
+  // For public suggestions that are NOT update_info or new_opening, don't compare salon info fields
+  // because those fields were just pre-filled for reference (not actual intended changes)
+  const isNonInfoPublicSuggestion = isPublic && version.change_reason && !['update_info', 'new_opening'].includes(version.change_reason);
+  
+  const changedFields = isNonInfoPublicSuggestion
+    ? [] // Non-info suggestions (renovation, closed, reopened) don't have field-level changes
+    : FIELDS.filter(f => isFieldActuallyChanged(version, profile, f.key, isPublic));
+  
+  const descriptionChanged = isNonInfoPublicSuggestion
+    ? false
+    : isPublic
+      ? !!(version.description) && (version.description || '') !== (profile?.description || '')
+      : (version.description || '') !== (profile?.description || '');
   
   // For public suggestions with photos, check if there are NEW photos to add
   // (public form photos are additive, not replacements)
@@ -128,12 +161,16 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
     ? versionMedia.length > 0 // public suggestions: any photos means new photos to add
     : JSON.stringify(versionMedia) !== JSON.stringify(profileMedia);
   
-  const tagsChanged = isPublic
-    ? (version.selected_tags || []).length > 0 && JSON.stringify([...(version.selected_tags || [])].sort()) !== JSON.stringify([...(profile?.selected_tags || [])].sort())
-    : JSON.stringify([...(version.selected_tags || [])].sort()) !== JSON.stringify([...(profile?.selected_tags || [])].sort());
-  const highlightChanged = isPublic
-    ? (version.highlight_tags || []).length > 0 && JSON.stringify([...(version.highlight_tags || [])].sort()) !== JSON.stringify([...(profile?.highlight_tags || [])].sort())
-    : JSON.stringify([...(version.highlight_tags || [])].sort()) !== JSON.stringify([...(profile?.highlight_tags || [])].sort());
+  const tagsChanged = isNonInfoPublicSuggestion
+    ? false
+    : isPublic
+      ? (version.selected_tags || []).length > 0 && JSON.stringify([...(version.selected_tags || [])].sort()) !== JSON.stringify([...(profile?.selected_tags || [])].sort())
+      : JSON.stringify([...(version.selected_tags || [])].sort()) !== JSON.stringify([...(profile?.selected_tags || [])].sort());
+  const highlightChanged = isNonInfoPublicSuggestion
+    ? false
+    : isPublic
+      ? (version.highlight_tags || []).length > 0 && JSON.stringify([...(version.highlight_tags || [])].sort()) !== JSON.stringify([...(profile?.highlight_tags || [])].sort())
+      : JSON.stringify([...(version.highlight_tags || [])].sort()) !== JSON.stringify([...(profile?.highlight_tags || [])].sort());
 
   function groupTagsByCategory(tags: string[]) {
     const grouped: Record<string, string[]> = {};
@@ -217,12 +254,15 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
                 )}
               </div>
             )}
+            {!isNonInfoPublicSuggestion && (
             <div className="flex items-center gap-4 text-sm text-slate-500 bg-slate-50 rounded-lg p-3">
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-100 border border-amber-200 inline-block"></span>已更改欄位</span>
               <span className="text-slate-300">|</span>
               <span className="text-slate-400">劃線 = 原本內容，粗體 = 新內容</span>
             </div>
+            )}
 
+            {!isNonInfoPublicSuggestion && (
             <div className="border rounded-xl overflow-hidden">
               <div className="grid grid-cols-3 bg-slate-100 text-sm font-semibold text-slate-500 px-4 py-2">
                 <span>欄位</span><span>現有資料</span><span>申請更新</span>
@@ -247,8 +287,10 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
                 })}
               </div>
             </div>
+            )}
 
             {/* Description */}
+            {!isNonInfoPublicSuggestion && (
             <div className={`rounded-xl border overflow-hidden ${descriptionChanged ? 'border-amber-200' : ''}`}>
               <div className={`px-4 py-2 text-sm font-semibold ${descriptionChanged ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-500'}`}>
                 簡介{descriptionChanged && ' ✱ 已更改'}
@@ -268,6 +310,7 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
                 </div>
               </div>
             </div>
+            )}
 
             {/* Media */}
             {(version.product_media?.length > 0 || profile?.product_media?.length > 0) && (

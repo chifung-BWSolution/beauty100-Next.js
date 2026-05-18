@@ -7,6 +7,8 @@ import WhatsAppWidget from "@/components/WhatsAppWidget";
 import ErrorBoundaryScript from "@/components/ErrorBoundaryScript";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
+import TrackingScripts from "@/components/TrackingScripts";
+import TrackingNoscriptBody from "@/components/TrackingNoscriptBody";
 
 const notoSansTC = Noto_Sans_TC({
   subsets: ["latin"],
@@ -135,8 +137,12 @@ export default function RootLayout({
             }),
           }}
         />
+        {/* @ts-expect-error Async Server Component */}
+        <TrackingScripts />
       </head>
       <body className={`${notoSansTC.variable} ${notoSansTC.className}`}>
+        {/* @ts-expect-error Async Server Component */}
+        <TrackingNoscriptBody />
         <ErrorBoundaryScript />
         <AuthProvider>
           <AppLayout>

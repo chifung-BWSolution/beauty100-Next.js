@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, ChevronDown } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const REGION_GROUPS = [
   { region: '香港島', emoji: '🏙️', districts: ['中環', '上環', '灣仔', '銅鑼灣', '北角', '鰂魚涌', '天后', '炮台山', '柴灣', '西灣河', '西營盤', '香港仔', '堅尼地城', '半山區', '跑馬地'] },
@@ -13,6 +14,7 @@ const REGION_GROUPS = [
 interface District { id?: string; name: string; }
 
 interface DistrictSelectProps {
+  /** Pass districts externally (legacy). If omitted/empty and autoFetch is true, will fetch from Supabase. */
   districts?: District[];
   value?: string;
   onChange: (name: string) => void;
@@ -20,18 +22,47 @@ interface DistrictSelectProps {
   triggerClassName?: string;
   placeholder?: string;
   loading?: boolean;
+  /** If true, fetch districts from Supabase `districts` table automatically */
+  autoFetch?: boolean;
 }
 
 export default function DistrictSelect({
-  districts = [],
+  districts: externalDistricts,
   value,
   onChange,
   className = '',
   triggerClassName = '',
   placeholder = '請選擇地區',
-  loading = false,
+  loading: externalLoading = false,
+  autoFetch = false,
 }: DistrictSelectProps) {
   const [open, setOpen] = useState(false);
+  const [fetchedDistricts, setFetchedDistricts] = useState<District[] | null>(null);
+  const [fetching, setFetching] = useState(false);
+
+  // Auto-fetch from Supabase districts table
+  useEffect(() => {
+    if (autoFetch && (!externalDistricts || externalDistricts.length === 0)) {
+      setFetching(true);
+      supabase
+        .from('districts')
+        .select('id, name, region, region_emoji, sort_order')
+        .order('sort_order', { ascending: true })
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setFetchedDistricts(data.map((d: any) => ({ id: d.id, name: d.name })));
+          } else {
+            // Fallback to hardcoded list
+            const fallback = REGION_GROUPS.flatMap(g => g.districts.map(name => ({ id: name, name })));
+            setFetchedDistricts(fallback);
+          }
+          setFetching(false);
+        });
+    }
+  }, [autoFetch, externalDistricts]);
+
+  const districts = (externalDistricts && externalDistricts.length > 0) ? externalDistricts : (fetchedDistricts || []);
+  const isLoading = externalLoading || fetching;
 
   const grouped = REGION_GROUPS.map((group) => {
     const matched = districts.filter((d) =>
@@ -45,7 +76,7 @@ export default function DistrictSelect({
     (d) => !allGroupedNames.some((gd) => d.name?.includes(gd) || gd.includes(d.name))
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className={`h-11 rounded-xl border border-slate-200 bg-slate-50 flex items-center px-3 text-slate-400 text-sm ${className}`}>
         載入中...

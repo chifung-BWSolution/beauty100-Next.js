@@ -59,9 +59,13 @@ export default function AdminSalonsPage() {
         updates.closed_date = null;
         updates.renovation_date = null;
       }
+      if (newStatus === 'new_opening') {
+        updates.created_by = null;
+        updates.contact_person = null;
+      }
       const { error } = await supabase.from('salon_profiles').update(updates).eq('id', profileId);
       if (error) throw error;
-      toast.success(`已更新美容院狀態為「${newStatus === 'active' ? '營業中' : newStatus === 'closed' ? '已結業' : newStatus === 'renovation' ? '裝修中' : newStatus}」`);
+      toast.success(`已更新美容院狀態為「${newStatus === 'active' ? '營業中' : newStatus === 'closed' ? '已結業' : newStatus === 'renovation' ? '裝修中' : newStatus === 'new_opening' ? '新開張' : newStatus}」`);
       if (viewDetailsSalon) {
         setViewDetailsSalon({ ...viewDetailsSalon, salon_status: newStatus });
       }
@@ -394,9 +398,10 @@ export default function AdminSalonsPage() {
                       <Badge className={
                         salon.salon_status === 'closed' ? 'bg-red-100 text-red-600 border-0' :
                         salon.salon_status === 'renovation' ? 'bg-amber-100 text-amber-600 border-0' :
+                        salon.salon_status === 'new_opening' ? 'bg-blue-100 text-blue-600 border-0' :
                         'bg-emerald-100 text-emerald-700 border-0'
                       }>
-                        {salon.salon_status === 'closed' ? '🔒 已結業' : salon.salon_status === 'renovation' ? '🔧 裝修中' : '✅ 營業中'}
+                        {salon.salon_status === 'closed' ? '🔒 已結業' : salon.salon_status === 'renovation' ? '🔧 裝修中' : salon.salon_status === 'new_opening' ? '🆕 新開張' : '✅ 營業中'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm whitespace-nowrap">
@@ -547,9 +552,10 @@ export default function AdminSalonsPage() {
                       <Badge className={
                         salon.salon_status === 'closed' ? 'bg-red-100 text-red-700 border-0' :
                         salon.salon_status === 'renovation' ? 'bg-amber-100 text-amber-700 border-0' :
+                        salon.salon_status === 'new_opening' ? 'bg-blue-100 text-blue-700 border-0' :
                         'bg-emerald-100 text-emerald-700 border-0'
                       }>
-                        {salon.salon_status === 'closed' ? '🔒 已結業' : salon.salon_status === 'renovation' ? '🔧 裝修中' : '✅ 營業中'}
+                        {salon.salon_status === 'closed' ? '🔒 已結業' : salon.salon_status === 'renovation' ? '🔧 裝修中' : salon.salon_status === 'new_opening' ? '🆕 新開張' : '✅ 營業中'}
                       </Badge>
                       {salon.claimStatus === 'claimed' && <Badge className="bg-emerald-100 text-emerald-700 border-0">✅ 已認領</Badge>}
                       {salon.claimStatus === 'pending' && <Badge className="bg-amber-100 text-amber-700 border-0">⏳ 待審核</Badge>}
@@ -580,9 +586,10 @@ export default function AdminSalonsPage() {
                     <Badge className={
                       salon.salon_status === 'closed' ? 'bg-red-100 text-red-700 border-0' :
                       salon.salon_status === 'renovation' ? 'bg-amber-100 text-amber-700 border-0' :
+                      salon.salon_status === 'new_opening' ? 'bg-blue-100 text-blue-700 border-0' :
                       'bg-emerald-100 text-emerald-700 border-0'
                     }>
-                      {salon.salon_status === 'closed' ? '🔒 已結業' : salon.salon_status === 'renovation' ? '🔧 裝修中' : '✅ 營業中'}
+                      {salon.salon_status === 'closed' ? '🔒 已結業' : salon.salon_status === 'renovation' ? '🔧 裝修中' : salon.salon_status === 'new_opening' ? '🆕 新開張' : '✅ 營業中'}
                     </Badge>
                     {salon.closed_date && salon.salon_status === 'closed' && (
                       <span className="text-xs text-red-500">結業日期：{new Date(salon.closed_date).toLocaleDateString('zh-HK')}</span>
@@ -592,6 +599,9 @@ export default function AdminSalonsPage() {
                     )}
                     {salon.reopened_date && salon.salon_status === 'renovation' && (
                       <span className="text-xs text-amber-500">· 預計重開：{new Date(salon.reopened_date).toLocaleDateString('zh-HK')}</span>
+                    )}
+                    {salon.new_opening_date && salon.salon_status === 'new_opening' && (
+                      <span className="text-xs text-blue-500">開張日期：{new Date(salon.new_opening_date).toLocaleDateString('zh-HK')}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -622,6 +632,15 @@ export default function AdminSalonsPage() {
                       onClick={() => handleUpdateSalonStatus(salon.id, 'closed')}
                     >
                       🔒 已結業
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`text-xs h-7 ${salon.salon_status === 'new_opening' ? 'bg-blue-50 border-blue-300 text-blue-700' : ''}`}
+                      disabled={updatingStatus || salon.salon_status === 'new_opening'}
+                      onClick={() => handleUpdateSalonStatus(salon.id, 'new_opening')}
+                    >
+                      🆕 新開張
                     </Button>
                     {updatingStatus && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
                   </div>

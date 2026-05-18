@@ -19,17 +19,15 @@ export default function ClaimSalonPage() {
         return;
       }
 
-      // Get unique district names from salon_profiles
+      // Get districts from districts table
       const { data: districtsRows } = await supabase
-        .from('salon_profiles')
-        .select('district_name')
-        .not('district_name', 'is', null);
+        .from('districts')
+        .select('name')
+        .order('sort_order', { ascending: true });
 
-      const uniqueDistricts = Array.from(
-        new Set((districtsRows || []).map((r: any) => r.district_name).filter(Boolean))
-      ) as string[];
+      const uniqueDistricts = (districtsRows || []).map((r: any) => r.name) as string[];
 
-      setInitialDistricts(uniqueDistricts.sort());
+      setInitialDistricts(uniqueDistricts);
       setLoading(false);
     }).catch(() => router.replace('/login'));
   }, [router]);

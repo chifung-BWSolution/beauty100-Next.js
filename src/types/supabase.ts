@@ -202,6 +202,33 @@ export type Database = {
           },
         ]
       }
+      districts: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          region: string
+          region_emoji: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          region: string
+          region_emoji?: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          region?: string
+          region_emoji?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       kol_applications: {
         Row: {
           content_direction: string
@@ -992,6 +1019,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tracking_codes: {
+        Row: {
+          code_type: string
+          code_value: string
+          created_at: string | null
+          enabled: boolean
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          code_type: string
+          code_value?: string
+          created_at?: string | null
+          enabled?: boolean
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          code_type?: string
+          code_value?: string
+          created_at?: string | null
+          enabled?: boolean
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       user_activity_logs: {
         Row: {

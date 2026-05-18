@@ -13,6 +13,7 @@ import {
   Calendar, User, Phone, Mail, MessageSquare, X, Upload, Image as ImageIcon,
 } from 'lucide-react';
 import { uploadFile } from '@/api/supabaseApi';
+import DistrictSelect from '@/components/DistrictSelect';
 
 const CHANGE_REASONS = [
   { key: 'new_opening', label: '新美容院開張', emoji: '🆕', icon: Sparkles, color: 'from-emerald-50 to-teal-50', border: 'border-emerald-200', text: 'text-emerald-700', description: '報告新開業的美容院' },
@@ -174,6 +175,25 @@ export default function SuggestSalonUpdatePage() {
       return;
     }
 
+    if (!formData.submitter_email.trim() || !formData.submitter_phone.trim()) {
+      alert('請填寫你的電郵及電話');
+      return;
+    }
+
+    // Validate phone number format (HK: 8 digits starting with 2-9, or international with +)
+    const phoneDigits = formData.submitter_phone.replace(/[\s\-\(\)]/g, '');
+    const isValidHKPhone = /^[2-9]\d{7}$/.test(phoneDigits);
+    const isValidIntlPhone = /^\+\d{8,15}$/.test(phoneDigits);
+    if (!isValidHKPhone && !isValidIntlPhone) {
+      alert('請輸入有效的電話號碼（香港號碼為8位數字，或國際號碼以+開頭）');
+      return;
+    }
+
+    if (selectedReason === 'new_opening' && (!formData.address.trim() || !formData.district.trim())) {
+      alert('新美容院開張必須填寫地址及地區');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const reason = CHANGE_REASONS.find(r => r.key === selectedReason);
@@ -198,11 +218,11 @@ export default function SuggestSalonUpdatePage() {
       };
 
       if (selectedSalon?.id) {
-        // Try to find matching salon_profile
+        // selectedSalon.id is already the salon_profiles.id since we query salon_profiles directly
         const { data: profile } = await supabase
           .from('salon_profiles')
           .select('id, shopify_product_id')
-          .eq('shopify_product_id', String(selectedSalon.id))
+          .eq('id', selectedSalon.id)
           .single();
         if (profile) {
           payload.profile_id = profile.id;
@@ -210,13 +230,17 @@ export default function SuggestSalonUpdatePage() {
         }
       }
 
-      // Add form fields based on reason
-      if (formData.address) payload.address = formData.address;
-      if (formData.district) payload.district = formData.district;
-      if (formData.contact_number) payload.contact_number = formData.contact_number;
-      if (formData.email) payload.email = formData.email;
-      if (formData.website) payload.website = formData.website;
-      if (formData.description) payload.description = formData.description;
+      // Only add salon info fields for reasons that actually show the info form
+      // (update_info and new_opening). For other reasons like renovation/closed/reopened,
+      // the pre-filled data is just for reference and shouldn't be submitted as changes.
+      if (selectedReason === 'update_info' || selectedReason === 'new_opening') {
+        if (formData.address) payload.address = formData.address;
+        if (formData.district) payload.district = formData.district;
+        if (formData.contact_number) payload.contact_number = formData.contact_number;
+        if (formData.email) payload.email = formData.email;
+        if (formData.website) payload.website = formData.website;
+        if (formData.description) payload.description = formData.description;
+      }
 
       // Add uploaded photos
       if (uploadedPhotos.length > 0) {
@@ -367,91 +391,110 @@ export default function SuggestSalonUpdatePage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Salon search */}
-                <div ref={dropdownRef}>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    美容院名稱 <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      placeholder="搜尋美容院名稱..."
-                      value={salonSearch}
-                      onChange={(e) => {
-                        setSalonSearch(e.target.value);
-                        setFormData(prev => ({ ...prev, salon_name: e.target.value }));
-                        setSelectedSalon(null);
-                        if (e.target.value.length >= 2) {
-                          setShowDropdown(true);
-                        } else {
-                          setShowDropdown(false);
-                        }
-                      }}
-                      onFocus={() => {
-                        if (searchResults.length > 0 && !selectedSalon) {
-                          setShowDropdown(true);
-                        }
-                      }}
-                      className="pl-9"
-                      required
-                    />
-                    {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />}
+                {/* Salon name: free text for new_opening, search for others */}
+                {selectedReason === 'new_opening' ? (
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                      美容院名稱 <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        placeholder="輸入新美容院名稱..."
+                        value={formData.salon_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, salon_name: e.target.value }))}
+                        className="pl-9"
+                        required
+                      />
+                    </div>
+                    <p className="mt-1.5 text-xs text-slate-400">新開張嘅美容院，直接輸入名稱即可</p>
                   </div>
-                  {showDropdown && searchResults.length > 0 && !selectedSalon && (
-                    <div className="mt-1 border rounded-xl bg-white shadow-lg max-h-60 overflow-y-auto z-50 relative">
-                      {searchResults.map((salon) => (
+                ) : (
+                  <div ref={dropdownRef}>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                      美容院名稱 <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        placeholder="搜尋美容院名稱..."
+                        value={salonSearch}
+                        onChange={(e) => {
+                          setSalonSearch(e.target.value);
+                          setFormData(prev => ({ ...prev, salon_name: e.target.value }));
+                          setSelectedSalon(null);
+                          if (e.target.value.length >= 2) {
+                            setShowDropdown(true);
+                          } else {
+                            setShowDropdown(false);
+                          }
+                        }}
+                        onFocus={() => {
+                          if (searchResults.length > 0 && !selectedSalon) {
+                            setShowDropdown(true);
+                          }
+                        }}
+                        className="pl-9"
+                        required
+                      />
+                      {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />}
+                    </div>
+                    {showDropdown && searchResults.length > 0 && !selectedSalon && (
+                      <div className="mt-1 border rounded-xl bg-white shadow-lg max-h-60 overflow-y-auto z-50 relative">
+                        {searchResults.map((salon) => (
+                          <button
+                            type="button"
+                            key={salon.id}
+                            onClick={() => handleSelectSalon(salon)}
+                            className="flex items-center gap-3 w-full px-4 py-3 hover:bg-rose-50 transition-colors text-left border-b last:border-b-0"
+                          >
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-pink-50 flex items-center justify-center shrink-0">
+                              {salon.image_src ? (
+                                <img src={salon.image_src} alt="" className="w-10 h-10 object-cover" />
+                              ) : (
+                                <Store className="w-5 h-5 text-pink-400" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-slate-800 truncate">{salon.title}</p>
+                              {salon.district_name && <p className="text-xs text-slate-400">{salon.district_name}</p>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {selectedSalon && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">
+                        <CheckCircle2 className="w-4 h-4" />
+                        已選擇：{selectedSalon.title}
+                        {selectedSalon.district_name && <span className="text-slate-400">（{selectedSalon.district_name}）</span>}
                         <button
                           type="button"
-                          key={salon.id}
-                          onClick={() => handleSelectSalon(salon)}
-                          className="flex items-center gap-3 w-full px-4 py-3 hover:bg-rose-50 transition-colors text-left border-b last:border-b-0"
+                          onClick={() => {
+                            setSelectedSalon(null);
+                            setSalonSearch('');
+                            setFormData(prev => ({
+                              ...prev,
+                              salon_name: '',
+                              address: '',
+                              district: '',
+                              contact_number: '',
+                              email: '',
+                              website: '',
+                              description: '',
+                            }));
+                          }}
+                          className="ml-auto text-slate-400 hover:text-rose-500 transition-colors"
                         >
-                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-pink-50 flex items-center justify-center shrink-0">
-                            {salon.image_src ? (
-                              <img src={salon.image_src} alt="" className="w-10 h-10 object-cover" />
-                            ) : (
-                              <Store className="w-5 h-5 text-pink-400" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-medium text-slate-800 truncate">{salon.title}</p>
-                            {salon.district_name && <p className="text-xs text-slate-400">{salon.district_name}</p>}
-                          </div>
+                          <X className="w-4 h-4" />
                         </button>
-                      ))}
-                    </div>
-                  )}
-                  {selectedSalon && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">
-                      <CheckCircle2 className="w-4 h-4" />
-                      已選擇：{selectedSalon.title}
-                      {selectedSalon.district_name && <span className="text-slate-400">（{selectedSalon.district_name}）</span>}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedSalon(null);
-                          setSalonSearch('');
-                          setFormData(prev => ({
-                            ...prev,
-                            salon_name: '',
-                            address: '',
-                            district: '',
-                            contact_number: '',
-                            email: '',
-                            website: '',
-                            description: '',
-                          }));
-                        }}
-                        className="ml-auto text-slate-400 hover:text-rose-500 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  {salonSearch.length >= 2 && searchResults.length === 0 && !searching && !selectedSalon && (
-                    <p className="mt-1.5 text-xs text-slate-400">搵唔到？可以直接輸入美容院名稱</p>
-                  )}
-                </div>
+                      </div>
+                    )}
+                    {salonSearch.length >= 2 && searchResults.length === 0 && !searching && !selectedSalon && (
+                      <p className="mt-1.5 text-xs text-slate-400">搵唔到？可以直接輸入美容院名稱</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Date field for status changes */}
                 {showDateField && (
@@ -472,22 +515,27 @@ export default function SuggestSalonUpdatePage() {
                 {/* Additional fields for update_info reason */}
                 {(selectedReason === 'update_info' || selectedReason === 'new_opening') && (
                   <div className="space-y-4 border-t pt-4">
-                    <h3 className="text-sm font-semibold text-slate-600">美容院資料（選填）</h3>
+                    <h3 className="text-sm font-semibold text-slate-600">美容院資料{selectedReason === 'new_opening' ? '' : '（選填）'}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">地址</label>
+                        <label className="block text-xs text-slate-500 mb-1">
+                          詳細地址 {selectedReason === 'new_opening' && <span className="text-red-500">*</span>}
+                        </label>
                         <Input
                           placeholder="詳細地址"
                           value={formData.address}
                           onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                          required={selectedReason === 'new_opening'}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">地區</label>
-                        <Input
-                          placeholder="例如：銅鑼灣"
+                        <label className="block text-xs text-slate-500 mb-1">
+                          地區 {selectedReason === 'new_opening' && <span className="text-red-500">*</span>}
+                        </label>
+                        <DistrictSelect
+                          autoFetch
                           value={formData.district}
-                          onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
+                          onChange={(val) => setFormData(prev => ({ ...prev, district: val }))}
                         />
                       </div>
                       <div>
@@ -600,25 +648,36 @@ export default function SuggestSalonUpdatePage() {
                     <div>
                       <label className="block text-xs text-slate-500 mb-1">
                         <Mail className="inline w-3 h-3 mr-0.5" />
-                        電郵（選填）
+                        電郵 <span className="text-red-500">*</span>
                       </label>
                       <Input
                         placeholder="email@example.com"
                         type="email"
                         value={formData.submitter_email}
                         onChange={(e) => setFormData(prev => ({ ...prev, submitter_email: e.target.value }))}
+                        required
                       />
                     </div>
                     <div>
                       <label className="block text-xs text-slate-500 mb-1">
                         <Phone className="inline w-3 h-3 mr-0.5" />
-                        電話（選填）
+                        電話 <span className="text-red-500">*</span>
                       </label>
                       <Input
-                        placeholder="電話號碼"
+                        placeholder="例：91234567"
                         value={formData.submitter_phone}
                         onChange={(e) => setFormData(prev => ({ ...prev, submitter_phone: e.target.value }))}
+                        required
                       />
+                      {formData.submitter_phone && (() => {
+                        const digits = formData.submitter_phone.replace(/[\s\-\(\)]/g, '');
+                        const valid = /^[2-9]\d{7}$/.test(digits) || /^\+\d{8,15}$/.test(digits);
+                        return !valid ? (
+                          <p className="text-xs text-red-500 mt-1">請輸入有效電話號碼（8位數字或+國際號碼）</p>
+                        ) : (
+                          <p className="text-xs text-emerald-600 mt-1">✓ 格式正確</p>
+                        );
+                      })()}
                     </div>
                   </div>
 

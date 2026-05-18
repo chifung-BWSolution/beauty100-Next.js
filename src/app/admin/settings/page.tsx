@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MessageCircle, Save, CheckCircle, Tag, Plus, Pencil, Trash2, Check, X, Send, ShoppingBag, RefreshCw, Clock, AlertCircle } from 'lucide-react';
+import { Phone, MessageCircle, Save, CheckCircle, Tag, Plus, Pencil, Trash2, Check, X, Send, ShoppingBag, RefreshCw, Clock, AlertCircle, Code } from 'lucide-react';
 import SettingsSidebar from '@/components/admin/SettingsSidebar';
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -538,6 +538,130 @@ function ShopifySettingsTab() {
   );
 }
 
+// ─── Tracking Codes Tab ──────────────────────────────────────────────────────
+function TrackingCodesTab() {
+  const [codes, setCodes] = useState<{ id: string; code_type: string; code_value: string; enabled: boolean }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.from('tracking_codes').select('*').order('code_type');
+        if (data) setCodes(data);
+      } catch (e) { console.error(e); } finally { setLoading(false); }
+    })();
+  }, []);
+
+  const updateCode = (type: string, field: 'code_value' | 'enabled', value: string | boolean) => {
+    setCodes(prev => prev.map(c => c.code_type === type ? { ...c, [field]: value } : c));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      for (const code of codes) {
+        await supabase.from('tracking_codes').update({ code_value: code.code_value, enabled: code.enabled, updated_at: new Date().toISOString() }).eq('id', code.id);
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) { console.error(e); } finally { setSaving(false); }
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-12">
+      <div className="w-6 h-6 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin" />
+    </div>
+  );
+
+  const codeLabels: Record<string, { label: string; description: string; placeholder: string }> = {
+    google_analytics: {
+      label: 'Google Analytics (GA4)',
+      description: '追蹤網站流量與用戶行為分析',
+      placeholder: '例: G-XXXXXXXXXX',
+    },
+    google_ads: {
+      label: 'Google Ads Conversion',
+      description: '追蹤 Google Ads 轉換及廣告成效',
+      placeholder: '例: AW-XXXXXXXXX',
+    },
+    google_tag_manager: {
+      label: 'Google Tag Manager (GTM)',
+      description: '統一管理所有追蹤標籤',
+      placeholder: '例: GTM-XXXXXXX',
+    },
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f9a8d4 0%, #ec4899 100%)' }}>
+              <Code className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-base text-slate-800">追蹤代碼設定</CardTitle>
+              <CardDescription className="text-sm text-slate-500 mt-0.5">設定 Google Analytics、Google Ads 及 Google Tag Manager 代碼</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {codes.map(code => {
+            const meta = codeLabels[code.code_type];
+            if (!meta) return null;
+            return (
+              <div key={code.id} className="space-y-3 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700">{meta.label}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{meta.description}</p>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-xs text-slate-500">{code.enabled ? '已啟用' : '已停用'}</span>
+                    <button
+                      onClick={() => updateCode(code.code_type, 'enabled', !code.enabled)}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${code.enabled ? 'bg-pink-500' : 'bg-slate-300'}`}
+                    >
+                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${code.enabled ? 'left-5' : 'left-0.5'}`} />
+                    </button>
+                  </label>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-600">追蹤 ID / 代碼</Label>
+                  <Input
+                    value={code.code_value}
+                    onChange={e => updateCode(code.code_type, 'code_value', e.target.value)}
+                    placeholder={meta.placeholder}
+                    className="border-slate-200 focus:border-pink-400 focus:ring-pink-400/20 font-mono text-sm"
+                  />
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+            <p className="text-xs text-blue-600 font-medium mb-1">💡 使用說明</p>
+            <ul className="text-xs text-blue-500 space-y-0.5">
+              <li>• Google Analytics：輸入 Measurement ID（格式：G-XXXXXXXXXX）</li>
+              <li>• Google Ads：輸入 Conversion ID（格式：AW-XXXXXXXXX）</li>
+              <li>• Google Tag Manager：輸入 Container ID（格式：GTM-XXXXXXX）</li>
+              <li>• 啟用後代碼將自動加入網站所有頁面</li>
+            </ul>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button onClick={handleSave} disabled={saving} className="gap-2 text-white" style={{ background: saved ? '#10b981' : 'linear-gradient(135deg, #f9a8d4 0%, #ec4899 100%)', border: 'none' }}>
+              {saved ? <><CheckCircle className="w-4 h-4" />已儲存！</> : saving ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />儲存中...</> : <><Save className="w-4 h-4" />儲存設定</>}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Main Settings Page ─────────────────────────────────────────────────────
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('tags');
@@ -572,6 +696,12 @@ export default function AdminSettingsPage() {
             >
               <ShoppingBag className="w-3.5 h-3.5 inline mr-1.5" />Shopify
             </button>
+            <button
+              onClick={() => setActiveTab('tracking')}
+              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${activeTab === 'tracking' ? 'bg-white text-pink-600 shadow-sm' : 'text-slate-500'}`}
+            >
+              <Code className="w-3.5 h-3.5 inline mr-1.5" />追蹤碼
+            </button>
           </div>
         </div>
 
@@ -579,6 +709,7 @@ export default function AdminSettingsPage() {
           {activeTab === 'tags' && <SalonTagsTab />}
           {activeTab === 'whatsapp' && <WhatsAppSettingsTab />}
           {activeTab === 'shopify' && <ShopifySettingsTab />}
+          {activeTab === 'tracking' && <TrackingCodesTab />}
         </div>
       </div>
     </div>

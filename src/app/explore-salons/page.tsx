@@ -184,6 +184,38 @@ export default function ExploreSalonsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedHoursSalonId, setExpandedHoursSalonId] = useState<string | null>(null);
 
+  // Status display helper: show 新開張/裝修/重開 only within 1 month, 結業 until reopened
+  const shouldShowStatus = (salon: SalonProfile): boolean => {
+    if (!salon.salon_status || salon.salon_status === 'active') return false;
+    
+    const now = new Date();
+    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    if (salon.salon_status === 'closed') {
+      // Show 結業 until there's a reopened_date in the future or past (meaning they reopened)
+      if (salon.reopened_date) {
+        const reopenedDate = new Date(salon.reopened_date);
+        // If reopened date has passed, don't show closed status anymore
+        if (reopenedDate <= now) return false;
+      }
+      return true;
+    }
+    
+    // For new_opening, renovation, reopened - only show if within 1 month
+    if (salon.salon_status === 'new_opening' && salon.new_opening_date) {
+      return new Date(salon.new_opening_date) >= oneMonthAgo;
+    }
+    if (salon.salon_status === 'renovation' && salon.renovation_date) {
+      return new Date(salon.renovation_date) >= oneMonthAgo;
+    }
+    if (salon.salon_status === 'reopened' && salon.reopened_date) {
+      return new Date(salon.reopened_date) >= oneMonthAgo;
+    }
+    
+    // If no date set, show by default
+    return true;
+  };
+
   // Opening hours helpers
   const DAY_KEYS = ['office_hr_sun', 'office_hr_mon', 'office_hr_tue', 'office_hr_wed', 'office_hr_thu', 'office_hr_fri', 'office_hr_sat'] as const;
   const DAY_LABELS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
@@ -780,16 +812,22 @@ export default function ExploreSalonsPage() {
                       )}
 
                       {/* Salon status badge - bottom left */}
-                      {salon.salon_status && salon.salon_status !== 'active' && (
+                      {shouldShowStatus(salon) && (
                         <div className={`absolute bottom-3 left-3 flex items-center gap-1 backdrop-blur-sm text-xs font-semibold px-2.5 py-1.5 rounded-full shadow-sm ${
                           salon.salon_status === 'closed' 
                             ? 'bg-red-500/90 text-white' 
                             : salon.salon_status === 'renovation'
                             ? 'bg-amber-500/90 text-white'
+                            : salon.salon_status === 'new_opening'
+                            ? 'bg-blue-500/90 text-white'
+                            : salon.salon_status === 'reopened'
+                            ? 'bg-green-500/90 text-white'
                             : 'bg-slate-500/90 text-white'
                         }`}>
                           {salon.salon_status === 'closed' && <><Lock className="w-3 h-3" /> 已結業</>}
                           {salon.salon_status === 'renovation' && <><Wrench className="w-3 h-3" /> 裝修中</>}
+                          {salon.salon_status === 'new_opening' && <><Sparkles className="w-3 h-3" /> 新開張</>}
+                          {salon.salon_status === 'reopened' && <><Sparkles className="w-3 h-3" /> 重新開業</>}
                         </div>
                       )}
                     </div>
@@ -797,10 +835,12 @@ export default function ExploreSalonsPage() {
                     {/* Content */}
                     <div className="p-4">
                       <h3 className={`font-bold text-base mb-1.5 line-clamp-1 transition-colors ${
-                        salon.salon_status === 'closed' 
+                        shouldShowStatus(salon) && salon.salon_status === 'closed' 
                           ? 'text-red-400 line-through' 
-                          : salon.salon_status === 'renovation'
+                          : shouldShowStatus(salon) && salon.salon_status === 'renovation'
                           ? 'text-amber-600 group-hover:text-amber-700'
+                          : shouldShowStatus(salon) && salon.salon_status === 'new_opening'
+                          ? 'text-blue-600 group-hover:text-blue-700'
                           : 'text-slate-800 group-hover:text-rose-600'
                       }`}>
                         {salon.salon_name || '未命名美容院'}

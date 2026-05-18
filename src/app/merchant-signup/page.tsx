@@ -33,14 +33,11 @@ export default function MerchantSignupPage() {
         : null;
 
       const { data: districtsRows } = await supabase
-        .from('salon_profiles')
-        .select('district_name')
-        .not('district_name', 'is', null);
+        .from('districts')
+        .select('id, name')
+        .order('sort_order', { ascending: true });
 
-      const uniqueDistricts = Array.from(
-        new Set((districtsRows || []).map((r: any) => r.district_name).filter(Boolean))
-      ) as string[];
-      const districtList = uniqueDistricts.sort().map((name) => ({ id: name, name }));
+      const districtList = (districtsRows || []).map((r: any) => ({ id: r.id, name: r.name }));
 
       setUserData({
         userEmail: session.user.email || '',

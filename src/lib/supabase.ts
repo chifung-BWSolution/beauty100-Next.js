@@ -23,8 +23,15 @@ export const supabase = createClient(supabaseUrl || 'https://placeholder.supabas
         }));
       }
       return fetch(...args).catch((err) => {
-        console.error('[Supabase fetch error]', err?.message || err);
-        throw err;
+        // Use warn instead of error to avoid triggering error overlays in dev
+        if (typeof window !== 'undefined') {
+          console.warn('[Supabase fetch warning] Network request failed:', err?.message || 'Failed to fetch');
+        }
+        // Return an empty response instead of throwing to prevent cascading errors
+        return new Response(JSON.stringify({ data: null, error: { message: 'Network request failed' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
       });
     },
   },
