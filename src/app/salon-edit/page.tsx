@@ -154,7 +154,7 @@ function SalonEditContent() {
       const [profileRes, versionsRes, districtsRes] = await Promise.all([
         supabase.from('salon_profiles').select('*').eq('id', profileId).single(),
         supabase.from('salon_profile_versions').select('*').eq('profile_id', profileId).order('created_date', { ascending: false }),
-        supabase.from('districts').select('id, name').order('sort_order', { ascending: true }).then(({ data }) => ({ districts: (data || []).map((d: any) => ({ id: d.id, name: d.name })) })).catch(() => ({ districts: [] })),
+        supabase.from('districts').select('id, name').order('sort_order', { ascending: true }).then(({ data, error }) => { if (error) return { districts: [] }; return { districts: (data || []).map((d: any) => ({ id: d.id, name: d.name })) }; }),
       ]);
 
       const districtsList = (districtsRes as any)?.districts || [];
