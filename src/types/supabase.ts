@@ -483,6 +483,7 @@ export type Database = {
           closed_date: string | null
           contact_number: string | null
           contact_person: string | null
+          cover_photo: string | null
           created_by: string | null
           created_by_email: string | null
           created_date: string | null
@@ -533,6 +534,7 @@ export type Database = {
           closed_date?: string | null
           contact_number?: string | null
           contact_person?: string | null
+          cover_photo?: string | null
           created_by?: string | null
           created_by_email?: string | null
           created_date?: string | null
@@ -583,6 +585,7 @@ export type Database = {
           closed_date?: string | null
           contact_number?: string | null
           contact_person?: string | null
+          cover_photo?: string | null
           created_by?: string | null
           created_by_email?: string | null
           created_date?: string | null
@@ -650,6 +653,7 @@ export type Database = {
           closed_date: string | null
           contact_number: string | null
           contact_person: string | null
+          cover_photo: string | null
           created_by: string | null
           created_by_email: string | null
           created_date: string | null
@@ -700,6 +704,7 @@ export type Database = {
           closed_date?: string | null
           contact_number?: string | null
           contact_person?: string | null
+          cover_photo?: string | null
           created_by?: string | null
           created_by_email?: string | null
           created_date?: string | null
@@ -750,6 +755,7 @@ export type Database = {
           closed_date?: string | null
           contact_number?: string | null
           contact_person?: string | null
+          cover_photo?: string | null
           created_by?: string | null
           created_by_email?: string | null
           created_date?: string | null
@@ -807,6 +813,53 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salon_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          is_visible: boolean | null
+          photos: string[] | null
+          rating: number
+          salon_id: string
+          updated_at: string | null
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          is_visible?: boolean | null
+          photos?: string[] | null
+          rating: number
+          salon_id: string
+          updated_at?: string | null
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          is_visible?: boolean | null
+          photos?: string[] | null
+          rating?: number
+          salon_id?: string
+          updated_at?: string | null
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salon_reviews_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salon_profiles"
             referencedColumns: ["id"]
           },
         ]

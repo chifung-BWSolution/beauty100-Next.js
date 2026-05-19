@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import UserSettingsClient from '@/components/UserSettingsClient';
+import NoIndexMeta from '@/components/NoIndexMeta';
 
 export default function UserSettingsPage() {
   const router = useRouter();
@@ -29,6 +30,8 @@ export default function UserSettingsPage() {
   const role = (user as any)?.role || (user as any)?.user_metadata?.role || 'merchant';
 
   return (
+    <>
+    <NoIndexMeta />
     <div className="min-h-screen bg-stone-50/60 py-10 px-4">
       <div className="max-w-lg mx-auto">
         <div className="mb-6">
@@ -39,5 +42,6 @@ export default function UserSettingsPage() {
         <UserSettingsClient displayName={displayName} email={email} role={role} />
       </div>
     </div>
+    </>
   );
 }

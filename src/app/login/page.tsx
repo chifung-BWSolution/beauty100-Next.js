@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Sparkles, Eye, EyeOff, LogIn, Store, Star, ChevronRight, ArrowLeft, Mail, Lock, User, Home } from 'lucide-react';
+import { Sparkles, Eye, EyeOff, LogIn, Store, Star, ChevronRight, ArrowLeft, Mail, Lock, User, Home, AlertCircle } from 'lucide-react';
 
 const TABS = { login: 'login', signup: 'signup' };
 
@@ -23,6 +23,9 @@ export default function UserLoginPage() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [checkingSession, setCheckingSession] = useState(true);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [pendingUser, setPendingUser] = useState<any>(null);
+  const [upgrading, setUpgrading] = useState(false);
 
   useEffect(() => {
     const timeout = setTimeout(() => setCheckingSession(false), 3000);
@@ -33,7 +36,12 @@ export default function UserLoginPage() {
       .then(async ({ data: { session } }: any) => {
         clearTimeout(timeout);
         if (session?.user) {
-          await redirectByRole(session.user);
+          const redirected = await redirectByRole(session.user);
+          if (!redirected) {
+            // Member already logged in - show upgrade modal
+            setPendingUser(session.user);
+            setShowUpgradeModal(true);
+          }
         }
         setCheckingSession(false);
       })
@@ -44,13 +52,25 @@ export default function UserLoginPage() {
   }, []);
 
   const redirectByRole = async (user: any) => {
-    const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single();
-    const role = profile?.role || user.user_metadata?.role;
-    if (role === 'admin' || role === 'marketing') {
-      router.push('/admin/dashboard');
-    } else {
-      router.push('/merchant-onboarding');
+    const { data: profile } = await supabase.from('users').select('role, roles').eq('id', user.id).single();
+    const roles: string[] = profile?.roles || (profile?.role ? [profile.role] : [user.user_metadata?.role || '']);
+    const primaryRole = profile?.role || user.user_metadata?.role;
+
+    // Ensure merchants/staff also have 'member' role for member features
+    if ((roles.includes('merchant') || roles.includes('sub_merchant')) && !roles.includes('member')) {
+      const updatedRoles = [...roles, 'member'];
+      await supabase.from('users').update({ roles: updatedRoles }).eq('id', user.id);
     }
+
+    if (roles.includes('admin') || roles.includes('marketing') || primaryRole === 'admin' || primaryRole === 'marketing') {
+      router.push('/admin/dashboard');
+    } else if (roles.includes('merchant') || roles.includes('sub_merchant') || primaryRole === 'merchant' || primaryRole === 'sub_merchant') {
+      router.push('/merchant-onboarding');
+    } else {
+      // Non-merchant users: don't auto-redirect, let them see the upgrade modal
+      return false;
+    }
+    return true;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -61,11 +81,20 @@ export default function UserLoginPage() {
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
 
-      const { data: profile } = await supabase.from('users').select('role').eq('id', data.user.id).single();
-      const role = profile?.role || data.user.user_metadata?.role;
-      if (role === 'admin' || role === 'marketing') {
+      const { data: profile } = await supabase.from('users').select('role, roles').eq('id', data.user.id).single();
+      const roles: string[] = profile?.roles || (profile?.role ? [profile.role] : [data.user.user_metadata?.role || '']);
+      const primaryRole = profile?.role || data.user.user_metadata?.role;
+
+      if (roles.includes('admin') || roles.includes('marketing') || primaryRole === 'admin' || primaryRole === 'marketing') {
         await supabase.auth.signOut();
         setError('員工帳號請使用員工登入頁面。');
+        setLoading(false);
+        return;
+      }
+      // If user does NOT have merchant/sub_merchant role, ask if they want to upgrade
+      if (!roles.includes('merchant') && !roles.includes('sub_merchant') && primaryRole !== 'merchant' && primaryRole !== 'sub_merchant') {
+        setPendingUser(data.user);
+        setShowUpgradeModal(true);
         setLoading(false);
         return;
       }
@@ -74,6 +103,43 @@ export default function UserLoginPage() {
       setError(err.message === 'Invalid login credentials' ? '電郵或密碼錯誤，請重試。' : err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpgradeToMerchant = async () => {
+    if (!pendingUser) return;
+    setUpgrading(true);
+    try {
+      // Get current roles
+      const { data: profile } = await supabase.from('users').select('roles').eq('id', pendingUser.id).single();
+      const currentRoles: string[] = profile?.roles || ['member'];
+      const updatedRoles = [...currentRoles, 'merchant'];
+
+      // Update user roles to include merchant
+      await supabase.from('users').update({
+        roles: updatedRoles,
+        role: 'merchant',
+      }).eq('id', pendingUser.id);
+
+      setShowUpgradeModal(false);
+      setPendingUser(null);
+      router.push('/merchant-onboarding');
+    } catch (err: any) {
+      setError('升級失敗，請稍後再試。');
+      setShowUpgradeModal(false);
+      await supabase.auth.signOut();
+    } finally {
+      setUpgrading(false);
+    }
+  };
+
+  const handleCancelUpgrade = () => {
+    setShowUpgradeModal(false);
+    setPendingUser(null);
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = '/';
     }
   };
 
@@ -240,6 +306,43 @@ export default function UserLoginPage() {
           </div>
         </div>
       </div>
+
+      {/* Upgrade to Merchant Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
+          <div className="w-full max-w-[400px] rounded-3xl p-6 shadow-2xl" style={{ background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(255,255,255,0.8)' }}>
+            <div className="flex items-center justify-center w-14 h-14 rounded-2xl mx-auto mb-4" style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}>
+              <Store className="w-7 h-7 text-white" />
+            </div>
+            <h2 className="text-lg font-bold text-slate-800 text-center mb-2">申請成為商戶？</h2>
+            <p className="text-sm text-slate-500 text-center mb-6 leading-relaxed">
+              偵測到您目前是會員帳號。是否同時申請成為商戶？<br />
+              成為商戶後，您可以入駐平台管理美容院，同時保留會員功能。
+            </p>
+            <div className="space-y-3">
+              <Button
+                onClick={handleUpgradeToMerchant}
+                disabled={upgrading}
+                className="w-full h-12 font-semibold rounded-xl text-white border-0 shadow-lg shadow-rose-200/50"
+                style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}
+              >
+                {upgrading ? (
+                  <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />處理中...</span>
+                ) : (
+                  <span className="flex items-center gap-2"><Store className="w-4 h-4" />確定，申請成為商戶</span>
+                )}
+              </Button>
+              <button
+                onClick={handleCancelUpgrade}
+                disabled={upgrading}
+                className="w-full h-11 text-sm font-medium text-slate-500 hover:text-slate-700 rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                暫時不需要
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

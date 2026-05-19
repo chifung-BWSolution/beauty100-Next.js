@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { FileText, Sparkles, Plus } from 'lucide-react';
 import Link from 'next/link';
 import ApplicationList from '@/components/ApplicationList';
+import NoIndexMeta from '@/components/NoIndexMeta';
 
 export default function ApplicationStatusPage() {
   const router = useRouter();
@@ -75,6 +76,8 @@ export default function ApplicationStatusPage() {
   }
 
   return (
+    <>
+    <NoIndexMeta />
     <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8 flex items-start justify-between gap-4">
@@ -103,5 +106,6 @@ export default function ApplicationStatusPage() {
         <ApplicationList applications={appList} />
       </div>
     </div>
+    </>
   );
 }

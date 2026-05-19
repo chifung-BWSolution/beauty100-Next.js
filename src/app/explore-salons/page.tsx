@@ -143,6 +143,7 @@ interface SalonProfile {
   district_name: string | null;
   description: string | null;
   image_src: string | null;
+  cover_photo: string | null;
   product_media: any;
   tags: string | null;
   selected_tags: any;
@@ -183,6 +184,7 @@ export default function ExploreSalonsPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedHoursSalonId, setExpandedHoursSalonId] = useState<string | null>(null);
+  const [reviewStatsMap, setReviewStatsMap] = useState<Record<string, { avg: number; count: number }>>({});
 
   // Status display helper: show 新開張/裝修/重開 only within 1 month, 結業 until reopened
   const shouldShowStatus = (salon: SalonProfile): boolean => {
@@ -258,7 +260,7 @@ export default function ExploreSalonsPage() {
         while (hasMore) {
           const { data, error } = await supabase
             .from('salon_profiles')
-            .select('id, salon_name, handle, address, district, district_name, description, image_src, product_media, tags, selected_tags, highlight_tags, contact_number, whatsapp_number, website, is_active, product_type, created_by, office_hr_mon, office_hr_tue, office_hr_wed, office_hr_thu, office_hr_fri, office_hr_sat, office_hr_sun, salon_status, closed_date, renovation_date, reopened_date, new_opening_date')
+            .select('id, salon_name, handle, address, district, district_name, description, image_src, cover_photo, product_media, tags, selected_tags, highlight_tags, contact_number, whatsapp_number, website, is_active, product_type, created_by, office_hr_mon, office_hr_tue, office_hr_wed, office_hr_thu, office_hr_fri, office_hr_sat, office_hr_sun, salon_status, closed_date, renovation_date, reopened_date, new_opening_date')
             .or('is_active.eq.true,is_active.is.null')
             .order('salon_name')
             .range(from, from + FETCH_LIMIT - 1);
@@ -281,6 +283,25 @@ export default function ExploreSalonsPage() {
         }
 
         setSalons(allSalons);
+
+        // Fetch review stats for all salons
+        const { data: reviewsData } = await supabase
+          .from('salon_reviews')
+          .select('salon_id, rating')
+          .eq('is_visible', true);
+        if (reviewsData && reviewsData.length > 0) {
+          const statsMap: Record<string, { total: number; count: number }> = {};
+          reviewsData.forEach((r: any) => {
+            if (!statsMap[r.salon_id]) statsMap[r.salon_id] = { total: 0, count: 0 };
+            statsMap[r.salon_id].total += r.rating;
+            statsMap[r.salon_id].count += 1;
+          });
+          const finalMap: Record<string, { avg: number; count: number }> = {};
+          Object.entries(statsMap).forEach(([salonId, { total, count }]) => {
+            finalMap[salonId] = { avg: Math.round((total / count) * 10) / 10, count };
+          });
+          setReviewStatsMap(finalMap);
+        }
 
         const tagsRes = await supabase
           .from('salon_tags')
@@ -375,6 +396,7 @@ export default function ExploreSalonsPage() {
   }, []);
 
   const getImageSrc = useCallback((salon: SalonProfile): string | null => {
+    if (salon.cover_photo) return salon.cover_photo;
     if (salon.image_src) return salon.image_src;
     if (salon.product_media) {
       const media = typeof salon.product_media === 'string' ? JSON.parse(salon.product_media) : salon.product_media;
@@ -852,6 +874,22 @@ export default function ExploreSalonsPage() {
                           {salon.address}
                         </p>
                       )}
+
+                      {/* Review Stats - always show */}
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <Star
+                              key={star}
+                              className={`w-3 h-3 ${
+                                reviewStatsMap[salon.id] && star <= Math.round(reviewStatsMap[salon.id].avg) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs font-semibold text-slate-600">{reviewStatsMap[salon.id]?.avg ?? 0}</span>
+                        <span className="text-xs text-slate-400">({reviewStatsMap[salon.id]?.count ?? 0} 則評論)</span>
+                      </div>
 
                       {/* Opening Hours */}
                       {getTodayHours(salon) && (

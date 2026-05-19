@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { Sparkles, FileText } from 'lucide-react';
 import Link from 'next/link';
 import SalonProfileActions from '@/components/salon/SalonProfileActions';
+import NoIndexMeta from '@/components/NoIndexMeta';
 
 export default function SalonProfilePage() {
   const router = useRouter();
@@ -80,6 +81,8 @@ export default function SalonProfilePage() {
   }
 
   return (
+    <>
+    <NoIndexMeta />
     <div className="p-6 md:p-8">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
@@ -98,5 +101,6 @@ export default function SalonProfilePage() {
         <SalonProfileActions profiles={salonList} />
       </div>
     </div>
+    </>
   );
 }

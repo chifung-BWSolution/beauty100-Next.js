@@ -7,6 +7,7 @@ import PublicLayout from '@/components/public/PublicLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import SalonReviews from '@/components/salon/SalonReviews';
 import {
   MapPin, Phone, Globe, Clock, Star, Store,
   ChevronLeft, CheckCircle2, MessageCircle, Mail,
@@ -44,6 +45,7 @@ interface SalonProfile {
   created_date: string | null;
   storefront_photo: string | null;
   namecard_photo: string | null;
+  cover_photo: string | null;
   salon_status: string | null;
   closed_date: string | null;
   renovation_date: string | null;
@@ -123,6 +125,7 @@ export default function SalonDetailPage() {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [tagCategoryMap, setTagCategoryMap] = useState<Record<string, string>>({});
+  const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
 
   useEffect(() => {
     if (!salonId) return;
@@ -207,6 +210,25 @@ export default function SalonDetailPage() {
     fetchTagCategories();
   }, []);
 
+  // Fetch review stats (average rating + count)
+  useEffect(() => {
+    if (!salon?.id) return;
+    const fetchReviewStats = async () => {
+      const { data, error } = await supabase
+        .from('salon_reviews')
+        .select('rating')
+        .eq('salon_id', salon.id)
+        .eq('is_visible', true);
+      if (!error && data && data.length > 0) {
+        const total = data.reduce((sum: number, r: any) => sum + r.rating, 0);
+        setReviewStats({ avg: Math.round((total / data.length) * 10) / 10, count: data.length });
+      } else {
+        setReviewStats(null);
+      }
+    };
+    fetchReviewStats();
+  }, [salon?.id]);
+
   // Set dynamic page title and meta description from SEO fields
   useEffect(() => {
     if (!salon) return;
@@ -287,6 +309,8 @@ export default function SalonDetailPage() {
   };
 
   const getImageSrc = (): string | null => {
+    // Priority: cover_photo > image_src > first product_media
+    if (salon.cover_photo) return salon.cover_photo;
     if (salon.image_src) return salon.image_src;
     if (salon.product_media) {
       const media = typeof salon.product_media === 'string' ? JSON.parse(salon.product_media) : salon.product_media;
@@ -465,6 +489,23 @@ export default function SalonDetailPage() {
             <div className="flex items-center gap-1.5 text-slate-500">
               <MapPin className="w-4 h-4 text-rose-400" />
               <span className="text-sm font-medium">{salon.district_name || salon.district}</span>
+            </div>
+          )}
+          {/* Review Stats */}
+          {reviewStats && (
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <Star
+                    key={star}
+                    className={`w-4 h-4 ${
+                      star <= Math.round(reviewStats.avg) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-sm font-semibold text-slate-700">{reviewStats.avg}</span>
+              <span className="text-sm text-slate-400">({reviewStats.count} 則評價)</span>
             </div>
           )}
         </div>
@@ -823,6 +864,9 @@ export default function SalonDetailPage() {
             );
           })()}
         </div>
+
+          {/* ── Reviews Section ── */}
+          {salon && <SalonReviews salonId={salon.id} />}
           </div>
           {/* ── Desktop Sidebar ── */}
           <aside className="hidden lg:block w-[300px] shrink-0">

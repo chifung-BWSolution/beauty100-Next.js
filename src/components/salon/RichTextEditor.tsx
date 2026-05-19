@@ -1,7 +1,20 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
+
+const TinyMCEEditor = dynamic(
+  () => import('@tinymce/tinymce-react').then((mod) => ({ default: mod.Editor as any })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[350px] border rounded-xl bg-slate-50 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-rose-300 border-t-rose-600 rounded-full animate-spin" />
+      </div>
+    ),
+  }
+);
 
 async function uploadImageToStorage(file: File): Promise<string> {
   const ext = file.name ? file.name.split('.').pop() : 'jpg';
@@ -24,13 +37,10 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
-  // Dynamically import TinyMCE to avoid SSR issues
-  const [Editor, setEditor] = React.useState<React.ComponentType<any> | null>(null);
+  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    import('@tinymce/tinymce-react').then((mod) => {
-      setEditor(() => mod.Editor as unknown as React.ComponentType<any>);
-    });
+    setMounted(true);
   }, []);
 
   const handleFilePicker = (cb: (url: string, opts: object) => void) => {
@@ -64,7 +74,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     }
   };
 
-  if (!Editor) {
+  if (!mounted) {
     return (
       <div className="h-[350px] border rounded-xl bg-slate-50 flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-rose-300 border-t-rose-600 rounded-full animate-spin" />
@@ -73,7 +83,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   }
 
   return (
-    <Editor
+    <TinyMCEEditor
       tinymceScriptSrc="https://cdn.jsdelivr.net/npm/tinymce@6.8.4/tinymce.min.js"
       value={value}
       onEditorChange={(content: string) => onChange(content)}

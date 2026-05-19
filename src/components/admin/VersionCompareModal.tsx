@@ -161,6 +161,15 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
     ? versionMedia.length > 0 // public suggestions: any photos means new photos to add
     : JSON.stringify(versionMedia) !== JSON.stringify(profileMedia);
   
+  // Cover photo comparison
+  const versionCoverPhoto = version.cover_photo || '';
+  const profileCoverPhoto = profile?.cover_photo || '';
+  const coverPhotoChanged = isNonInfoPublicSuggestion
+    ? false
+    : isPublic
+      ? !!versionCoverPhoto && versionCoverPhoto !== profileCoverPhoto
+      : versionCoverPhoto !== profileCoverPhoto;
+
   const tagsChanged = isNonInfoPublicSuggestion
     ? false
     : isPublic
@@ -182,7 +191,7 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
     return grouped;
   }
 
-  const totalChanges = [...changedFields, descriptionChanged && 'desc', mediaChanged && 'media', tagsChanged && 'tags', highlightChanged && 'highlight'].filter(Boolean).length;
+  const totalChanges = [...changedFields, descriptionChanged && 'desc', mediaChanged && 'media', coverPhotoChanged && 'cover', tagsChanged && 'tags', highlightChanged && 'highlight'].filter(Boolean).length;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -310,6 +319,33 @@ export default function VersionCompareModal({ version, open, onClose, onApprove,
                 </div>
               </div>
             </div>
+            )}
+
+            {/* Cover Photo */}
+            {(versionCoverPhoto || profileCoverPhoto) && (
+              <div className={`rounded-xl border overflow-hidden ${coverPhotoChanged ? 'border-amber-200' : ''}`}>
+                <div className={`px-4 py-2 text-sm font-semibold ${coverPhotoChanged ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-500'}`}>
+                  封面相片{coverPhotoChanged && ' ✱ 已更改'}
+                </div>
+                <div className="grid grid-cols-2 divide-x">
+                  <div className="p-3">
+                    <p className="text-sm text-slate-400 mb-2">現有</p>
+                    {profileCoverPhoto ? (
+                      <img src={profileCoverPhoto} alt="現有封面" className="w-full max-w-[200px] h-auto object-cover rounded-lg" />
+                    ) : (
+                      <span className="text-slate-300 italic text-sm">無封面相片</span>
+                    )}
+                  </div>
+                  <div className={`p-3 ${coverPhotoChanged ? 'bg-amber-50/30' : ''}`}>
+                    <p className="text-sm text-slate-400 mb-2">申請更新</p>
+                    {versionCoverPhoto ? (
+                      <img src={versionCoverPhoto} alt="新封面" className="w-full max-w-[200px] h-auto object-cover rounded-lg" />
+                    ) : (
+                      <span className="text-slate-300 italic text-sm">無封面相片</span>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Media */}

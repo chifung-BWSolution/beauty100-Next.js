@@ -242,7 +242,7 @@ export default function AdminDashboardPage() {
         const fieldsToMerge = [
           'salon_name', 'contact_person', 'contact_number', 'whatsapp_number',
           'email', 'address', 'district', 'website', 'tags', 'handle',
-          'seo_title', 'seo_description', 'description',
+          'seo_title', 'seo_description', 'description', 'cover_photo',
           'office_hr_mon', 'office_hr_tue', 'office_hr_wed', 'office_hr_thu',
           'office_hr_fri', 'office_hr_sat', 'office_hr_sun',
         ];

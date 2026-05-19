@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import OnboardingActions from '@/components/OnboardingActions';
+import NoIndexMeta from '@/components/NoIndexMeta';
 
 export default function MerchantOnboardingPage() {
   const router = useRouter();
@@ -99,7 +100,9 @@ export default function MerchantOnboardingPage() {
   }
 
   return (
-    <div className="p-6 md:p-10">
+    <>
+      <NoIndexMeta />
+      <div className="p-6 md:p-10">
       <div className="max-w-2xl mx-auto">
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-3">
@@ -119,5 +122,6 @@ export default function MerchantOnboardingPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

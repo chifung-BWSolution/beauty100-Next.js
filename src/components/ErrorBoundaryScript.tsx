@@ -9,7 +9,7 @@ import { useEffect } from 'react';
  */
 export default function ErrorBoundaryScript() {
   useEffect(() => {
-    // Patch console.error to suppress "Failed to fetch" from devtools/extensions
+    // Patch console.error to suppress "Failed to fetch" and Router errors from devtools/extensions
     const originalConsoleError = console.error;
     console.error = (...args: any[]) => {
       const firstArg = typeof args[0] === 'string' ? args[0] : '';
@@ -18,9 +18,13 @@ export default function ErrorBoundaryScript() {
         firstArg.includes('Fetch request failed') ||
         firstArg.includes('[Supabase fetch') ||
         firstArg.includes('Supabase fetch') ||
-        (firstArg.includes('TypeError') && firstArg.includes('fetch'))
+        (firstArg.includes('TypeError') && firstArg.includes('fetch')) ||
+        firstArg.includes('The above error occurred in the <Router>') ||
+        firstArg.includes('createInitialRouterState') ||
+        firstArg.includes('fillLazyItemsTillLeafWithHead') ||
+        firstArg.includes("Cannot read properties of null (reading 'get')")
       ) {
-        return; // Suppress network fetch errors from devtools/extensions
+        return; // Suppress network fetch errors and Next.js Router hydration errors
       }
       originalConsoleError.apply(console, args);
     };

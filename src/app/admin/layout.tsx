@@ -33,5 +33,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  return <>{children}</>;
+  return <><meta name="robots" content="noindex, nofollow" />{children}</>;
 }

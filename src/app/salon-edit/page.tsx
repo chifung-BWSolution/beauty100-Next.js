@@ -28,7 +28,7 @@ const EMPTY_FORM: Record<string, any> = {
   address: '', district: '', tags: '', handle: '', seo_title: '', seo_description: '',
   office_hr_mon: '', office_hr_tue: '', office_hr_wed: '', office_hr_thu: '',
   office_hr_fri: '', office_hr_sat: '', office_hr_sun: '', product_media: [] as string[],
-  selected_tags: [] as string[], highlight_tags: [] as string[],
+  selected_tags: [] as string[], highlight_tags: [] as string[], cover_photo: '',
 };
 
 function slugify(text: string) {
@@ -255,6 +255,7 @@ function SalonEditContent() {
     product_media: src.product_media || [],
     selected_tags: Array.isArray(src.selected_tags) ? src.selected_tags : [],
     highlight_tags: Array.isArray(src.highlight_tags) ? src.highlight_tags : [],
+    cover_photo: src.cover_photo || '',
   });
 
   const handleChange = (field: string, value: any) => setFormData(prev => ({ ...prev, [field]: value }));
@@ -651,6 +652,29 @@ function SalonEditContent() {
           </CardHeader>
           <CardContent>
             <ProductMediaUpload mediaList={formData.product_media} onChange={(newMedia: string[]) => handleChange('product_media', newMedia)} />
+            {/* Cover Photo Selector */}
+            {formData.product_media && formData.product_media.length > 0 && (
+              <div className="mt-6 border-t pt-4">
+                <p className="text-sm font-medium text-slate-700 mb-2">選擇封面相片（Cover Photo）</p>
+                <p className="text-xs text-slate-500 mb-3">揀選一張相片作為美容院頁面嘅封面圖。如未選擇，將自動使用第一張相片。</p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                  {formData.product_media.map((url: string, idx: number) => (
+                    <div
+                      key={idx}
+                      onClick={() => handleChange('cover_photo', formData.cover_photo === url ? '' : url)}
+                      className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all aspect-video ${formData.cover_photo === url ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-200 hover:border-slate-300'}`}
+                    >
+                      <img src={url} alt={`媒體 ${idx + 1}`} className="w-full h-full object-cover" />
+                      {formData.cover_photo === url && (
+                        <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                          <CheckCircle className="w-6 h-6 text-blue-600 drop-shadow" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -698,6 +722,8 @@ function SalonEditContent() {
 
 export default function SalonEditPage() {
   return (
+    <>
+    <meta name="robots" content="noindex, nofollow" />
     <Suspense fallback={
       <div className="flex items-center justify-center h-full min-h-[60vh]">
         <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
@@ -705,5 +731,6 @@ export default function SalonEditPage() {
     }>
       <SalonEditContent />
     </Suspense>
+    </>
   );
 }

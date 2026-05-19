@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 import PublicLayout from '@/components/public/PublicLayout';
 import { Button } from '@/components/ui/button';
@@ -121,9 +122,9 @@ function ArticleCardLarge({ article }: { article: ArticleSectionData['articles']
   return (
     <Link href={article.href} className="group block rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100/80">
       <div className="relative h-48 overflow-hidden bg-gradient-to-br from-rose-100 to-pink-50">
-        <img src={article.image} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80'; }} />
+        <Image src={article.image} alt={article.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px" className="object-cover group-hover:scale-105 transition-transform duration-500" />
         {article.tag && (
-          <div className="absolute top-2.5 left-2.5">
+          <div className="absolute top-2.5 left-2.5 z-10">
             <Badge className="bg-rose-500 text-white border-0 text-[14px] shadow-sm">{article.tag}</Badge>
           </div>
         )}
@@ -139,7 +140,9 @@ function ArticleCardLarge({ article }: { article: ArticleSectionData['articles']
 function ArticleCardSmall({ article }: { article: ArticleSectionData['articles'][0] }) {
   return (
     <Link href={article.href} className="group flex gap-3 items-start py-2.5 border-b border-slate-100/70 last:border-b-0 hover:bg-rose-50/30 -mx-1 px-1 rounded-md transition-colors">
-      <img src={article.image} alt={article.title} className="w-[72px] h-[52px] rounded-lg object-cover shrink-0 bg-rose-50" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80'; }} />
+      <div className="relative w-[72px] h-[52px] rounded-lg overflow-hidden shrink-0 bg-rose-50">
+        <Image src={article.image} alt={article.title} fill sizes="72px" className="object-cover" />
+      </div>
       <h4 className="text-[14px] font-medium text-slate-700 line-clamp-2 group-hover:text-rose-600 transition-colors leading-snug">{article.title}</h4>
     </Link>
   );
@@ -261,17 +264,18 @@ function SalonCarousel({ salons }: { salons: FeaturedSalon[] }) {
             >
               <div className="relative h-36 overflow-hidden bg-gradient-to-br from-rose-100 to-pink-50">
                 {salon.image ? (
-                  <img src={salon.image} alt={salon.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <Image src={salon.image} alt={salon.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (() => {
                   const styleIdx = getCoverStyleIndex(salon.id || salon.name);
                   const coverStyle = COVER_STYLES[styleIdx];
                   return (
                     <div className="relative w-full h-full">
-                      <img
+                      <Image
                         src={coverStyle.bgImage}
                         alt=""
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div
                         className="absolute inset-0"
@@ -573,24 +577,27 @@ export default function HomePage() {
 
   return (
     <PublicLayout>
+      <h1 className="sr-only">beauty100-magazine | 香港最全面的美容資訊平台</h1>
       {/* ═══════════ 1. FEATURED EDITORIAL ZONE ═══════════ */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
         {heroFeatured ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Main featured article */}
             <Link href={heroFeatured.href} className="lg:col-span-7 group relative rounded-2xl overflow-hidden bg-slate-900 min-h-[320px] lg:min-h-[420px]">
-              <img
+              <Image
                 src={heroFeatured.image}
                 alt={heroFeatured.title}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80'; }}
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 58vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
                 <Badge className="bg-rose-500 text-white border-0 text-[12px] mb-3 shadow-md">{heroFeatured.tag}</Badge>
-                <h1 className="text-xl sm:text-2xl lg:text-[28px] font-bold text-white leading-tight mb-2 group-hover:text-rose-200 transition-colors">
+                <h2 className="text-xl sm:text-2xl lg:text-[28px] font-bold text-white leading-tight mb-2 group-hover:text-rose-200 transition-colors">
                   {heroFeatured.title}
-                </h1>
+                </h2>
                 <p className="text-sm text-white/70 line-clamp-2 max-w-lg">{heroFeatured.description}</p>
               </div>
             </Link>
@@ -599,12 +606,12 @@ export default function HomePage() {
             <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
               {heroSupporting.map((article, i) => (
                 <Link key={i} href={article.href} className="group relative rounded-xl overflow-hidden bg-slate-900 min-h-[130px]">
-                  <img
+                  <Image
                     src={article.image}
                     alt={article.title}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80'; }}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4">

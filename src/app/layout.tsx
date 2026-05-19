@@ -94,7 +94,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.addEventListener('error',function(e){if(e.message==='Script error.'&&!e.filename&&e.lineno===0&&e.colno===0){e.preventDefault();e.stopImmediatePropagation();return true;}if(e.message&&(e.message.indexOf("Cannot read properties of null (reading 'get')")!==-1||e.message.indexOf('fillLazyItemsTillLeafWithHead')!==-1||e.message.indexOf('createInitialRouterState')!==-1)){e.preventDefault();e.stopImmediatePropagation();return true;}},true);`,
+            __html: `(function(){var oCE=console.error;console.error=function(){var a=typeof arguments[0]==='string'?arguments[0]:'';if(a.indexOf('The above error occurred in the <Router>')!==-1||a.indexOf('createInitialRouterState')!==-1||a.indexOf('fillLazyItemsTillLeafWithHead')!==-1||a.indexOf("Cannot read properties of null (reading 'get')")!==-1){return;}oCE.apply(console,arguments);};window.addEventListener('error',function(e){if(e.message==='Script error.'&&!e.filename&&e.lineno===0&&e.colno===0){e.preventDefault();e.stopImmediatePropagation();return true;}if(e.message&&(e.message.indexOf("Cannot read properties of null (reading 'get')")!==-1||e.message.indexOf('fillLazyItemsTillLeafWithHead')!==-1||e.message.indexOf('createInitialRouterState')!==-1)){e.preventDefault();e.stopImmediatePropagation();return true;}},true);})();`,
           }}
         />
         {/* JSON-LD Structured Data for Organization & Website */}
