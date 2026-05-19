@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 
 const TinyMCEEditor = dynamic(
-  () => import('@tinymce/tinymce-react').then((mod) => ({ default: mod.Editor as any })),
+  () => import('@tinymce/tinymce-react').then((mod) => mod.Editor) as any,
   {
     ssr: false,
     loading: () => (
@@ -14,7 +14,7 @@ const TinyMCEEditor = dynamic(
       </div>
     ),
   }
-);
+) as any;
 
 async function uploadImageToStorage(file: File): Promise<string> {
   const ext = file.name ? file.name.split('.').pop() : 'jpg';
