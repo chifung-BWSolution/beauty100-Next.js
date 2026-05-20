@@ -20,7 +20,6 @@ import StatusBadge from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import VersionCompareModal from '@/components/admin/VersionCompareModal';
-import { CATEGORY_PREFIX } from '@/components/salon/TagSelector';
 import { supabase } from '@/lib/supabase';
 
 export default function AdminDashboardPage() {
@@ -100,14 +99,7 @@ export default function AdminDashboardPage() {
     }
   }, [historyLoaded]);
 
-  const buildShopifyTags = (district: string, selectedTagLabels: string[]) => {
-    const prefixedLabels = selectedTagLabels.map(label => {
-      const cat = labelCategoryMap[label];
-      const prefix = cat ? ((CATEGORY_PREFIX as any)[cat] || '') : '';
-      return prefix + label;
-    });
-    return [district, ...prefixedLabels].filter(Boolean);
-  };
+
 
   const handleApproveApp = async (app: any) => {
     setProcessing(true);
@@ -174,13 +166,8 @@ export default function AdminDashboardPage() {
     if (!version.profile_id) {
       let resolvedProfileId = null;
       try {
-        // Try by shopify_product_id first
-        if (version.shopify_product_id) {
-          const profiles = await base44.entities.SalonProfile.filter({ shopify_product_id: version.shopify_product_id });
-          if (profiles.length > 0) resolvedProfileId = profiles[0].id;
-        }
-        // Fallback: try by salon_name
-        if (!resolvedProfileId && version.salon_name) {
+        // Try by salon_name
+        if (version.salon_name) {
           const profiles = await base44.entities.SalonProfile.filter({ salon_name: version.salon_name });
           if (profiles.length > 0) resolvedProfileId = profiles[0].id;
         }
@@ -213,7 +200,7 @@ export default function AdminDashboardPage() {
         'new_opening_date', 'updated_at', 'attachments',
       ]);
       let { profile_id } = version;
-      const { shopify_product_id, closed_date, renovation_date, reopened_date, new_opening_date } = version;
+      const { closed_date, renovation_date, reopened_date, new_opening_date } = version;
       const profileData: Record<string, any> = {};
       Object.entries(version).forEach(([key, value]) => {
         if (!VERSION_ONLY_KEYS.has(key)) {
@@ -280,43 +267,6 @@ export default function AdminDashboardPage() {
         finalProfileData = mergedData;
       }
       
-      let shopifySynced = false;
-      if (shopify_product_id) {
-        try {
-          const districtObj = districts.find((d: any) => d.name === finalProfileData.district);
-          const selectedTagLabels = Array.isArray(finalProfileData.selected_tags) && finalProfileData.selected_tags.length > 0
-            ? finalProfileData.selected_tags
-            : (finalProfileData.tags ? finalProfileData.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
-          const tags = buildShopifyTags(finalProfileData.district, selectedTagLabels);
-          const highlightedService = Array.isArray(finalProfileData.highlight_tags) ? finalProfileData.highlight_tags : [];
-          const productData = {
-            id: shopify_product_id, status: targetStatus, title: finalProfileData.salon_name,
-            body_html: finalProfileData.description || '', description: finalProfileData.description || '',
-            handle: finalProfileData.handle || '', vendor: finalProfileData.salon_name || '', product_type: '美容院',
-            tags, seo_title: finalProfileData.seo_title || '', seo_description: finalProfileData.seo_description || '',
-            email: finalProfileData.email || '', contact_number: finalProfileData.contact_number || '',
-            address: finalProfileData.address || '', district_id: districtObj?.id || '',
-            office_hr_mon: finalProfileData.office_hr_mon || '', office_hr_tue: finalProfileData.office_hr_tue || '',
-            office_hr_wed: finalProfileData.office_hr_wed || '', office_hr_thu: finalProfileData.office_hr_thu || '',
-            office_hr_fri: finalProfileData.office_hr_fri || '', office_hr_sat: finalProfileData.office_hr_sat || '',
-            office_hr_sun: finalProfileData.office_hr_sun || '', product_media: finalProfileData.product_media || [],
-            metafields: [{ namespace: 'custom', key: 'highlighted_service', type: 'list.single_line_text_field', value: JSON.stringify(highlightedService) }],
-          };
-          const res = await base44.functions.invoke('shopifyData', { type: 'update_product', product: productData });
-          if ((res as any).data?.error) throw new Error((res as any).data.error);
-          shopifySynced = true;
-        } catch (err: any) {
-          console.error('Failed to update product in Shopify:', err);
-          try {
-            const user = await base44.auth.me();
-            await base44.entities.UserActivityLog.create({
-              user_email: (user as any).email, user_name: (user as any).full_name,
-              action: 'shopify_api_error', details: `更新 Shopify 產品失敗：${version.salon_name}`,
-              is_error: true, error_message: err.message || JSON.stringify(err)
-            });
-          } catch (e) {}
-        }
-      }
       // Determine salon_status based on change_reason for public suggestions
       const statusFields: Record<string, any> = {};
       if (isPublicSuggestion && version.change_reason) {
@@ -343,14 +293,12 @@ export default function AdminDashboardPage() {
           salon_status: 'new_opening',
           created_by: null,
           contact_person: null,
-          shopify_sync_pending: false,
-          shopify_synced: shopifySynced,
         });
         profile_id = newProfile.id;
         // Update the version record with the new profile_id
         await base44.entities.SalonProfileVersion.update(version.id, { status: 'approved', profile_id: newProfile.id });
       } else {
-        await base44.entities.SalonProfile.update(profile_id, { ...finalProfileData, ...statusFields, shopify_sync_pending: false, shopify_synced: shopifySynced });
+        await base44.entities.SalonProfile.update(profile_id, { ...finalProfileData, ...statusFields });
         await base44.entities.SalonProfileVersion.update(version.id, { status: 'approved' });
       }
       try {
@@ -375,7 +323,7 @@ export default function AdminDashboardPage() {
     setProcessing(true);
     try {
       await base44.entities.SalonProfileVersion.update(selectedVersion.id, { status: 'rejected', rejection_reason: rejectionReason });
-      await base44.entities.SalonProfile.update(selectedVersion.profile_id, { shopify_sync_pending: false });
+      await base44.entities.SalonProfile.update(selectedVersion.profile_id, {});
       try {
         const user = await base44.auth.me();
         await base44.entities.UserActivityLog.create({

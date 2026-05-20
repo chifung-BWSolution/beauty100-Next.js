@@ -138,7 +138,7 @@ export default function SalonPreviewModal({ open, onClose, formData, profileId }
           <div className="flex-1 overflow-y-auto min-h-0">
             {/* URL preview bar */}
             <div className="mx-6 mb-4 bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-500 font-mono break-all">
-              beauty100.com.hk/salon/{handleSlug || <span className="italic text-slate-400">未設定</span>}
+              beauty100-magazine.com/salon/{handleSlug || <span className="italic text-slate-400">未設定</span>}
             </div>
 
             {/* SEO preview */}
@@ -149,7 +149,7 @@ export default function SalonPreviewModal({ open, onClose, formData, profileId }
                   {formData.seo_title || formData.salon_name || '未設定標題'}
                 </p>
                 <p className="text-xs text-emerald-700 mb-0.5">
-                  beauty100.com.hk/salon/{handleSlug || '...'}
+                  beauty100-magazine.com/salon/{handleSlug || '...'}
                 </p>
                 <p className="text-sm text-slate-500 line-clamp-2">
                   {formData.seo_description || '未設定描述'}

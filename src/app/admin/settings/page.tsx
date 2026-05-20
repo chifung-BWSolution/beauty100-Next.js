@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MessageCircle, Save, CheckCircle, Tag, Plus, Pencil, Trash2, Check, X, Send, ShoppingBag, RefreshCw, Clock, AlertCircle, Code } from 'lucide-react';
+import { Phone, MessageCircle, Save, CheckCircle, Tag, Plus, Pencil, Trash2, Check, X, Send, RefreshCw, Clock, AlertCircle, Code } from 'lucide-react';
 import SettingsSidebar from '@/components/admin/SettingsSidebar';
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -343,201 +343,6 @@ function SalonTagsTab() {
   );
 }
 
-// ─── Shopify Settings Tab ────────────────────────────────────────────────────
-function ShopifySettingsTab() {
-  const [refreshing, setRefreshing] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [tokenInfo, setTokenInfo] = useState<any>(null);
-  const [logs, setLogs] = useState<any[]>([]);
-  const [loadingInfo, setLoadingInfo] = useState(true);
-
-  const fetchTokenInfo = async () => {
-    setLoadingInfo(true);
-    try {
-      const { data: token } = await supabase
-        .from('shopify_configs')
-        .select('*')
-        .eq('key', 'shopify_token')
-        .limit(1)
-        .single();
-      setTokenInfo(token);
-
-      const { data: recentLogs } = await supabase
-        .from('shopify_token_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      setLogs(recentLogs || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoadingInfo(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTokenInfo();
-  }, []);
-
-  const handleRefreshToken = async () => {
-    setRefreshing(true);
-    setResult(null);
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const { data: { session } } = await supabase.auth.getSession();
-      const accessToken = session?.access_token || supabaseAnonKey;
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/supabase-functions-shopify-refresh-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-          'apikey': supabaseAnonKey,
-        },
-        body: JSON.stringify({ triggered_by: 'manual' }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setResult({ success: true, message: `Token 已成功刷新！到期時間：${new Date(data.expires_at).toLocaleString('zh-HK')}` });
-        fetchTokenInfo();
-      } else {
-        setResult({ success: false, message: data.error || '刷新失敗' });
-      }
-    } catch (e: any) {
-      setResult({ success: false, message: e.message || '刷新失敗' });
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  const isTokenExpired = tokenInfo?.expires_at ? new Date(tokenInfo.expires_at) < new Date() : true;
-
-  return (
-    <div className="space-y-6">
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="pb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f9a8d4 0%, #ec4899 100%)' }}>
-              <ShoppingBag className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-base text-slate-800">Shopify API 連接</CardTitle>
-              <CardDescription className="text-sm text-slate-500 mt-0.5">
-                使用 Client Credentials 向 Shopify 換取 24 小時 Token，並存入資料庫。系統每小時自動刷新一次。
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          {loadingInfo ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="w-6 h-6 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin" />
-            </div>
-          ) : (
-            <>
-              {/* Token Status */}
-              {tokenInfo && (
-                <div className={`flex items-start gap-3 p-3 rounded-lg border ${isTokenExpired ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
-                  {isTokenExpired ? (
-                    <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                  ) : (
-                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium ${isTokenExpired ? 'text-red-700' : 'text-green-700'}`}>
-                      {isTokenExpired ? 'Token 已過期' : 'Token 有效'}
-                    </p>
-                    <div className="mt-1 space-y-0.5">
-                      <p className="text-sm text-slate-500">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        到期時間：{new Date(tokenInfo.expires_at).toLocaleString('zh-HK')}
-                      </p>
-                      <p className="text-sm text-slate-500">
-                        <RefreshCw className="w-3 h-3 inline mr-1" />
-                        上次刷新：{new Date(tokenInfo.refreshed_at).toLocaleString('zh-HK')}
-                      </p>
-                      {tokenInfo.scope && (
-                        <p className="text-sm text-slate-400 truncate">
-                          Scope：{tokenInfo.scope}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {!tokenInfo && (
-                <div className="flex items-center gap-3 p-3 rounded-lg border bg-amber-50 border-amber-200">
-                  <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                  <p className="text-sm text-amber-700">尚未取得 Token，請點擊下方按鈕手動刷新。</p>
-                </div>
-              )}
-
-              {/* Description */}
-              <p className="text-sm text-slate-500 leading-relaxed">
-                如需立即手動刷新，請點擊下方按鈕。系統會以 Client ID / Secret 向 Shopify 換取新 Token 並寫入資料庫。
-              </p>
-
-              {/* Result message */}
-              {result && (
-                <div className={`flex items-center gap-2 p-3 rounded-lg border ${result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                  {result.success ? (
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                  )}
-                  <p className={`text-sm ${result.success ? 'text-green-700' : 'text-red-700'}`}>{result.message}</p>
-                </div>
-              )}
-
-              {/* Refresh button */}
-              <Button
-                onClick={handleRefreshToken}
-                disabled={refreshing}
-                className="gap-2 text-white"
-                style={{ background: 'linear-gradient(135deg, #f472b6 0%, #e11d48 100%)', border: 'none' }}
-              >
-                {refreshing ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    刷新中...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    立即刷新 Shopify Token
-                  </>
-                )}
-              </Button>
-
-              {/* Recent logs */}
-              {logs.length > 0 && (
-                <div className="pt-2">
-                  <p className="text-sm font-medium text-slate-500 mb-2">最近刷新記錄</p>
-                  <div className="space-y-1.5">
-                    {logs.map(log => (
-                      <div key={log.id} className="flex items-center gap-2 text-sm text-slate-500">
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${log.status === 'success' ? 'bg-green-400' : 'bg-red-400'}`} />
-                        <span className="text-slate-400 font-mono">{new Date(log.created_at).toLocaleString('zh-HK')}</span>
-                        <Badge variant="outline" className={`text-[14px] px-1.5 py-0 ${log.triggered_by === 'cron' ? 'border-blue-200 text-blue-600' : 'border-pink-200 text-pink-600'}`}>
-                          {log.triggered_by === 'cron' ? '自動' : '手動'}
-                        </Badge>
-                        <span className="truncate">{log.message}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
 // ─── Tracking Codes Tab ──────────────────────────────────────────────────────
 function TrackingCodesTab() {
   const [codes, setCodes] = useState<{ id: string; code_type: string; code_value: string; enabled: boolean }[]>([]);
@@ -691,12 +496,6 @@ export default function AdminSettingsPage() {
               <WhatsAppIcon className="w-3.5 h-3.5 inline mr-1.5" />WhatsApp
             </button>
             <button
-              onClick={() => setActiveTab('shopify')}
-              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${activeTab === 'shopify' ? 'bg-white text-pink-600 shadow-sm' : 'text-slate-500'}`}
-            >
-              <ShoppingBag className="w-3.5 h-3.5 inline mr-1.5" />Shopify
-            </button>
-            <button
               onClick={() => setActiveTab('tracking')}
               className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${activeTab === 'tracking' ? 'bg-white text-pink-600 shadow-sm' : 'text-slate-500'}`}
             >
@@ -708,7 +507,6 @@ export default function AdminSettingsPage() {
         <div className="p-6 max-w-4xl">
           {activeTab === 'tags' && <SalonTagsTab />}
           {activeTab === 'whatsapp' && <WhatsAppSettingsTab />}
-          {activeTab === 'shopify' && <ShopifySettingsTab />}
           {activeTab === 'tracking' && <TrackingCodesTab />}
         </div>
       </div>

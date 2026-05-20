@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Tag, MessageCircle, Settings, ShoppingBag, Code } from 'lucide-react';
+import { ArrowLeft, Tag, MessageCircle, Settings, Code } from 'lucide-react';
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -18,7 +18,6 @@ interface SettingsSidebarProps {
 const settingsTabs = [
   { key: 'tags', label: '美容院標籤', icon: Tag },
   { key: 'whatsapp', label: 'WhatsApp 客服', icon: null, customIcon: WhatsAppIcon },
-  { key: 'shopify', label: 'Shopify', icon: ShoppingBag },
   { key: 'tracking', label: '追蹤代碼', icon: Code },
 ];
 

@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = 'https://www.beauty100.com.hk';
+  const siteUrl = 'https://www.beauty100-magazine.com';
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [

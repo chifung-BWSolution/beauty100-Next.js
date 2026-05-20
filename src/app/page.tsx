@@ -122,7 +122,7 @@ function ArticleCardLarge({ article }: { article: ArticleSectionData['articles']
   return (
     <Link href={article.href} className="group block rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100/80">
       <div className="relative h-48 overflow-hidden bg-gradient-to-br from-rose-100 to-pink-50">
-        <Image src={article.image} alt={article.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+        <Image src={article.image} alt={article.title} fill loading="lazy" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px" className="object-cover group-hover:scale-105 transition-transform duration-500" />
         {article.tag && (
           <div className="absolute top-2.5 left-2.5 z-10">
             <Badge className="bg-rose-500 text-white border-0 text-[14px] shadow-sm">{article.tag}</Badge>
@@ -141,7 +141,7 @@ function ArticleCardSmall({ article }: { article: ArticleSectionData['articles']
   return (
     <Link href={article.href} className="group flex gap-3 items-start py-2.5 border-b border-slate-100/70 last:border-b-0 hover:bg-rose-50/30 -mx-1 px-1 rounded-md transition-colors">
       <div className="relative w-[72px] h-[52px] rounded-lg overflow-hidden shrink-0 bg-rose-50">
-        <Image src={article.image} alt={article.title} fill sizes="72px" className="object-cover" />
+        <Image src={article.image} alt={article.title} fill loading="lazy" sizes="72px" className="object-cover" />
       </div>
       <h4 className="text-[14px] font-medium text-slate-700 line-clamp-2 group-hover:text-rose-600 transition-colors leading-snug">{article.title}</h4>
     </Link>
@@ -264,7 +264,7 @@ function SalonCarousel({ salons }: { salons: FeaturedSalon[] }) {
             >
               <div className="relative h-36 overflow-hidden bg-gradient-to-br from-rose-100 to-pink-50">
                 {salon.image ? (
-                  <Image src={salon.image} alt={salon.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <Image src={salon.image} alt={salon.name} fill loading="lazy" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (() => {
                   const styleIdx = getCoverStyleIndex(salon.id || salon.name);
                   const coverStyle = COVER_STYLES[styleIdx];
@@ -274,6 +274,7 @@ function SalonCarousel({ salons }: { salons: FeaturedSalon[] }) {
                         src={coverStyle.bgImage}
                         alt=""
                         fill
+                        loading="lazy"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
@@ -589,6 +590,7 @@ export default function HomePage() {
                 alt={heroFeatured.title}
                 fill
                 priority
+                fetchPriority="high"
                 sizes="(max-width: 1024px) 100vw, 58vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
               />
@@ -635,7 +637,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════ 2. PLATFORM STATS STRIP ═══════════ */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-5" style={{ minHeight: '88px' }}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {PLATFORM_STATS.map((stat) => (
             <div key={stat.label} className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3.5 border border-rose-100/40 shadow-sm">
@@ -668,7 +670,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════ 3.5 JOIN KOL CTA BANNER ═══════════ */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-3" style={{ minHeight: '76px' }}>
         <Link
           href="/kol"
           className="group flex items-center justify-between rounded-xl px-5 sm:px-7 py-4 transition-all duration-300 hover:shadow-md border border-purple-100/60"

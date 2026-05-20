@@ -114,6 +114,7 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
         background: 'rgba(255,255,255,0.92)',
         backdropFilter: 'blur(24px)',
         borderBottom: '1px solid rgba(251,207,232,0.35)',
+        minHeight: '60px',
       }}
     >
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">

@@ -8,7 +8,7 @@ export default function PublicTopBar() {
   return (
     <div
       className="w-full text-white"
-      style={{ fontSize: '13px', background: 'linear-gradient(135deg, #f9a8d4 0%, #f472b6 50%, #ec4899 100%)' }}
+      style={{ fontSize: '13px', background: 'linear-gradient(135deg, #f9a8d4 0%, #f472b6 50%, #ec4899 100%)', height: '32px' }}
     >
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[32px]">

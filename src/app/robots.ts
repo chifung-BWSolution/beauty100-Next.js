@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = 'https://www.beauty100.com.hk';
+  const siteUrl = 'https://www.beauty100-magazine.com';
 
   return {
     rules: [

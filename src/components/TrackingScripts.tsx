@@ -40,39 +40,33 @@ export default async function TrackingScripts() {
 
   return (
     <>
-      {/* Google Tag Manager - loads before gtag.js for proper tag management */}
+      {/* Google Tag Manager - deferred to reduce TBT */}
       {gtm && gtm.code_value && (
-        <>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener('load',function(){setTimeout(function(){(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${gtm.code_value}');`,
-            }}
-          />
-        </>
+})(window,document,'script','dataLayer','${gtm.code_value}');},100);});`,
+          }}
+        />
       )}
 
-      {/* Google Analytics (GA4) + Google Ads via gtag.js */}
+      {/* Google Analytics (GA4) + Google Ads via gtag.js - deferred */}
       {needsGtag && primaryGtagId && (
-        <>
-          {/* Load gtag.js with primary measurement ID */}
-          <script
-            async
-            src={`https://www.googletagmanager.com/gtag/js?id=${primaryGtagId}`}
-          />
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `window.dataLayer = window.dataLayer || [];
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener('load',function(){setTimeout(function(){
+window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 ${ga4?.code_value ? `gtag('config', '${ga4.code_value}');` : ""}
-${googleAds?.code_value ? `gtag('config', '${googleAds.code_value}');` : ""}`,
-            }}
-          />
-        </>
+${googleAds?.code_value ? `gtag('config', '${googleAds.code_value}');` : ""}
+var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=${primaryGtagId}';document.head.appendChild(s);
+},100);});`,
+          }}
+        />
       )}
     </>
   );

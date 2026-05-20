@@ -14,7 +14,7 @@ export async function generateArticleMetadata(
   fallbackTitle: string,
   fallbackDescription: string
 ): Promise<Metadata> {
-  const siteUrl = 'https://www.beauty100.com.hk';
+  const siteUrl = 'https://www.beauty100-magazine.com';
 
   if (!supabaseUrl || !supabaseKey) {
     return { title: fallbackTitle, description: fallbackDescription };
