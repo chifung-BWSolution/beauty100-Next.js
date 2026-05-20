@@ -4,7 +4,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
-import ShopifyAPI from '@/api/shopify';
+// Shopify integration removed – import kept as reference
+// import ShopifyAPI from '@/api/shopify';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -190,43 +191,9 @@ function SalonEditContent() {
     }
   };
 
-  const prefillFromShopify = async (shopifyProductId: string) => {
-    try {
-      const numericId = String(shopifyProductId).replace(/.*\//, '');
-      const [productRes, metafieldsRes] = await Promise.all([
-        ShopifyAPI.getProduct(numericId),
-        ShopifyAPI.getProductMetafields(numericId),
-      ]);
-      const product = (productRes as any)?.product;
-      if (!product) return;
-
-      const metafields = (metafieldsRes as any)?.metafields || [];
-      let seoTitle = '', seoDescription = '', address = '';
-      const officeHours: Record<string, string> = {};
-
-      metafields.forEach((mf: any) => {
-        if (mf.namespace === 'global' && mf.key === 'title_tag') seoTitle = mf.value;
-        if (mf.namespace === 'global' && mf.key === 'description_tag') seoDescription = mf.value;
-        if (mf.namespace === 'custom' && mf.key === 'address') address = mf.value;
-        const hrKeys = ['office_hr_mon','office_hr_tue','office_hr_wed','office_hr_thu','office_hr_fri','office_hr_sat','office_hr_sun'];
-        if (mf.namespace === 'custom' && hrKeys.includes(mf.key)) officeHours[mf.key] = mf.value;
-      });
-
-      setFormData(prev => ({
-        ...prev,
-        salon_name: product.title || prev.salon_name,
-        description: product.body_html || prev.description,
-        tags: product.tags || prev.tags,
-        handle: product.handle || prev.handle,
-        seo_title: seoTitle || prev.seo_title,
-        seo_description: seoDescription || prev.seo_description,
-        address: address || prev.address,
-        ...officeHours,
-      }));
-      toast.success('已從 Shopify 載入現有資料');
-    } catch (e) {
-      console.error('Shopify prefill error', e);
-    }
+  const prefillFromShopify = async (_shopifyProductId: string) => {
+    // Shopify integration has been removed. This function is kept as a no-op for compatibility.
+    console.warn('Shopify integration removed – prefillFromShopify is a no-op');
   };
 
   const extractFormData = (src: any) => ({
