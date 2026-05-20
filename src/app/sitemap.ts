@@ -83,12 +83,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (supabaseUrl && supabaseKey) {
       const supabase = createClient(supabaseUrl, supabaseKey);
 
-      const { data: articles } = await supabase
-        .from('blog_articles')
-        .select('handle, category, updated_at, published_at')
-        .eq('status', 'active')
-        .order('published_at', { ascending: false })
-        .limit(500);
+      // Fetch all articles (no limit) - paginate if needed
+      let allArticles: any[] = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data: batch } = await supabase
+          .from('blog_articles')
+          .select('handle, category, updated_at, published_at')
+          .eq('status', 'active')
+          .order('published_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (!batch || batch.length === 0) break;
+        allArticles = allArticles.concat(batch);
+        if (batch.length < pageSize) break;
+        from += pageSize;
+      }
+      const articles = allArticles;
 
       if (articles) {
         articlePages = articles.map((article) => {
@@ -123,10 +134,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (supabaseUrl && supabaseKey) {
       const supabase = createClient(supabaseUrl, supabaseKey);
 
-      const { data: salons } = await supabase
-        .from('salon_profiles')
-        .select('id, updated_at')
-        .limit(500);
+      // Fetch all salons (no limit) - paginate if needed
+      let allSalons: any[] = [];
+      let salonFrom = 0;
+      const salonPageSize = 1000;
+      while (true) {
+        const { data: batch } = await supabase
+          .from('salon_profiles')
+          .select('id, updated_at')
+          .range(salonFrom, salonFrom + salonPageSize - 1);
+        if (!batch || batch.length === 0) break;
+        allSalons = allSalons.concat(batch);
+        if (batch.length < salonPageSize) break;
+        salonFrom += salonPageSize;
+      }
+      const salons = allSalons;
 
       if (salons) {
         salonPages = salons.map((salon) => ({
