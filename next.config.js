@@ -26,10 +26,31 @@ const nextConfig = {
         imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     },
     experimental: {
-        optimizeCss: false,
+        optimizeCss: true,
+        optimizePackageImports: ['lucide-react', '@supabase/supabase-js', 'sonner'],
+        // Enables CSS chunking per route - reduces unused CSS per page
+        cssChunking: 'strict',
     },
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+    },
+    // Optimize chunk splitting to reduce unused JS per page
+    webpack: (config, { isServer }) => {
+        if (!isServer) {
+            config.optimization.splitChunks = {
+                ...config.optimization.splitChunks,
+                cacheGroups: {
+                    ...config.optimization.splitChunks?.cacheGroups,
+                    supabase: {
+                        test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+                        name: 'supabase',
+                        chunks: 'all',
+                        priority: 30,
+                    },
+                },
+            };
+        }
+        return config;
     },
 };
 

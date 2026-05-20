@@ -124,10 +124,11 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
             <Image
               src="/images/beauty-100_logo.png"
               alt="Beauty 100 Magazine"
-              width={160}
-              height={40}
+              width={120}
+              height={30}
               className="h-[38px] w-auto object-contain"
               priority
+              quality={60}
             />
           </Link>
 

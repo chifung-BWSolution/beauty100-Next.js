@@ -214,11 +214,26 @@ function SalonCarousel({ salons }: { salons: FeaturedSalon[] }) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [trackOffset, setTrackOffset] = useState(0);
+  const containerWidthRef = useRef(0);
 
-  // Recalculate offset when currentIndex or visibleCount changes
+  // Cache container width using ResizeObserver to avoid forced reflow
   useEffect(() => {
     if (!containerRef.current) return;
-    const containerWidth = containerRef.current.offsetWidth;
+    const el = containerRef.current;
+    containerWidthRef.current = el.offsetWidth;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        containerWidthRef.current = entry.contentRect.width;
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Recalculate offset when currentIndex or visibleCount changes (no DOM read)
+  useEffect(() => {
+    const containerWidth = containerWidthRef.current;
+    if (!containerWidth) return;
     const gapPx = 16;
     const cardWidth = (containerWidth - gapPx * (visibleCount - 1)) / visibleCount;
     setTrackOffset(currentIndex * (cardWidth + gapPx));
@@ -670,7 +685,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════ 3.5 JOIN KOL CTA BANNER ═══════════ */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-3" style={{ minHeight: '76px' }}>
+      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-3" style={{ minHeight: '82px' }}>
         <Link
           href="/kol"
           className="group flex items-center justify-between rounded-xl px-5 sm:px-7 py-4 transition-all duration-300 hover:shadow-md border border-purple-100/60"

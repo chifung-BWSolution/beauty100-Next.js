@@ -40,31 +40,20 @@ export default async function TrackingScripts() {
 
   return (
     <>
-      {/* Google Tag Manager - deferred to reduce TBT */}
+      {/* Google Tag Manager - heavily deferred to reduce TBT & unused JS */}
       {gtm && gtm.code_value && (
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.addEventListener('load',function(){setTimeout(function(){(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${gtm.code_value}');},100);});`,
+            __html: `(function(){var loaded=false;function loadGTM(){if(loaded)return;loaded=true;(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtm.code_value}');}var delay=function(){setTimeout(loadGTM,3500);};if(typeof requestIdleCallback!=='undefined'){window.addEventListener('load',function(){requestIdleCallback(function(){setTimeout(loadGTM,2000);});});}else{window.addEventListener('load',delay);}['scroll','click','touchstart','mousemove','keydown'].forEach(function(e){document.addEventListener(e,loadGTM,{once:true,passive:true});});})();`,
           }}
         />
       )}
 
-      {/* Google Analytics (GA4) + Google Ads via gtag.js - deferred */}
+      {/* Google Analytics (GA4) + Google Ads via gtag.js - deferred until user interaction or idle */}
       {needsGtag && primaryGtagId && (
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.addEventListener('load',function(){setTimeout(function(){
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-${ga4?.code_value ? `gtag('config', '${ga4.code_value}');` : ""}
-${googleAds?.code_value ? `gtag('config', '${googleAds.code_value}');` : ""}
-var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=${primaryGtagId}';document.head.appendChild(s);
-},100);});`,
+            __html: `(function(){var loaded=false;function loadGtag(){if(loaded)return;loaded=true;window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());${ga4?.code_value ? `gtag('config','${ga4.code_value}');` : ""}${googleAds?.code_value ? `gtag('config','${googleAds.code_value}');` : ""}var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=${primaryGtagId}';document.head.appendChild(s);}var delay=function(){setTimeout(loadGtag,3500);};if(typeof requestIdleCallback!=='undefined'){window.addEventListener('load',function(){requestIdleCallback(function(){setTimeout(loadGtag,2000);});});}else{window.addEventListener('load',delay);}['scroll','click','touchstart','mousemove','keydown'].forEach(function(e){document.addEventListener(e,loadGtag,{once:true,passive:true});});})();`,
           }}
         />
       )}

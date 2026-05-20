@@ -2,10 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Menu, X } from 'lucide-react';
+
+const Sidebar = dynamic(() => import('@/components/Sidebar'), {
+  ssr: false,
+  loading: () => <div className="w-64 h-full bg-white/50" />,
+});
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoadingAuth } = useAuth();
