@@ -90,7 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       while (true) {
         const { data: batch } = await supabase
           .from('blog_articles')
-          .select('handle, category, updated_at, published_at')
+          .select('handle, category, published_at')
           .eq('status', 'active')
           .order('published_at', { ascending: false })
           .range(from, from + pageSize - 1);
@@ -113,7 +113,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
           return {
             url: `${siteUrl}${path}`,
-            lastModified: new Date(article.updated_at || article.published_at),
+            lastModified: new Date(article.published_at || new Date()),
             changeFrequency: 'weekly' as const,
             priority: 0.7,
           };
