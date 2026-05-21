@@ -37,7 +37,7 @@ const FOOTER_LINKS = [
 
 export default function PublicFooter() {
   return (
-    <footer className="border-t border-rose-100/50" style={{ background: 'linear-gradient(180deg, rgba(253,242,248,0.3) 0%, rgba(253,242,248,0.8) 100%)' }}>
+    <footer className="border-t border-rose-100/50" style={{ background: 'linear-gradient(180deg, rgba(253,242,248,0.3) 0%, rgba(253,242,248,0.8) 100%)', minHeight: '380px' }}>
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row justify-between gap-8">
           {/* Brand & Contact - wider left section */}
@@ -56,8 +56,8 @@ export default function PublicFooter() {
             </p>
 
             {/* 2 columns for contact info */}
-            <div className="grid grid-cols-2 gap-6 text-sm text-slate-400">
-              <div className="whitespace-nowrap">
+            <div className="grid grid-cols-2 gap-6 text-sm text-slate-400" style={{ minHeight: '80px' }}>
+              <div className="whitespace-nowrap overflow-hidden">
                 <p className="font-semibold text-slate-700 text-xs uppercase tracking-wider mb-1">廣告熱線</p>
                 <p>
                   Whatsapp{" "}
@@ -124,7 +124,7 @@ export default function PublicFooter() {
 
           {/* Links */}
           {FOOTER_LINKS.map((group) => (
-            <div key={group.title}>
+            <div key={group.title} style={{ minWidth: '100px' }}>
               <h3 className="text-sm font-semibold text-slate-700 mb-3">{group.title}</h3>
               <ul className="space-y-2">
                 {group.links.map((link) => (

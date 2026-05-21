@@ -10,7 +10,7 @@ export default function PublicLayout({ children, activeHref }: { children: React
     <div className="min-h-screen flex flex-col" style={{ background: '#fafafa' }}>
       <PublicTopBar />
       <PublicNavbar activeHref={activeHref} />
-      <main className="flex-1">
+      <main className="flex-1" style={{ contain: 'layout style' }}>
         {children}
       </main>
       <PublicFooter />

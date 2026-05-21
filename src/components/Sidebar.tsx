@@ -15,7 +15,8 @@ import {
   Home,
   MessageSquare,
   UserCog,
-  Megaphone
+  Megaphone,
+  Package
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
@@ -80,6 +81,7 @@ export default function Sidebar({ userRole: userRoleProp, hasApprovedProfile, is
     { name: '申請入駐', href: '/merchant-onboarding', icon: FileText, show: true },
     { name: '申請狀態', href: '/application-status', icon: CheckSquare, show: true },
     { name: '我的美容院', href: '/salon-profile', icon: Store, show: hasApprovedProfile || isAdmin },
+    { name: '我的療程', href: '/my-treatments', icon: Package, show: hasApprovedProfile || isAdmin },
     { name: 'KOL 推廣', href: '/kol-promotion', icon: Megaphone, show: true },
   ].filter(l => l.show);
 

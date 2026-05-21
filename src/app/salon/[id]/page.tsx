@@ -309,9 +309,8 @@ export default function SalonDetailPage() {
   };
 
   const getImageSrc = (): string | null => {
-    // Priority: cover_photo > image_src > first product_media
+    // Priority: cover_photo > first product_media
     if (salon.cover_photo) return salon.cover_photo;
-    if (salon.image_src) return salon.image_src;
     if (salon.product_media) {
       const media = typeof salon.product_media === 'string' ? JSON.parse(salon.product_media) : salon.product_media;
       if (Array.isArray(media) && media.length > 0) {

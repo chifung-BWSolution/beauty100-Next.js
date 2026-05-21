@@ -397,7 +397,6 @@ export default function ExploreSalonsPage() {
 
   const getImageSrc = useCallback((salon: SalonProfile): string | null => {
     if (salon.cover_photo) return salon.cover_photo;
-    if (salon.image_src) return salon.image_src;
     if (salon.product_media) {
       const media = typeof salon.product_media === 'string' ? JSON.parse(salon.product_media) : salon.product_media;
       if (Array.isArray(media) && media.length > 0) return media[0]?.src || media[0]?.url || null;

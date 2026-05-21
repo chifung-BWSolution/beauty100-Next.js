@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Menu, X, Heart, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import NavbarSearch from './NavbarSearch';
 
 const NAV_ITEMS = [
   { label: '首頁', href: '/' },
@@ -114,7 +115,7 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
         background: 'rgba(255,255,255,0.92)',
         backdropFilter: 'blur(24px)',
         borderBottom: '1px solid rgba(251,207,232,0.35)',
-        minHeight: '60px',
+        height: '60px',
       }}
     >
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -133,7 +134,7 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
           </Link>
 
           {/* Desktop Nav — all items visible, no dropdowns */}
-          <nav className="hidden xl:flex items-center gap-0">
+          <nav className="hidden xl:flex items-center gap-0" style={{ contain: 'layout' }}>
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
@@ -158,8 +159,11 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
             ))}
           </nav>
 
-          {/* Right side: Member area + Merchant Login CTA + Hamburger */}
+          {/* Right side: Search + Member area + Hamburger */}
           <div className="flex items-center gap-2.5 shrink-0">
+            {/* Search */}
+            <NavbarSearch />
+
             {/* Show member avatar + name when logged in */}
             {!memberLoading && member ? (
               <div className="relative" ref={dropdownRef}>

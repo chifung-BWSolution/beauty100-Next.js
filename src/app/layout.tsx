@@ -22,6 +22,7 @@ const notoSansTC = Noto_Sans_TC({
   variable: "--font-noto-sans-tc",
   preload: true,
   adjustFontFallback: true,
+  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'PingFang TC', 'Microsoft JhengHei', 'sans-serif'],
 });
 
 const SITE_URL = "https://www.beauty100-magazine.com";
@@ -99,6 +100,9 @@ export default function RootLayout({
   return (
     <html lang="zh-HK" suppressHydrationWarning>
       <head>
+        {/* Preconnect to Google Fonts for faster font loading (reduces CLS) */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* Preconnect to Supabase for faster API/image loading (saves ~80ms LCP) */}
         <link rel="preconnect" href="https://gkqctvtteafjprkudgsb.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://gkqctvtteafjprkudgsb.supabase.co" />

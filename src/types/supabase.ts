@@ -1100,6 +1100,54 @@ export type Database = {
         }
         Relationships: []
       }
+      treatments: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          image_url: string | null
+          limited_quantity: number | null
+          name: string
+          original_price: number
+          promo_expiry: string | null
+          promo_price: number | null
+          salon_profile_id: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          limited_quantity?: number | null
+          name: string
+          original_price: number
+          promo_expiry?: string | null
+          promo_price?: number | null
+          salon_profile_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          limited_quantity?: number | null
+          name?: string
+          original_price?: number
+          promo_expiry?: string | null
+          promo_price?: number | null
+          salon_profile_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_activity_logs: {
         Row: {
           action: string | null

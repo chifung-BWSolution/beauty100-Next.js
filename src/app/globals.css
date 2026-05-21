@@ -35,6 +35,14 @@
     @apply bg-background text-foreground;
     font-size: 14px;
     line-height: 1.6;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Stabilize layout during font swap to reduce CLS */
+  footer, header, nav {
+    line-height: 1.6;
+    overflow-anchor: none;
   }
 }
 
