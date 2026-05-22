@@ -5,9 +5,9 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Sparkles, Shield, Eye, EyeOff, LogIn, Home } from 'lucide-react';
+import { Shield, Eye, EyeOff, LogIn, Home, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function StaffLoginPage() {
   const router = useRouter();
@@ -58,66 +58,81 @@ export default function StaffLoginPage() {
 
   if (checkingSession) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-slate-50">
-        <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
+      <div className="fixed inset-0 flex items-center justify-center" style={{background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 40%, #334155 70%, #1e293b 100%)'}}>
+        <div className="w-10 h-10 border-4 border-cyan-400 border-t-cyan-700 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-rose-400 hover:text-rose-600 font-medium mb-6 transition-colors">
-          <Home className="w-4 h-4" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 40%, #334155 70%, #1e293b 100%)' }}>
+      {/* Decorative blobs */}
+      <div className="absolute top-[-150px] right-[-100px] w-[500px] h-[500px] rounded-full opacity-20 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #06b6d4, #0e7490)' }} />
+      <div className="absolute bottom-[-120px] left-[-120px] w-[450px] h-[450px] rounded-full opacity-15 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #22d3ee, #155e75)' }} />
+      <div className="absolute top-1/2 right-1/3 w-[200px] h-[200px] rounded-full opacity-10 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, #67e8f9, #0891b2)' }} />
+
+      <div className="w-full max-w-[480px] relative z-10">
+        <Link href="/" className="inline-flex items-center gap-2 text-base text-cyan-400 hover:text-cyan-300 font-medium mb-6 transition-colors">
+          <Home className="w-5 h-5" />
           返回主頁
         </Link>
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-400 rounded-2xl shadow-lg mb-4">
-            <Sparkles className="w-8 h-8 text-white" />
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl shadow-xl shadow-slate-900/60 mb-5 bg-white p-3">
+            <Image src="/images/beauty-100_logo.png" alt="Beauty 100" width={72} height={72} className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-white">BEAUTY 商戶平台</h1>
-          <p className="text-slate-400 text-sm mt-1">員工專用登入</p>
+          <h1 className="text-4xl font-extrabold text-white tracking-tight">員工登入</h1>
+          <p className="text-lg text-cyan-400 mt-2 font-semibold">Staff Portal</p>
+          <p className="text-base text-slate-400 mt-1">僅供管理員及市場推廣人員使用</p>
         </div>
 
-        <Card className="border-0 shadow-2xl">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Shield className="w-5 h-5 text-pink-500" />
-              <CardTitle className="text-lg text-slate-800">員工登入</CardTitle>
-            </div>
-            <CardDescription>此入口僅供管理員及市場推廣人員使用</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">電郵地址</label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="staff@example.com" required className="h-11" autoComplete="email" />
+        <div className="rounded-3xl overflow-hidden shadow-2xl shadow-black/30" style={{ background: 'rgba(30,41,59,0.85)', backdropFilter: 'blur(24px)', border: '1px solid rgba(100,116,139,0.3)' }}>
+          <div className="px-7 pt-7 pb-3">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">密碼</label>
+                <h2 className="text-lg font-bold text-white">員工專用入口</h2>
+                <p className="text-sm text-slate-400">此入口僅供管理員及市場推廣人員使用</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-7 pb-8">
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">電郵地址</label>
                 <div className="relative">
-                  <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="請輸入密碼" required className="h-11 pr-10" autoComplete="current-password" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400/60" />
+                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="staff@example.com" required className="h-[52px] pl-12 rounded-xl border-slate-600 bg-slate-800/60 text-base text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400/20" autoComplete="email" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">密碼</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400/60" />
+                  <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="請輸入密碼" required className="h-[52px] pl-12 pr-12 rounded-xl border-slate-600 bg-slate-800/60 text-base text-white placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400/20" autoComplete="current-password" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-400">
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
-              {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
+              {error && <div className="bg-red-900/30 border border-red-500/30 text-red-300 text-sm rounded-xl px-4 py-3">{error}</div>}
 
-              <Button type="submit" disabled={loading} className="w-full h-12 bg-pink-600 hover:bg-pink-700 text-white font-medium mt-2">
-                {loading ? <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />登入中...</span> : <span className="flex items-center gap-2"><LogIn className="w-4 h-4" />登入</span>}
+              <Button type="submit" disabled={loading} className="w-full h-[52px] text-base font-bold rounded-xl text-white border-0 mt-2 shadow-lg shadow-cyan-900/30" style={{ background: 'linear-gradient(135deg, #06b6d4, #0e7490)' }}>
+                {loading ? <span className="flex items-center gap-2"><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />登入中...</span> : <span className="flex items-center gap-2"><LogIn className="w-5 h-5" />員工登入</span>}
               </Button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-              <p className="text-sm text-slate-400">
+            <div className="mt-6 pt-5 border-t border-slate-700 text-center">
+              <p className="text-base text-slate-400">
                 如非員工，請使用{' '}
-                <a href="/login" className="text-pink-600 hover:underline font-medium">商戶登入</a>
+                <Link href="/login" className="text-cyan-400 hover:text-cyan-300 font-bold">商戶登入</Link>
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

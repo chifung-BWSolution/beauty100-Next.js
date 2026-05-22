@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Sparkles, Eye, EyeOff, LogIn, Store, Star, ChevronRight, ArrowLeft, Mail, Lock, User, Home, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Store, Star, ChevronRight, ArrowLeft, Mail, Lock, User, Home, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 
 const TABS = { login: 'login', signup: 'signup' };
 
@@ -176,65 +177,68 @@ export default function UserLoginPage() {
 
   if (checkingSession) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center" style={{background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fdf4ff 100%)'}}>
-        <div className="w-8 h-8 border-4 border-rose-300 border-t-rose-600 rounded-full animate-spin" />
+      <div className="fixed inset-0 flex items-center justify-center" style={{background: 'linear-gradient(160deg, #faf5ff 0%, #ede9fe 30%, #ddd6fe 60%, #c4b5fd 100%)'}}>
+        <div className="w-10 h-10 border-4 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 40%, #fdf4ff 100%)' }}>
-      <div className="absolute top-[-120px] right-[-80px] w-[400px] h-[400px] rounded-full opacity-30 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #f9a8d4, #fbcfe8)' }} />
-      <div className="absolute bottom-[-100px] left-[-100px] w-[350px] h-[350px] rounded-full opacity-20 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #e879f9, #f0abfc)' }} />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #faf5ff 0%, #ede9fe 30%, #ddd6fe 60%, #c4b5fd 100%)' }}>
+      {/* Decorative blobs */}
+      <div className="absolute top-[-150px] right-[-100px] w-[500px] h-[500px] rounded-full opacity-35 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #c4b5fd, #ede9fe)' }} />
+      <div className="absolute bottom-[-120px] left-[-120px] w-[450px] h-[450px] rounded-full opacity-25 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, #a78bfa, #ddd6fe)' }} />
+      <div className="absolute top-1/2 right-1/4 w-[250px] h-[250px] rounded-full opacity-20 blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, #8b5cf6, #ede9fe)' }} />
 
-      <div className="w-full max-w-[420px] relative z-10">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-rose-400 hover:text-rose-600 font-medium mb-6 transition-colors">
-          <Home className="w-4 h-4" />
+      <div className="w-full max-w-[480px] relative z-10">
+        <Link href="/" className="inline-flex items-center gap-2 text-base text-purple-500 hover:text-purple-700 font-medium mb-6 transition-colors">
+          <Home className="w-5 h-5" />
           返回主頁
         </Link>
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg shadow-rose-200/50 mb-4" style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}>
-            <Sparkles className="w-8 h-8 text-white" />
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl shadow-xl shadow-purple-200/60 mb-5 bg-white p-3">
+            <Image src="/images/beauty-100_logo.png" alt="Beauty 100" width={72} height={72} className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">BEAUTY</h1>
-          <p className="text-sm text-rose-400/80 mt-1 font-medium">商戶入駐平台</p>
+          <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">商戶登入</h1>
+          <p className="text-lg text-purple-500 mt-2 font-semibold">Merchant Portal</p>
+          <p className="text-base text-slate-500 mt-1">商戶入駐平台・管理美容院</p>
         </div>
 
-        <div className="rounded-3xl overflow-hidden shadow-2xl shadow-rose-100/60" style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.75)' }}>
-          <div className="flex p-2 gap-1 bg-rose-50/70 m-4 rounded-2xl">
+        <div className="rounded-3xl overflow-hidden shadow-2xl shadow-purple-200/50" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.8)' }}>
+          <div className="flex p-2 gap-1 bg-purple-50/80 m-5 rounded-2xl">
             {[{ key: TABS.login, label: '登入' }, { key: TABS.signup, label: '免費註冊' }].map(t => (
               <button key={t.key} onClick={() => { setTab(t.key); setError(''); setSuccessMsg(''); }}
-                className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${tab === t.key ? 'bg-white text-rose-600 shadow-sm shadow-rose-100' : 'text-slate-400 hover:text-slate-600'}`}>
+                className={`flex-1 py-3 text-base font-semibold rounded-xl transition-all duration-200 ${tab === t.key ? 'bg-white text-purple-600 shadow-sm shadow-purple-100' : 'text-slate-400 hover:text-slate-600'}`}>
                 {t.label}
               </button>
             ))}
           </div>
 
-          <div className="px-6 pb-7">
+          <div className="px-7 pb-8">
             {successMsg && <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-2xl px-4 py-3 mb-5">{successMsg}</div>}
 
             {tab === TABS.login && (
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">電郵地址</label>
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-500 uppercase tracking-wider">電郵地址</label>
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="h-12 pl-10 rounded-xl border-rose-100 bg-rose-50/40 text-sm focus:border-rose-300" autoComplete="email" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300" />
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="h-[52px] pl-12 rounded-xl border-purple-100 bg-purple-50/40 text-base focus:border-purple-300" autoComplete="email" />
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">密碼</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-500 uppercase tracking-wider">密碼</label>
                   <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
-                    <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="請輸入密碼" required className="h-12 pl-10 pr-11 rounded-xl border-rose-100 bg-rose-50/40 text-sm focus:border-rose-300" autoComplete="current-password" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-rose-300 hover:text-rose-500">
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300" />
+                    <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="請輸入密碼" required className="h-[52px] pl-12 pr-12 rounded-xl border-purple-100 bg-purple-50/40 text-base focus:border-purple-300" autoComplete="current-password" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-300 hover:text-purple-500">
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
                 {error && <div className="bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3">{error}</div>}
-                <Button type="submit" disabled={loading} className="w-full h-12 font-semibold rounded-xl shadow-lg shadow-rose-200/50 text-white border-0 mt-2" style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}>
-                  {loading ? <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />登入中...</span> : <span className="flex items-center gap-2"><LogIn className="w-4 h-4" />登入</span>}
+                <Button type="submit" disabled={loading} className="w-full h-[52px] text-base font-bold rounded-xl shadow-lg shadow-purple-200/50 text-white border-0 mt-2" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' }}>
+                  {loading ? <span className="flex items-center gap-2"><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />登入中...</span> : <span className="flex items-center gap-2"><LogIn className="w-5 h-5" />商戶登入</span>}
                 </Button>
               </form>
             )}
@@ -243,53 +247,53 @@ export default function UserLoginPage() {
               <form onSubmit={handleSignup} className="space-y-4">
                 {!selectedRole ? (
                   <div className="space-y-3">
-                    <p className="text-sm font-semibold text-slate-600 mb-1">請選擇您的身份</p>
+                    <p className="text-base font-semibold text-slate-600 mb-1">請選擇您的身份</p>
                     {[
-                      { role: 'merchant', icon: Store, label: '美容院商家', desc: '擁有美容院，希望入駐平台', gradient: 'from-rose-50 to-pink-50', border: 'border-rose-200 hover:border-rose-300', iconBg: 'bg-rose-100', iconColor: 'text-rose-500' },
+                      { role: 'merchant', icon: Store, label: '美容院商家', desc: '擁有美容院，希望入駐平台', gradient: 'from-purple-50 to-violet-50', border: 'border-purple-200 hover:border-purple-300', iconBg: 'bg-purple-100', iconColor: 'text-purple-500' },
                     ].map(item => (
                       <button key={item.role} type="button" onClick={() => setSelectedRole(item.role)}
-                        className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 bg-gradient-to-r ${item.gradient} ${item.border} hover:shadow-md transition-all duration-200 text-left group hover:scale-[1.01]`}>
-                        <div className={`w-12 h-12 ${item.iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                          <item.icon className={`w-6 h-6 ${item.iconColor}`} />
+                        className={`w-full flex items-center gap-4 p-5 rounded-2xl border-2 bg-gradient-to-r ${item.gradient} ${item.border} hover:shadow-md transition-all duration-200 text-left group hover:scale-[1.01]`}>
+                        <div className={`w-14 h-14 ${item.iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                          <item.icon className={`w-7 h-7 ${item.iconColor}`} />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-slate-800">{item.label}</p>
+                          <p className="font-bold text-lg text-slate-800">{item.label}</p>
                           <p className="text-sm text-slate-500 mt-0.5">{item.desc}</p>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-slate-300" />
+                        <ChevronRight className="w-5 h-5 text-slate-300" />
                       </button>
                     ))}
                   </div>
                 ) : (
                   <>
                     <div className="flex items-center gap-3 mb-2">
-                      <button type="button" onClick={() => setSelectedRole('')} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500">
+                      <button type="button" onClick={() => setSelectedRole('')} className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500">
                         <ArrowLeft className="w-4 h-4" />
                       </button>
-                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold bg-rose-100 text-rose-600`}>
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold bg-purple-100 text-purple-600`}>
                         <Store className="w-3.5 h-3.5" />
                         美容院商家
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">姓名 <span className="text-rose-400">*</span></label>
-                      <div className="relative"><User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" /><Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="請輸入您的全名" required className="h-12 pl-10 rounded-xl border-rose-100 bg-rose-50/40 text-sm" /></div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-500 uppercase tracking-wider">姓名 <span className="text-purple-400">*</span></label>
+                      <div className="relative"><User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300" /><Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="請輸入您的全名" required className="h-[52px] pl-12 rounded-xl border-purple-100 bg-purple-50/40 text-base" /></div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">電郵地址 <span className="text-rose-400">*</span></label>
-                      <div className="relative"><Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" /><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="h-12 pl-10 rounded-xl border-rose-100 bg-rose-50/40 text-sm" /></div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-500 uppercase tracking-wider">電郵地址 <span className="text-purple-400">*</span></label>
+                      <div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300" /><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="h-[52px] pl-12 rounded-xl border-purple-100 bg-purple-50/40 text-base" /></div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">密碼 <span className="text-rose-400">*</span></label>
-                      <div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" /><Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="最少 6 個字元" required className="h-12 pl-10 pr-11 rounded-xl border-rose-100 bg-rose-50/40 text-sm" /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-rose-300">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-500 uppercase tracking-wider">密碼 <span className="text-purple-400">*</span></label>
+                      <div className="relative"><Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300" /><Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="最少 6 個字元" required className="h-[52px] pl-12 pr-12 rounded-xl border-purple-100 bg-purple-50/40 text-base" /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-300">{showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}</button></div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider">確認密碼 <span className="text-rose-400">*</span></label>
-                      <div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" /><Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="再次輸入密碼" required className="h-12 pl-10 rounded-xl border-rose-100 bg-rose-50/40 text-sm" /></div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-500 uppercase tracking-wider">確認密碼 <span className="text-purple-400">*</span></label>
+                      <div className="relative"><Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300" /><Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="再次輸入密碼" required className="h-[52px] pl-12 rounded-xl border-purple-100 bg-purple-50/40 text-base" /></div>
                     </div>
                     {error && <div className="bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3">{error}</div>}
-                    <Button type="submit" disabled={loading} className="w-full h-12 font-semibold rounded-xl text-white border-0 mt-2" style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}>
-                      {loading ? <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />註冊中...</span> : '立即免費註冊'}
+                    <Button type="submit" disabled={loading} className="w-full h-[52px] text-base font-bold rounded-xl text-white border-0 mt-2" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' }}>
+                      {loading ? <span className="flex items-center gap-2"><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />註冊中...</span> : '立即免費註冊'}
                     </Button>
                   </>
                 )}
@@ -297,10 +301,10 @@ export default function UserLoginPage() {
               </form>
             )}
 
-            <div className="mt-6 pt-5 border-t border-rose-50 text-center">
-              <p className="text-sm text-slate-400">
+            <div className="mt-6 pt-5 border-t border-purple-100 text-center">
+              <p className="text-base text-slate-500">
                 員工請使用{' '}
-                <Link href="/staff-login" prefetch={false} className="text-rose-500 hover:text-rose-600 font-semibold">員工登入</Link>
+                <Link href="/staff-login" prefetch={false} className="text-purple-500 hover:text-purple-600 font-bold">員工登入</Link>
               </p>
             </div>
           </div>
@@ -310,12 +314,12 @@ export default function UserLoginPage() {
       {/* Upgrade to Merchant Modal */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
-          <div className="w-full max-w-[400px] rounded-3xl p-6 shadow-2xl" style={{ background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(255,255,255,0.8)' }}>
-            <div className="flex items-center justify-center w-14 h-14 rounded-2xl mx-auto mb-4" style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}>
-              <Store className="w-7 h-7 text-white" />
+          <div className="w-full max-w-[420px] rounded-3xl p-7 shadow-2xl" style={{ background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(255,255,255,0.8)' }}>
+            <div className="flex items-center justify-center w-16 h-16 rounded-2xl mx-auto mb-4" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' }}>
+              <Store className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-lg font-bold text-slate-800 text-center mb-2">申請成為商戶？</h2>
-            <p className="text-sm text-slate-500 text-center mb-6 leading-relaxed">
+            <h2 className="text-xl font-bold text-slate-800 text-center mb-2">申請成為商戶？</h2>
+            <p className="text-base text-slate-500 text-center mb-6 leading-relaxed">
               偵測到您目前是會員帳號。是否同時申請成為商戶？<br />
               成為商戶後，您可以入駐平台管理美容院，同時保留會員功能。
             </p>
@@ -323,19 +327,19 @@ export default function UserLoginPage() {
               <Button
                 onClick={handleUpgradeToMerchant}
                 disabled={upgrading}
-                className="w-full h-12 font-semibold rounded-xl text-white border-0 shadow-lg shadow-rose-200/50"
-                style={{ background: 'linear-gradient(135deg, #f472b6, #e11d48)' }}
+                className="w-full h-[52px] text-base font-bold rounded-xl text-white border-0 shadow-lg shadow-purple-200/50"
+                style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' }}
               >
                 {upgrading ? (
-                  <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />處理中...</span>
+                  <span className="flex items-center gap-2"><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />處理中...</span>
                 ) : (
-                  <span className="flex items-center gap-2"><Store className="w-4 h-4" />確定，申請成為商戶</span>
+                  <span className="flex items-center gap-2"><Store className="w-5 h-5" />確定，申請成為商戶</span>
                 )}
               </Button>
               <button
                 onClick={handleCancelUpgrade}
                 disabled={upgrading}
-                className="w-full h-11 text-sm font-medium text-slate-500 hover:text-slate-700 rounded-xl hover:bg-slate-50 transition-colors"
+                className="w-full h-12 text-base font-medium text-slate-500 hover:text-slate-700 rounded-xl hover:bg-slate-50 transition-colors"
               >
                 暫時不需要
               </button>

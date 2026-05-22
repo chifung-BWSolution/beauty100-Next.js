@@ -12,6 +12,7 @@ import {
   MapPin, Phone, Globe, Clock, Star, Store,
   ChevronLeft, CheckCircle2, MessageCircle, Mail,
   User, Sparkles, Image as ImageIcon, X, Lock, Wrench, AlertTriangle,
+  Tag, Calendar,
 } from 'lucide-react';
 
 interface SalonProfile {
@@ -126,6 +127,7 @@ export default function SalonDetailPage() {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [tagCategoryMap, setTagCategoryMap] = useState<Record<string, string>>({});
   const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
+  const [treatments, setTreatments] = useState<any[]>([]);
 
   useEffect(() => {
     if (!salonId) return;
@@ -227,6 +229,33 @@ export default function SalonDetailPage() {
       }
     };
     fetchReviewStats();
+  }, [salon?.id]);
+
+  // Fetch treatments for this salon
+  useEffect(() => {
+    if (!salon?.id) return;
+    const fetchTreatments = async () => {
+      // Query treatments where salon_profile_id matches OR salon_profile_ids contains this salon id
+      const { data: data1 } = await supabase
+        .from('treatments')
+        .select('*')
+        .eq('salon_profile_id', salon.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      const { data: data2 } = await supabase
+        .from('treatments')
+        .select('*')
+        .contains('salon_profile_ids', [salon.id])
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      // Merge and dedupe
+      const all = [...(data1 || []), ...(data2 || [])];
+      const unique = Array.from(new Map(all.map(t => [t.id, t])).values());
+      setTreatments(unique);
+    };
+    fetchTreatments();
   }, [salon?.id]);
 
   // Set dynamic page title and meta description from SEO fields
@@ -729,6 +758,67 @@ export default function SalonDetailPage() {
               <p className="text-center text-white/70 text-sm mt-3">
                 {galleryIndex + 1} / {mediaImages.length}
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Treatments Section */}
+        {treatments.length > 0 && (
+          <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm mb-6">
+            <h2 className="text-base font-semibold text-slate-800 mb-4 flex items-center gap-2">
+              <Tag className="w-4 h-4 text-rose-400" />
+              療程優惠
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {treatments.map((t) => {
+                const hasPromo = t.promo_price && Number(t.promo_price) < Number(t.original_price);
+                const promoExpired = t.promo_expiry && new Date(t.promo_expiry) < new Date();
+                const showPromo = hasPromo && !promoExpired;
+                const displayImage = t.image_url || (t.images && t.images.length > 0 ? t.images[0] : null);
+                return (
+                  <div key={t.id} className="border border-slate-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+                    {displayImage && (
+                      <div className="h-32 overflow-hidden bg-slate-50">
+                        <img src={displayImage} alt={t.name} className="w-full h-full object-cover" loading="lazy" />
+                      </div>
+                    )}
+                    <div className="p-3">
+                      <h3 className="text-sm font-semibold text-slate-800 mb-1 line-clamp-1">{t.name}</h3>
+                      {t.description && (
+                        <p className="text-xs text-slate-500 line-clamp-2 mb-2">{t.description.replace(/<[^>]*>/g, '')}</p>
+                      )}
+                      <div className="flex items-center gap-2">
+                        {showPromo ? (
+                          <>
+                            <span className="text-sm font-bold text-rose-600">
+                              ${Number(t.promo_price).toLocaleString()}
+                            </span>
+                            <span className="text-xs text-slate-400 line-through">
+                              ${Number(t.original_price).toLocaleString()}
+                            </span>
+                            <Badge className="text-[10px] bg-rose-50 text-rose-600 border-0 px-1.5 py-0.5">
+                              優惠
+                            </Badge>
+                          </>
+                        ) : (
+                          <span className="text-sm font-bold text-slate-700">
+                            ${Number(t.original_price).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      {showPromo && t.promo_expiry && (
+                        <div className="flex items-center gap-1 mt-1.5 text-[10px] text-slate-400">
+                          <Calendar className="w-3 h-3" />
+                          優惠至 {new Date(t.promo_expiry).toLocaleDateString('zh-HK')}
+                        </div>
+                      )}
+                      {t.limited_quantity && (
+                        <p className="text-[10px] text-amber-600 mt-1">限量 {t.limited_quantity} 個</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthContext";
 import NoIndexMeta from "@/components/NoIndexMeta";
+import RichTextEditor from "@/components/salon/RichTextEditor";
 import {
   Plus,
   Sparkles,
@@ -17,30 +18,33 @@ import {
   Package,
   DollarSign,
   X,
+  Upload,
+  Pencil,
+  GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 
 interface Treatment {
   id: string;
   name: string;
   description: string | null;
   image_url: string | null;
+  images: string[] | null;
   original_price: number;
   promo_price: number | null;
   promo_expiry: string | null;
+  purchase_start_date: string | null;
+  purchase_end_date: string | null;
+  redeem_start_date: string | null;
+  redeem_end_date: string | null;
   limited_quantity: number | null;
   status: string;
   salon_profile_id: string | null;
+  salon_profile_ids: string[] | null;
+  terms: string | null;
   created_at: string;
 }
 
@@ -62,12 +66,21 @@ export default function MyTreatmentsPage() {
   // Form state
   const [formName, setFormName] = useState("");
   const [formDesc, setFormDesc] = useState("");
-  const [formImage, setFormImage] = useState("");
+  const [formImages, setFormImages] = useState<string[]>([]);
   const [formOriginalPrice, setFormOriginalPrice] = useState("");
   const [formPromoPrice, setFormPromoPrice] = useState("");
-  const [formPromoExpiry, setFormPromoExpiry] = useState("");
+  const [formPurchaseStartDate, setFormPurchaseStartDate] = useState("");
+  const [formPurchaseEndDate, setFormPurchaseEndDate] = useState("");
+  const [formRedeemStartDate, setFormRedeemStartDate] = useState("");
+  const [formRedeemEndDate, setFormRedeemEndDate] = useState("");
   const [formLimitedQty, setFormLimitedQty] = useState("");
-  const [formSalonId, setFormSalonId] = useState("");
+  const [formSalonIds, setFormSalonIds] = useState<string[]>([]);
+  const [formTerms, setFormTerms] = useState("");
+  const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (isLoadingAuth) return;
@@ -116,21 +129,89 @@ export default function MyTreatmentsPage() {
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingImage(true);
+    
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const newImages: string[] = [];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = file.name.split('.').pop() || 'jpg';
+      const fileName = `treatments/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      
+      const { error } = await supabase.storage
+        .from('uploads')
+        .upload(fileName, file, { upsert: false, contentType: file.type });
+      
+      if (!error) {
+        newImages.push(`${supabaseUrl}/storage/v1/object/public/uploads/${fileName}`);
+      }
+    }
+    
+    setFormImages(prev => [...prev, ...newImages]);
+    setUploadingImage(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeImage = (index: number) => {
+    setFormImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragStart = (index: number) => {
+    setDragIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (index: number) => {
+    if (dragIndex === null || dragIndex === index) {
+      setDragIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    setFormImages(prev => {
+      const newImages = [...prev];
+      const [dragged] = newImages.splice(dragIndex, 1);
+      newImages.splice(index, 0, dragged);
+      return newImages;
+    });
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !formName || !formOriginalPrice) return;
+    if (!user || !formName || !formOriginalPrice || !formPurchaseStartDate || !formPurchaseEndDate || !formRedeemStartDate || !formRedeemEndDate || !formDesc) return;
     setSaving(true);
 
     const payload = {
       created_by: user.id,
       name: formName,
       description: formDesc || null,
-      image_url: formImage || null,
+      image_url: formImages.length > 0 ? formImages[0] : null,
+      images: formImages.length > 0 ? formImages : null,
       original_price: parseFloat(formOriginalPrice),
       promo_price: formPromoPrice ? parseFloat(formPromoPrice) : null,
-      promo_expiry: formPromoExpiry || null,
+      promo_expiry: formPurchaseEndDate || null,
+      purchase_start_date: formPurchaseStartDate || null,
+      purchase_end_date: formPurchaseEndDate || null,
+      redeem_start_date: formRedeemStartDate || null,
+      redeem_end_date: formRedeemEndDate || null,
       limited_quantity: formLimitedQty ? parseInt(formLimitedQty) : null,
-      salon_profile_id: formSalonId || null,
+      salon_profile_id: formSalonIds.length > 0 ? formSalonIds[0] : null,
+      salon_profile_ids: formSalonIds.length > 0 ? formSalonIds : null,
+      terms: formTerms || null,
       status: "active",
     };
 
@@ -151,18 +232,90 @@ export default function MyTreatmentsPage() {
   const resetForm = () => {
     setFormName("");
     setFormDesc("");
-    setFormImage("");
+    setFormImages([]);
     setFormOriginalPrice("");
     setFormPromoPrice("");
-    setFormPromoExpiry("");
+    setFormPurchaseStartDate("");
+    setFormPurchaseEndDate("");
+    setFormRedeemStartDate("");
+    setFormRedeemEndDate("");
     setFormLimitedQty("");
-    setFormSalonId("");
+    setFormSalonIds([]);
+    setFormTerms("");
   };
 
-  const getSalonName = (salonId: string | null) => {
-    if (!salonId) return "未指定";
-    const salon = salons.find((s) => s.id === salonId);
-    return salon?.salon_name || "未知美容院";
+  const openEditForm = (treatment: Treatment) => {
+    setEditingTreatment(treatment);
+    setFormName(treatment.name);
+    setFormDesc(treatment.description || "");
+    setFormImages(treatment.images || (treatment.image_url ? [treatment.image_url] : []));
+    setFormOriginalPrice(String(treatment.original_price));
+    setFormPromoPrice(treatment.promo_price ? String(treatment.promo_price) : "");
+    setFormPurchaseStartDate(treatment.purchase_start_date || "");
+    setFormPurchaseEndDate(treatment.purchase_end_date || "");
+    setFormRedeemStartDate(treatment.redeem_start_date || "");
+    setFormRedeemEndDate(treatment.redeem_end_date || "");
+    setFormLimitedQty(treatment.limited_quantity ? String(treatment.limited_quantity) : "");
+    setFormSalonIds(treatment.salon_profile_ids || (treatment.salon_profile_id ? [treatment.salon_profile_id] : []));
+    setFormTerms(treatment.terms || "");
+    setShowForm(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !editingTreatment || !formName || !formOriginalPrice || !formPurchaseStartDate || !formPurchaseEndDate || !formRedeemStartDate || !formRedeemEndDate || !formDesc) return;
+    setSaving(true);
+
+    const payload = {
+      name: formName,
+      description: formDesc || null,
+      image_url: formImages.length > 0 ? formImages[0] : null,
+      images: formImages.length > 0 ? formImages : null,
+      original_price: parseFloat(formOriginalPrice),
+      promo_price: formPromoPrice ? parseFloat(formPromoPrice) : null,
+      promo_expiry: formPurchaseEndDate || null,
+      purchase_start_date: formPurchaseStartDate || null,
+      purchase_end_date: formPurchaseEndDate || null,
+      redeem_start_date: formRedeemStartDate || null,
+      redeem_end_date: formRedeemEndDate || null,
+      limited_quantity: formLimitedQty ? parseInt(formLimitedQty) : null,
+      salon_profile_id: formSalonIds.length > 0 ? formSalonIds[0] : null,
+      salon_profile_ids: formSalonIds.length > 0 ? formSalonIds : null,
+      terms: formTerms || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from("treatments")
+      .update(payload)
+      .eq("id", editingTreatment.id)
+      .select()
+      .single();
+
+    if (!error && data) {
+      setTreatments((prev) =>
+        prev.map((t) => (t.id === editingTreatment.id ? data : t))
+      );
+      resetForm();
+      setEditingTreatment(null);
+      setShowForm(false);
+    }
+    setSaving(false);
+  };
+
+  const getSalonNames = (treatment: Treatment) => {
+    const ids = (treatment as any).salon_profile_ids as string[] | null;
+    if (ids && ids.length > 0) {
+      return ids.map((id) => {
+        const salon = salons.find((s) => s.id === id);
+        return salon?.salon_name || "未知美容院";
+      }).join("、");
+    }
+    if (treatment.salon_profile_id) {
+      const salon = salons.find((s) => s.id === treatment.salon_profile_id);
+      return salon?.salon_name || "未知美容院";
+    }
+    return "未指定";
   };
 
   if (isLoadingAuth || !user) {
@@ -194,7 +347,7 @@ export default function MyTreatmentsPage() {
             </div>
           </div>
           <Button
-            onClick={() => setShowForm(true)}
+            onClick={() => { setEditingTreatment(null); resetForm(); setShowForm(true); }}
             className="bg-pink-500 hover:bg-pink-600 text-white rounded-full px-5"
           >
             <Plus className="w-4 h-4 mr-1" />
@@ -205,20 +358,21 @@ export default function MyTreatmentsPage() {
         {/* Add Form Modal */}
         {showForm && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 relative">
+            <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative">
               <button
                 onClick={() => {
                   setShowForm(false);
                   resetForm();
+                  setEditingTreatment(null);
                 }}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               >
                 <X className="w-5 h-5" />
               </button>
               <h2 className="text-xl font-bold text-slate-800 mb-6">
-                新增療程
+                {editingTreatment ? "編輯療程" : "新增療程"}
               </h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={editingTreatment ? handleUpdate : handleSubmit} className="space-y-4">
                 {/* 療程名 */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -232,30 +386,88 @@ export default function MyTreatmentsPage() {
                   />
                 </div>
 
-                {/* 療程簡介 */}
+                {/* 療程簡介 - TinyMCE */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    療程簡介
+                    療程簡介 <span className="text-red-500">*</span>
                   </label>
-                  <Textarea
+                  <RichTextEditor
                     value={formDesc}
-                    onChange={(e) => setFormDesc(e.target.value)}
+                    onChange={setFormDesc}
                     placeholder="簡單介紹療程內容..."
-                    rows={3}
                   />
                 </div>
 
-                {/* 參考圖片 */}
+                {/* 參考圖片 - Multiple Upload */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    參考圖片 (URL)
+                    參考圖片
                   </label>
-                  <Input
-                    value={formImage}
-                    onChange={(e) => setFormImage(e.target.value)}
-                    placeholder="https://..."
-                    type="url"
-                  />
+                  <div className="space-y-3">
+                    {formImages.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2">
+                        {formImages.map((img, idx) => (
+                          <div
+                            key={idx}
+                            draggable
+                            onDragStart={() => handleDragStart(idx)}
+                            onDragOver={(e) => handleDragOver(e, idx)}
+                            onDrop={() => handleDrop(idx)}
+                            onDragEnd={handleDragEnd}
+                            className={`relative group rounded-lg overflow-hidden border transition-all cursor-grab active:cursor-grabbing ${
+                              dragOverIndex === idx
+                                ? "border-pink-400 ring-2 ring-pink-200"
+                                : dragIndex === idx
+                                ? "opacity-50 border-slate-300"
+                                : "border-slate-200"
+                            }`}
+                          >
+                            <div className="absolute top-1 left-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center text-xs z-10">
+                              {idx + 1}
+                            </div>
+                            <div className="absolute top-1 left-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <GripVertical className="w-4 h-4 text-white drop-shadow" />
+                            </div>
+                            <img src={img} alt="" className="w-full h-24 object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(idx)}
+                              className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {formImages.length > 1 && (
+                      <p className="text-xs text-slate-400">拖拽圖片可重新排序，順序會儲存到資料庫</p>
+                    )}
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-2 border-dashed border-slate-200 rounded-lg p-4 text-center cursor-pointer hover:border-pink-300 hover:bg-pink-50/30 transition-colors"
+                    >
+                      {uploadingImage ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin" />
+                          <span className="text-sm text-slate-500">上傳中...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1">
+                          <Upload className="w-5 h-5 text-slate-400" />
+                          <span className="text-sm text-slate-500">點擊上傳圖片（可多選）</span>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </div>
                 </div>
 
                 {/* 價錢 */}
@@ -281,7 +493,6 @@ export default function MyTreatmentsPage() {
                     <Input
                       value={formPromoPrice}
                       onChange={(e) => setFormPromoPrice(e.target.value)}
-                      placeholder="可選"
                       type="number"
                       min="0"
                       step="0.01"
@@ -289,54 +500,159 @@ export default function MyTreatmentsPage() {
                   </div>
                 </div>
 
-                {/* 優惠有效期 */}
+                {/* 購買日期 (Date Range) */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    優惠有效期
+                    購買日期 <span className="text-red-500">*</span>
                   </label>
-                  <Input
-                    value={formPromoExpiry}
-                    onChange={(e) => setFormPromoExpiry(e.target.value)}
-                    type="date"
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-slate-500 mb-0.5">開始日期</label>
+                      <Input
+                        value={formPurchaseStartDate}
+                        onChange={(e) => {
+                          setFormPurchaseStartDate(e.target.value);
+                          // If redeem start date is before new purchase start, reset it
+                          if (formRedeemStartDate && e.target.value && formRedeemStartDate < e.target.value) {
+                            setFormRedeemStartDate(e.target.value);
+                          }
+                        }}
+                        type="date"
+                        min={new Date().toISOString().split("T")[0]}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-500 mb-0.5">結束日期</label>
+                      <Input
+                        value={formPurchaseEndDate}
+                        onChange={(e) => setFormPurchaseEndDate(e.target.value)}
+                        type="date"
+                        min={formPurchaseStartDate || undefined}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 兌換日期 (Date Range) */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    兌換日期 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-slate-500 mb-0.5">開始日期</label>
+                      <Input
+                        value={formRedeemStartDate}
+                        onChange={(e) => setFormRedeemStartDate(e.target.value)}
+                        type="date"
+                        min={formPurchaseStartDate || undefined}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-500 mb-0.5">結束日期</label>
+                      <Input
+                        value={formRedeemEndDate}
+                        onChange={(e) => setFormRedeemEndDate(e.target.value)}
+                        type="date"
+                        min={formRedeemStartDate || undefined}
+                        required
+                      />
+                    </div>
+                  </div>
+                  {formRedeemStartDate && formPurchaseStartDate && formRedeemStartDate < formPurchaseStartDate && (
+                    <p className="text-xs text-red-500 mt-1">兌換開始日期不可早於購買開始日期</p>
+                  )}
                 </div>
 
                 {/* 限量數量 */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    限量數量
+                    限購數量
                   </label>
                   <Input
                     value={formLimitedQty}
                     onChange={(e) => setFormLimitedQty(e.target.value)}
-                    placeholder="可選，例如：50"
+                    placeholder="例如：50"
                     type="number"
                     min="0"
+                  />
+                </div>
+
+                {/* 條款及細則 - TinyMCE */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    條款及細則
+                  </label>
+                  <RichTextEditor
+                    value={formTerms}
+                    onChange={setFormTerms}
+                    placeholder="輸入條款及細則..."
                   />
                 </div>
 
                 {/* 適用美容院 */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    適用美容院
+                    適用美容院（可多選）
                   </label>
                   {salons.length > 0 ? (
-                    <Select value={formSalonId} onValueChange={setFormSalonId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="選擇美容院" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {salons.map((salon) => (
-                          <SelectItem key={salon.id} value={salon.id}>
+                    <div className="border border-slate-200 rounded-md p-3 space-y-2 max-h-48 overflow-y-auto">
+                      {salons.map((salon) => (
+                        <label
+                          key={salon.id}
+                          className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formSalonIds.includes(salon.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormSalonIds((prev) => [...prev, salon.id]);
+                              } else {
+                                setFormSalonIds((prev) =>
+                                  prev.filter((id) => id !== salon.id)
+                                );
+                              }
+                            }}
+                            className="rounded border-slate-300 text-pink-500 focus:ring-pink-500"
+                          />
+                          <span className="text-sm text-slate-700">
                             {salon.salon_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-sm text-slate-400">
                       尚未有美容院資料，請先建立美容院
                     </p>
+                  )}
+                  {formSalonIds.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {formSalonIds.map((id) => {
+                        const salon = salons.find((s) => s.id === id);
+                        return (
+                          <Badge
+                            key={id}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {salon?.salon_name || id}
+                            <X
+                              className="w-3 h-3 cursor-pointer"
+                              onClick={() =>
+                                setFormSalonIds((prev) =>
+                                  prev.filter((sid) => sid !== id)
+                                )
+                              }
+                            />
+                          </Badge>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
 
@@ -348,6 +664,7 @@ export default function MyTreatmentsPage() {
                     onClick={() => {
                       setShowForm(false);
                       resetForm();
+                      setEditingTreatment(null);
                     }}
                     className="flex-1 rounded-full"
                   >
@@ -355,10 +672,10 @@ export default function MyTreatmentsPage() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={saving || !formName || !formOriginalPrice}
+                    disabled={saving || !formName || !formOriginalPrice || !formPurchaseStartDate || !formPurchaseEndDate || !formRedeemStartDate || !formRedeemEndDate || !formDesc}
                     className="flex-1 bg-pink-500 hover:bg-pink-600 text-white rounded-full"
                   >
-                    {saving ? "儲存中..." : "確認新增"}
+                    {saving ? "儲存中..." : editingTreatment ? "確認修改" : "確認新增"}
                   </Button>
                 </div>
               </form>
@@ -383,7 +700,7 @@ export default function MyTreatmentsPage() {
               點擊「新增療程」開始建立您的療程項目
             </p>
             <Button
-              onClick={() => setShowForm(true)}
+              onClick={() => { setEditingTreatment(null); resetForm(); setShowForm(true); }}
               className="bg-pink-500 hover:bg-pink-600 text-white rounded-full px-6"
             >
               <Plus className="w-4 h-4 mr-1" />
@@ -464,6 +781,13 @@ export default function MyTreatmentsPage() {
 
                   {/* Expand */}
                   <button
+                    onClick={() => openEditForm(treatment)}
+                    className="text-slate-400 hover:text-pink-500 transition-colors"
+                    title="編輯療程"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() =>
                       setExpandedId(
                         expandedId === treatment.id ? null : treatment.id
@@ -481,17 +805,38 @@ export default function MyTreatmentsPage() {
 
                 {/* Expanded Details */}
                 {expandedId === treatment.id && (
-                  <div className="border-t border-slate-100 p-4 bg-slate-50 space-y-3 text-sm">
+                  <div className="border-t border-slate-100 p-4 bg-slate-50 space-y-4 text-sm">
+                    {/* Description */}
                     {treatment.description && (
                       <div>
                         <span className="text-slate-500 font-medium">
                           簡介：
                         </span>
-                        <span className="text-slate-700">
-                          {treatment.description}
-                        </span>
+                        <div
+                          className="text-slate-700 mt-1 prose prose-sm max-w-none [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded"
+                          dangerouslySetInnerHTML={{ __html: treatment.description }}
+                        />
                       </div>
                     )}
+
+                    {/* Images */}
+                    {treatment.images && treatment.images.length > 0 && (
+                      <div>
+                        <span className="text-slate-500 font-medium">圖片：</span>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {treatment.images.map((img, idx) => (
+                            <img
+                              key={idx}
+                              src={img}
+                              alt={`${treatment.name} ${idx + 1}`}
+                              className="w-20 h-20 object-cover rounded-lg border border-slate-200"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Prices */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex items-center gap-2">
                         <DollarSign className="w-4 h-4 text-slate-400" />
@@ -509,6 +854,10 @@ export default function MyTreatmentsPage() {
                           </span>
                         </div>
                       )}
+                    </div>
+
+                    {/* Dates */}
+                    <div className="grid grid-cols-2 gap-3">
                       {treatment.promo_expiry && (
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-slate-400" />
@@ -527,15 +876,66 @@ export default function MyTreatmentsPage() {
                           </span>
                         </div>
                       )}
+                      {treatment.purchase_start_date && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-blue-400" />
+                          <span className="text-slate-500">購買開始日期：</span>
+                          <span className="text-slate-700">
+                            {treatment.purchase_start_date}
+                          </span>
+                        </div>
+                      )}
+                      {treatment.purchase_end_date && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-blue-400" />
+                          <span className="text-slate-500">購買截止日期：</span>
+                          <span className="text-slate-700">
+                            {treatment.purchase_end_date}
+                          </span>
+                        </div>
+                      )}
+                      {treatment.redeem_start_date && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-green-400" />
+                          <span className="text-slate-500">兌換開始日期：</span>
+                          <span className="text-slate-700">
+                            {treatment.redeem_start_date}
+                          </span>
+                        </div>
+                      )}
+                      {treatment.redeem_end_date && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-green-400" />
+                          <span className="text-slate-500">兌換截止日期：</span>
+                          <span className="text-slate-700">
+                            {treatment.redeem_end_date}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <div>
+
+                    {/* Salon */}
+                    <div className="flex items-center gap-2">
                       <span className="text-slate-500 font-medium">
                         適用美容院：
                       </span>
                       <span className="text-slate-700">
-                        {getSalonName(treatment.salon_profile_id)}
+                        {getSalonNames(treatment)}
                       </span>
                     </div>
+
+                    {/* Terms */}
+                    {treatment.terms && (
+                      <div>
+                        <span className="text-slate-500 font-medium">
+                          條款及細則：
+                        </span>
+                        <div
+                          className="text-slate-600 mt-1 prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: treatment.terms }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

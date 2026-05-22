@@ -5,24 +5,104 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 
-// Cover styles for salons without images
+// Cover styles for salons without images - using real images with overlay
 const COVER_STYLES = [
-  { bgColor: 'from-emerald-700 to-teal-500', textColor: '#ffffff' },
-  { bgColor: 'from-rose-400 to-pink-300', textColor: '#ffffff' },
-  { bgColor: 'from-stone-700 to-amber-700', textColor: '#f5f5f4' },
-  { bgColor: 'from-sky-700 to-cyan-500', textColor: '#ffffff' },
-  { bgColor: 'from-purple-800 to-violet-500', textColor: '#ffffff' },
-  { bgColor: 'from-indigo-800 to-blue-500', textColor: '#ffffff' },
-  { bgColor: 'from-pink-800 to-pink-400', textColor: '#ffffff' },
-  { bgColor: 'from-green-800 to-green-500', textColor: '#ffffff' },
-  { bgColor: 'from-amber-800 to-amber-500', textColor: '#fef3c7' },
-  { bgColor: 'from-rose-800 to-red-400', textColor: '#ffffff' },
-  { bgColor: 'from-teal-800 to-teal-400', textColor: '#ffffff' },
-  { bgColor: 'from-indigo-700 to-indigo-400', textColor: '#ffffff' },
-  { bgColor: 'from-zinc-800 to-zinc-500', textColor: '#fafafa' },
-  { bgColor: 'from-cyan-800 to-cyan-400', textColor: '#ffffff' },
-  { bgColor: 'from-yellow-700 to-yellow-400', textColor: '#fef9c3' },
-  { bgColor: 'from-purple-700 to-purple-400', textColor: '#ffffff' },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
+    overlayFrom: 'rgba(6,78,59,0.7)',
+    overlayTo: 'rgba(13,148,136,0.5)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=800&q=80',
+    overlayFrom: 'rgba(251,113,133,0.6)',
+    overlayTo: 'rgba(249,168,212,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&q=80',
+    overlayFrom: 'rgba(41,37,36,0.6)',
+    overlayTo: 'rgba(146,64,14,0.4)',
+    textColor: '#f5f5f4',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+    overlayFrom: 'rgba(3,105,161,0.6)',
+    overlayTo: 'rgba(6,182,212,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+    overlayFrom: 'rgba(88,28,135,0.65)',
+    overlayTo: 'rgba(147,51,234,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=800&q=80',
+    overlayFrom: 'rgba(30,58,138,0.65)',
+    overlayTo: 'rgba(59,130,246,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&q=80',
+    overlayFrom: 'rgba(157,23,77,0.6)',
+    overlayTo: 'rgba(236,72,153,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800&q=80',
+    overlayFrom: 'rgba(20,83,45,0.65)',
+    overlayTo: 'rgba(34,197,94,0.35)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=800&q=80',
+    overlayFrom: 'rgba(120,53,15,0.65)',
+    overlayTo: 'rgba(217,119,6,0.4)',
+    textColor: '#fef3c7',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80',
+    overlayFrom: 'rgba(159,18,57,0.6)',
+    overlayTo: 'rgba(244,63,94,0.35)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=800&q=80',
+    overlayFrom: 'rgba(17,94,89,0.65)',
+    overlayTo: 'rgba(45,212,191,0.35)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&q=80',
+    overlayFrom: 'rgba(55,48,163,0.65)',
+    overlayTo: 'rgba(99,102,241,0.4)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1552693673-1bf958298935?w=800&q=80',
+    overlayFrom: 'rgba(9,9,11,0.5)',
+    overlayTo: 'rgba(63,63,70,0.4)',
+    textColor: '#fafafa',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80',
+    overlayFrom: 'rgba(21,94,117,0.65)',
+    overlayTo: 'rgba(34,211,238,0.35)',
+    textColor: '#ffffff',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80',
+    overlayFrom: 'rgba(113,63,18,0.65)',
+    overlayTo: 'rgba(234,179,8,0.35)',
+    textColor: '#fef9c3',
+  },
+  {
+    bgImage: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&q=80',
+    overlayFrom: 'rgba(76,29,149,0.6)',
+    overlayTo: 'rgba(168,85,247,0.35)',
+    textColor: '#ffffff',
+  },
 ];
 
 function getCoverStyleIndex(str: string): number {
@@ -173,9 +253,21 @@ export function SalonCarousel({ salons }: { salons: FeaturedSalon[] }) {
                   const styleIdx = getCoverStyleIndex(salon.id || salon.name);
                   const coverStyle = COVER_STYLES[styleIdx];
                   return (
-                    <div className={`relative w-full h-full bg-gradient-to-br ${coverStyle.bgColor}`}>
+                    <div className="relative w-full h-full">
+                      <img
+                        src={coverStyle.bgImage}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background: `linear-gradient(135deg, ${coverStyle.overlayFrom}, ${coverStyle.overlayTo})`,
+                        }}
+                      />
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
-                        <p className="text-[9px] uppercase tracking-[0.2em] opacity-70 mb-0.5" style={{ color: coverStyle.textColor }}>
+                        <p className="text-[9px] uppercase tracking-[0.25em] opacity-70 mb-0.5" style={{ color: coverStyle.textColor }}>
                           Beauty Salon
                         </p>
                         <h3 className="text-sm font-bold text-center leading-tight drop-shadow-md line-clamp-2" style={{ color: coverStyle.textColor }}>

@@ -14,48 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      backfill_progress: {
-        Row: {
-          api_errors: number | null
-          current_salon: string | null
-          finished_at: string | null
-          id: string
-          processed: number | null
-          skipped: number | null
-          started_at: string | null
-          status: string
-          total_profiles: number | null
-          updated: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          api_errors?: number | null
-          current_salon?: string | null
-          finished_at?: string | null
-          id?: string
-          processed?: number | null
-          skipped?: number | null
-          started_at?: string | null
-          status?: string
-          total_profiles?: number | null
-          updated?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          api_errors?: number | null
-          current_salon?: string | null
-          finished_at?: string | null
-          id?: string
-          processed?: number | null
-          skipped?: number | null
-          started_at?: string | null
-          status?: string
-          total_profiles?: number | null
-          updated?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       blog_articles: {
         Row: {
           author: string | null
@@ -894,147 +852,6 @@ export type Database = {
         }
         Relationships: []
       }
-      shopify_configs: {
-        Row: {
-          access_token: string | null
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          key: string
-          last_refreshed: string | null
-          refreshed_at: string | null
-          scope: string | null
-          shop_domain: string | null
-          token_type: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          access_token?: string | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          key: string
-          last_refreshed?: string | null
-          refreshed_at?: string | null
-          scope?: string | null
-          shop_domain?: string | null
-          token_type?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          access_token?: string | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          key?: string
-          last_refreshed?: string | null
-          refreshed_at?: string | null
-          scope?: string | null
-          shop_domain?: string | null
-          token_type?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      shopify_products_cache: {
-        Row: {
-          district_id: string | null
-          district_name: string | null
-          handle: string | null
-          id: string
-          image_src: string | null
-          product_type: string | null
-          raw_data: Json | null
-          shopify_created_at: string | null
-          status: string | null
-          synced_at: string | null
-          tags: string | null
-          title: string | null
-          updated_at: string | null
-          vendor: string | null
-        }
-        Insert: {
-          district_id?: string | null
-          district_name?: string | null
-          handle?: string | null
-          id: string
-          image_src?: string | null
-          product_type?: string | null
-          raw_data?: Json | null
-          shopify_created_at?: string | null
-          status?: string | null
-          synced_at?: string | null
-          tags?: string | null
-          title?: string | null
-          updated_at?: string | null
-          vendor?: string | null
-        }
-        Update: {
-          district_id?: string | null
-          district_name?: string | null
-          handle?: string | null
-          id?: string
-          image_src?: string | null
-          product_type?: string | null
-          raw_data?: Json | null
-          shopify_created_at?: string | null
-          status?: string | null
-          synced_at?: string | null
-          tags?: string | null
-          title?: string | null
-          updated_at?: string | null
-          vendor?: string | null
-        }
-        Relationships: []
-      }
-      shopify_sync_log: {
-        Row: {
-          error: string | null
-          id: string
-          product_count: number | null
-          status: string | null
-          synced_at: string | null
-        }
-        Insert: {
-          error?: string | null
-          id?: string
-          product_count?: number | null
-          status?: string | null
-          synced_at?: string | null
-        }
-        Update: {
-          error?: string | null
-          id?: string
-          product_count?: number | null
-          status?: string | null
-          synced_at?: string | null
-        }
-        Relationships: []
-      }
-      shopify_token_logs: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string | null
-          status: string
-          triggered_by: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message?: string | null
-          status: string
-          triggered_by?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string | null
-          status?: string
-          triggered_by?: string | null
-        }
-        Relationships: []
-      }
       staff: {
         Row: {
           created_at: string | null
@@ -1107,13 +924,20 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          images: string[] | null
           limited_quantity: number | null
           name: string
           original_price: number
           promo_expiry: string | null
           promo_price: number | null
+          purchase_end_date: string | null
+          purchase_start_date: string | null
+          redeem_end_date: string | null
+          redeem_start_date: string | null
           salon_profile_id: string | null
+          salon_profile_ids: string[] | null
           status: string
+          terms: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1122,13 +946,20 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          images?: string[] | null
           limited_quantity?: number | null
           name: string
           original_price: number
           promo_expiry?: string | null
           promo_price?: number | null
+          purchase_end_date?: string | null
+          purchase_start_date?: string | null
+          redeem_end_date?: string | null
+          redeem_start_date?: string | null
           salon_profile_id?: string | null
+          salon_profile_ids?: string[] | null
           status?: string
+          terms?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1137,13 +968,20 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          images?: string[] | null
           limited_quantity?: number | null
           name?: string
           original_price?: number
           promo_expiry?: string | null
           promo_price?: number | null
+          purchase_end_date?: string | null
+          purchase_start_date?: string | null
+          redeem_end_date?: string | null
+          redeem_start_date?: string | null
           salon_profile_id?: string | null
+          salon_profile_ids?: string[] | null
           status?: string
+          terms?: string | null
           updated_at?: string | null
         }
         Relationships: []

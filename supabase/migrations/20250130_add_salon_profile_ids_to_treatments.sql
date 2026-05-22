@@ -1,0 +1,1 @@
+ALTER TABLE treatments ADD COLUMN IF NOT EXISTS salon_profile_ids UUID[] DEFAULT NULL;
