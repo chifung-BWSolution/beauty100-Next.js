@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { Menu, X, Heart, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, X, Heart, Settings, LogOut, ChevronDown, ShoppingCart, ClipboardList } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useCart } from '@/lib/CartContext';
 import NavbarSearch from './NavbarSearch';
 
 const NAV_ITEMS = [
@@ -29,6 +30,25 @@ interface MemberInfo {
   email: string;
 }
 
+function CartNavButton() {
+  const { itemCount, setIsCartOpen } = useCart();
+  
+  return (
+    <button
+      onClick={() => setIsCartOpen(true)}
+      className="relative w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+      title="購物車"
+    >
+      <ShoppingCart className="w-[18px] h-[18px]" />
+      {itemCount > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center shadow-sm">
+          {itemCount > 9 ? '9+' : itemCount}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export default function PublicNavbar({ activeHref }: { activeHref?: string } = {}) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -42,6 +62,7 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
+          // Try members table first
           const { data: memberData } = await supabase
             .from('members')
             .select('id, full_name, avatar_url, email')
@@ -49,6 +70,14 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
             .single();
           if (memberData) {
             setMember(memberData);
+          } else {
+            // Fallback for staff/admin accounts without members record
+            setMember({
+              id: session.user.id,
+              full_name: session.user.user_metadata?.full_name || null,
+              avatar_url: session.user.user_metadata?.avatar_url || null,
+              email: session.user.email || '',
+            });
           }
         }
       } catch (e) {
@@ -69,7 +98,17 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
           .eq('auth_user_id', session.user.id)
           .single()
           .then(({ data }) => {
-            if (data) setMember(data);
+            if (data) {
+              setMember(data);
+            } else {
+              // Fallback for staff/admin accounts
+              setMember({
+                id: session.user.id,
+                full_name: session.user.user_metadata?.full_name || null,
+                avatar_url: session.user.user_metadata?.avatar_url || null,
+                email: session.user.email || '',
+              });
+            }
           });
       }
     });
@@ -159,10 +198,13 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
             ))}
           </nav>
 
-          {/* Right side: Search + Member area + Hamburger */}
+          {/* Right side: Search + Cart + Member area + Hamburger */}
           <div className="flex items-center gap-2.5 shrink-0">
             {/* Search */}
             <NavbarSearch />
+
+            {/* Cart icon */}
+            <CartNavButton />
 
             {/* Show member avatar + name when logged in */}
             {!memberLoading && member ? (
@@ -194,6 +236,14 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
                       <p className="text-xs text-slate-400 truncate">{member.email}</p>
                     </div>
                     <Link
+                      href="/my-orders"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                    >
+                      <ClipboardList className="w-4 h-4" />
+                      我的訂單
+                    </Link>
+                    <Link
                       href="/member-settings"
                       onClick={() => setDropdownOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors"
@@ -211,6 +261,14 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
                   </div>
                 )}
               </div>
+            ) : !memberLoading ? (
+              <Link
+                href="/member-login"
+                className="hidden sm:flex items-center gap-1.5 text-[13px] font-medium text-rose-600 px-3 py-[6px] rounded-full transition-all duration-200 hover:bg-rose-50 border border-rose-100"
+              >
+                <Heart className="w-3.5 h-3.5" />
+                登入
+              </Link>
             ) : null}
 
             {/* Mobile Hamburger — xl breakpoint to match nav */}
@@ -267,6 +325,14 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
                     <p className="text-xs text-slate-400 truncate">{member.email}</p>
                   </div>
                 </div>
+                <Link
+                  href="/my-orders"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold text-rose-600 rounded-full transition-all border border-rose-200 bg-white"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  我的訂單
+                </Link>
                 <Link
                   href="/member-settings"
                   onClick={() => setMobileMenuOpen(false)}

@@ -1,8 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useCart } from '@/lib/CartContext';
+import { useAuth } from '@/lib/AuthContext';
 import PublicLayout from '@/components/public/PublicLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +15,7 @@ import {
   MapPin, Phone, Globe, Clock, Star, Store,
   ChevronLeft, CheckCircle2, MessageCircle, Mail,
   User, Sparkles, Image as ImageIcon, X, Lock, Wrench, AlertTriangle,
-  Tag, Calendar,
+  Tag, Calendar, ChevronDown, Flame, Zap, Gift, Percent, ShoppingCart, Check,
 } from 'lucide-react';
 
 interface SalonProfile {
@@ -116,6 +119,329 @@ const removeTagPrefix = (tag: string): string => {
   return tag;
 };
 
+function TreatmentItem({ treatment: t, showPromo, displayImage, fixedTerms, salonName }: { treatment: any; showPromo: boolean; displayImage: string | null; fixedTerms: string; salonName: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [treatmentGalleryOpen, setTreatmentGalleryOpen] = useState(false);
+  const [treatmentGalleryIndex, setTreatmentGalleryIndex] = useState(0);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
+  const { addToCart, isInCart } = useCart();
+  const { user } = useAuth();
+  const router = useRouter();
+  const descriptionText = t.description ? t.description.replace(/<[^>]*>/g, '') : '';
+  const termsText = t.terms ? t.terms.replace(/<[^>]*>/g, '') : '';
+  const isSoldOut = t.limited_quantity != null && t.limited_quantity <= 0;
+
+  // Replace dynamic fields in fixed terms
+  const resolvedFixedTerms = fixedTerms
+    .replace(/\{\{redeem_end_date\}\}/g, t.redeem_end_date ? new Date(t.redeem_end_date).toLocaleDateString('zh-HK') : '（未設定）')
+    .replace(/\{\{redeem_start_date\}\}/g, t.redeem_start_date ? new Date(t.redeem_start_date).toLocaleDateString('zh-HK') : '（未設定）')
+    .replace(/\{\{purchase_end_date\}\}/g, t.purchase_end_date ? new Date(t.purchase_end_date).toLocaleDateString('zh-HK') : '（未設定）')
+    .replace(/\{\{purchase_start_date\}\}/g, t.purchase_start_date ? new Date(t.purchase_start_date).toLocaleDateString('zh-HK') : '（未設定）')
+    .replace(/\{\{treatment_name\}\}/g, t.name || '')
+    .replace(/\{\{salon_name\}\}/g, salonName || '');
+
+  // Calculate discount percentage
+  const discountPercent = showPromo && t.original_price && t.promo_price
+    ? Math.round((1 - Number(t.promo_price) / Number(t.original_price)) * 100)
+    : 0;
+
+  return (
+    <div className="relative group">
+      <div
+        className={`relative rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer
+          ${showPromo
+            ? 'border-rose-200 bg-gradient-to-br from-rose-50 via-white to-orange-50 hover:border-rose-300 hover:shadow-lg hover:shadow-rose-100/50'
+            : 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-md'
+          }`}
+        onClick={() => setExpanded(!expanded)}
+      >
+        {/* Discount badge */}
+        {showPromo && discountPercent > 0 && (
+          <div className="absolute top-0 right-0 z-10">
+            <div className="bg-gradient-to-br from-rose-500 to-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-bl-xl shadow-md">
+              -{discountPercent}% OFF
+            </div>
+          </div>
+        )}
+
+        {/* Limited quantity flash tag */}
+        {t.limited_quantity != null && t.limited_quantity > 0 && (
+          <div className="absolute top-0 left-0 z-10">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-br-lg flex items-center gap-1 shadow-sm">
+              <Flame className="w-3 h-3" />
+              限量 {t.limited_quantity} 個
+            </div>
+          </div>
+        )}
+
+        {/* Sold out overlay */}
+        {t.limited_quantity != null && t.limited_quantity <= 0 && (
+          <div className="absolute inset-0 z-20 bg-white/70 flex items-center justify-center rounded-2xl">
+            <div className="bg-slate-800 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg">
+              已售罄
+            </div>
+          </div>
+        )}
+
+        <div className="p-4">
+          <div className="flex gap-3">
+            {/* Image - bigger and more prominent */}
+            {displayImage ? (
+              <div className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden shadow-sm ring-1 ring-black/5">
+                <img src={displayImage} alt={t.name} className="w-full h-full object-cover" loading="lazy" />
+              </div>
+            ) : (
+              <div className="w-20 h-20 flex-shrink-0 rounded-xl bg-gradient-to-br from-rose-100 to-pink-50 flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-rose-300" />
+              </div>
+            )}
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-slate-800 line-clamp-2 leading-snug">{t.name}</h3>
+              
+              {/* Tags row */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                {showPromo && t.promo_expiry && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-medium">
+                    <Calendar className="w-2.5 h-2.5" />
+                    優惠至 {new Date(t.promo_expiry).toLocaleDateString('zh-HK')}
+                  </span>
+                )}
+                {showPromo && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
+                    <Zap className="w-2.5 h-2.5" />
+                    優惠進行中
+                  </span>
+                )}
+              </div>
+
+              {/* Price area */}
+              <div className="mt-2.5 flex items-end gap-2">
+                {showPromo ? (
+                  <>
+                    <span className="text-lg font-extrabold text-rose-600">
+                      ${Number(t.promo_price).toLocaleString()}
+                    </span>
+                    <span className="text-xs text-slate-400 line-through mb-0.5">
+                      ${Number(t.original_price).toLocaleString()}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-lg font-extrabold text-slate-700">
+                    ${Number(t.original_price).toLocaleString()}
+                  </span>
+                )}
+              </div>
+
+              {/* Add to cart button */}
+              <div className="mt-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isSoldOut) return;
+                    if (!user) {
+                      router.push('/member-login');
+                      return;
+                    }
+                    if (isInCart(t.id) && !addingToCart) {
+                      return;
+                    }
+                    setAddingToCart(true);
+                    addToCart(t.id, t.salon_profile_id).then((result) => {
+                      setAddingToCart(false);
+                      if (result.success) {
+                        setJustAdded(true);
+                        setTimeout(() => setJustAdded(false), 2000);
+                      } else if (result.error === 'limit_reached') {
+                        alert('已達到此療程嘅購買限量！');
+                      } else if (result.error === 'sold_out') {
+                        alert('此療程已售罄！');
+                      }
+                    });
+                  }}
+                  disabled={addingToCart || isSoldOut}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all
+                    ${isSoldOut
+                      ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                      : isInCart(t.id) || justAdded
+                      ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                      : 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95'
+                    }`}
+                >
+                  {isSoldOut ? (
+                    <>已售罄</>
+                  ) : addingToCart ? (
+                    <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                  ) : isInCart(t.id) || justAdded ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                  )}
+                  {!isSoldOut && (isInCart(t.id) || justAdded ? '已加入購物車' : '加入購物車')}
+                </button>
+              </div>
+            </div>
+
+            {/* Expand indicator */}
+            <div className="flex items-center self-center">
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all
+                ${expanded ? 'bg-rose-100 rotate-180' : 'bg-slate-100 group-hover:bg-rose-50'}`}>
+                <ChevronDown className={`w-4 h-4 ${expanded ? 'text-rose-600' : 'text-slate-400'}`} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Expanded details */}
+      {expanded && (t.description || t.terms || resolvedFixedTerms || (t.images && t.images.length > 0)) && (
+        <div className="mt-2 ml-2 mr-2 mb-1 space-y-3 animate-in slide-in-from-top-2 duration-200">
+          {/* Treatment images gallery */}
+          {t.images && t.images.length > 0 && (
+            <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+              <p className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-rose-100 inline-flex items-center justify-center shrink-0"><ImageIcon className="w-3 h-3 text-rose-600" /></span>
+                療程圖片
+              </p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {t.images.map((img: string, idx: number) => (
+                  <div
+                    key={idx}
+                    className="aspect-square rounded-md overflow-hidden bg-slate-100 ring-1 ring-black/5 cursor-pointer hover:ring-rose-300 hover:ring-2 transition-all"
+                    onClick={() => { setTreatmentGalleryIndex(idx); setTreatmentGalleryOpen(true); }}
+                  >
+                    <img src={img} alt={`${t.name} - ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Treatment Image Lightbox */}
+          {treatmentGalleryOpen && t.images && t.images.length > 0 && typeof document !== 'undefined' && createPortal(
+            <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center" onClick={() => setTreatmentGalleryOpen(false)}>
+              <button
+                className="absolute top-4 right-4 text-white/80 hover:text-white z-50"
+                onClick={() => setTreatmentGalleryOpen(false)}
+              >
+                <X className="w-8 h-8" />
+              </button>
+              {t.images.length > 1 && (
+                <>
+                  <button
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl font-light z-50 w-12 h-12 flex items-center justify-center"
+                    onClick={(e) => { e.stopPropagation(); setTreatmentGalleryIndex((prev: number) => (prev - 1 + t.images.length) % t.images.length); }}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl font-light z-50 w-12 h-12 flex items-center justify-center"
+                    onClick={(e) => { e.stopPropagation(); setTreatmentGalleryIndex((prev: number) => (prev + 1) % t.images.length); }}
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+              <div className="max-w-4xl max-h-[75dvh] px-4 flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                <img
+                  src={t.images[treatmentGalleryIndex]}
+                  alt={`${t.name} - ${treatmentGalleryIndex + 1}`}
+                  className="max-w-full max-h-[70dvh] object-contain rounded-lg"
+                />
+                <p className="text-center text-white/70 text-sm mt-3">
+                  {treatmentGalleryIndex + 1} / {t.images.length}
+                </p>
+              </div>
+            </div>,
+            document.body
+          )}
+          {t.description && (
+            <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+              <p className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">📋</span>
+                簡介
+              </p>
+              <div
+                className="text-sm text-slate-600 prose prose-sm prose-slate max-w-none [&_img]:rounded-md [&_img]:max-w-full [&_img]:h-auto [&_img]:my-2 [&_p]:mb-1.5"
+                dangerouslySetInnerHTML={{ __html: t.description }}
+              />
+            </div>
+          )}
+          {(resolvedFixedTerms || t.terms) && (
+            <div className="bg-amber-50/80 rounded-xl p-4 border border-amber-100/80">
+              <p className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 text-xs">📝</span>
+                條款及細則
+              </p>
+              {resolvedFixedTerms && (
+                <div className="text-sm text-slate-600 whitespace-pre-line mb-2">
+                  {resolvedFixedTerms}
+                </div>
+              )}
+              {t.terms && (
+                <div
+                  className="text-sm text-slate-600 prose prose-sm prose-slate max-w-none [&_h4]:text-sm [&_h4]:font-semibold [&_h4]:text-slate-700 [&_h4]:mt-3 [&_h4]:mb-1.5 [&_ol]:pl-5 [&_ol]:list-decimal [&_li]:mb-1 border-t border-amber-200 pt-2 mt-2"
+                  dangerouslySetInnerHTML={{ __html: t.terms }}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Bottom Add to Cart button in expanded view */}
+          <div className="flex justify-center pt-1 pb-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isSoldOut) return;
+                if (!user) {
+                  router.push('/member-login');
+                  return;
+                }
+                if (isInCart(t.id) && !addingToCart) {
+                  return;
+                }
+                setAddingToCart(true);
+                addToCart(t.id, t.salon_profile_id).then((result) => {
+                  setAddingToCart(false);
+                  if (result.success) {
+                    setJustAdded(true);
+                    setTimeout(() => setJustAdded(false), 2000);
+                  } else if (result.error === 'limit_reached') {
+                    alert('已達到此療程嘅購買限量！');
+                  } else if (result.error === 'sold_out') {
+                    alert('此療程已售罄！');
+                  }
+                });
+              }}
+              disabled={addingToCart || isSoldOut}
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all
+                ${isSoldOut
+                  ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                  : isInCart(t.id) || justAdded
+                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                  : 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95'
+                }`}
+            >
+              {isSoldOut ? (
+                <>已售罄</>
+              ) : addingToCart ? (
+                <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+              ) : isInCart(t.id) || justAdded ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <ShoppingCart className="w-4 h-4" />
+              )}
+              {!isSoldOut && (isInCart(t.id) || justAdded ? '已加入購物車' : '加入購物車')}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SalonDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -128,6 +454,7 @@ export default function SalonDetailPage() {
   const [tagCategoryMap, setTagCategoryMap] = useState<Record<string, string>>({});
   const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
   const [treatments, setTreatments] = useState<any[]>([]);
+  const [fixedTerms, setFixedTerms] = useState('');
 
   useEffect(() => {
     if (!salonId) return;
@@ -253,10 +580,39 @@ export default function SalonDetailPage() {
       // Merge and dedupe
       const all = [...(data1 || []), ...(data2 || [])];
       const unique = Array.from(new Map(all.map(t => [t.id, t])).values());
-      setTreatments(unique);
+      
+      // Filter out treatments where purchase_end_date has passed
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const filtered = unique.filter(t => {
+        // Hide if purchase end date has passed
+        if (t.purchase_end_date) {
+          const endDate = new Date(t.purchase_end_date);
+          endDate.setHours(23, 59, 59, 999);
+          if (endDate < now) return false;
+        }
+        // Hide if purchase start date hasn't arrived yet
+        if (t.purchase_start_date) {
+          const startDate = new Date(t.purchase_start_date);
+          startDate.setHours(0, 0, 0, 0);
+          if (startDate > now) return false;
+        }
+        return true;
+      });
+      setTreatments(filtered);
     };
     fetchTreatments();
   }, [salon?.id]);
+
+  // Fetch fixed treatment terms from system settings
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.from('system_settings').select('value').eq('key', 'fixed_treatment_terms').single();
+        if (data?.value) setFixedTerms(data.value);
+      } catch (e) { /* ignore */ }
+    })();
+  }, []);
 
   // Set dynamic page title and meta description from SEO fields
   useEffect(() => {
@@ -680,6 +1036,41 @@ export default function SalonDetailPage() {
           </div>
         </div>
 
+        {/* Treatments Section */}
+        {treatments.length > 0 && (
+          <div className="relative rounded-2xl overflow-hidden mb-6 shadow-lg shadow-rose-100/30 border border-rose-100">
+            {/* Gradient header */}
+            <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400 px-5 py-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                    <Gift className="w-4 h-4 text-white" />
+                  </div>
+                  療程優惠
+                </h2>
+                <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+                  <Flame className="w-3.5 h-3.5 text-yellow-200" />
+                  <span className="text-xs font-medium text-white">{treatments.length} 個優惠</span>
+                </div>
+              </div>
+              <p className="text-xs text-white/80 mt-1.5 ml-9">限時優惠，立即預約享受專屬折扣</p>
+            </div>
+            
+            {/* Treatment cards */}
+            <div className="bg-gradient-to-b from-rose-50/30 to-white p-4 space-y-3">
+              {treatments.map((t) => {
+                const hasPromo = t.promo_price && Number(t.promo_price) < Number(t.original_price);
+                const promoExpired = t.promo_expiry && new Date(t.promo_expiry) < new Date();
+                const showPromo = hasPromo && !promoExpired;
+                const displayImage = t.image_url || (t.images && t.images.length > 0 ? t.images[0] : null);
+                return (
+                  <TreatmentItem key={t.id} treatment={t} showPromo={!!showPromo} displayImage={displayImage} fixedTerms={fixedTerms} salonName={salon?.salon_name || ''} />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Description */}
         {salon.description && (
           <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm mb-6">
@@ -729,8 +1120,8 @@ export default function SalonDetailPage() {
         )}
 
         {/* Lightbox Gallery */}
-        {galleryOpen && (
-          <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={() => setGalleryOpen(false)}>
+        {galleryOpen && typeof document !== 'undefined' && createPortal(
+          <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center" onClick={() => setGalleryOpen(false)}>
             <button
               className="absolute top-4 right-4 text-white/80 hover:text-white z-50"
               onClick={() => setGalleryOpen(false)}
@@ -749,79 +1140,21 @@ export default function SalonDetailPage() {
             >
               ›
             </button>
-            <div className="max-w-4xl max-h-[85vh] px-4" onClick={(e) => e.stopPropagation()}>
+            <div className="max-w-4xl max-h-[75dvh] px-4 flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
               <img
                 src={mediaImages[galleryIndex]}
                 alt={`${salon.salon_name} - ${galleryIndex + 1}`}
-                className="max-w-full max-h-[85vh] object-contain rounded-lg"
+                className="max-w-full max-h-[70dvh] object-contain rounded-lg"
               />
               <p className="text-center text-white/70 text-sm mt-3">
                 {galleryIndex + 1} / {mediaImages.length}
               </p>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
-        {/* Treatments Section */}
-        {treatments.length > 0 && (
-          <div className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm mb-6">
-            <h2 className="text-base font-semibold text-slate-800 mb-4 flex items-center gap-2">
-              <Tag className="w-4 h-4 text-rose-400" />
-              療程優惠
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {treatments.map((t) => {
-                const hasPromo = t.promo_price && Number(t.promo_price) < Number(t.original_price);
-                const promoExpired = t.promo_expiry && new Date(t.promo_expiry) < new Date();
-                const showPromo = hasPromo && !promoExpired;
-                const displayImage = t.image_url || (t.images && t.images.length > 0 ? t.images[0] : null);
-                return (
-                  <div key={t.id} className="border border-slate-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-                    {displayImage && (
-                      <div className="h-32 overflow-hidden bg-slate-50">
-                        <img src={displayImage} alt={t.name} className="w-full h-full object-cover" loading="lazy" />
-                      </div>
-                    )}
-                    <div className="p-3">
-                      <h3 className="text-sm font-semibold text-slate-800 mb-1 line-clamp-1">{t.name}</h3>
-                      {t.description && (
-                        <p className="text-xs text-slate-500 line-clamp-2 mb-2">{t.description.replace(/<[^>]*>/g, '')}</p>
-                      )}
-                      <div className="flex items-center gap-2">
-                        {showPromo ? (
-                          <>
-                            <span className="text-sm font-bold text-rose-600">
-                              ${Number(t.promo_price).toLocaleString()}
-                            </span>
-                            <span className="text-xs text-slate-400 line-through">
-                              ${Number(t.original_price).toLocaleString()}
-                            </span>
-                            <Badge className="text-[10px] bg-rose-50 text-rose-600 border-0 px-1.5 py-0.5">
-                              優惠
-                            </Badge>
-                          </>
-                        ) : (
-                          <span className="text-sm font-bold text-slate-700">
-                            ${Number(t.original_price).toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                      {showPromo && t.promo_expiry && (
-                        <div className="flex items-center gap-1 mt-1.5 text-[10px] text-slate-400">
-                          <Calendar className="w-3 h-3" />
-                          優惠至 {new Date(t.promo_expiry).toLocaleDateString('zh-HK')}
-                        </div>
-                      )}
-                      {t.limited_quantity && (
-                        <p className="text-[10px] text-amber-600 mt-1">限量 {t.limited_quantity} 個</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+
 
         {/* Storefront & Namecard photos */}
         {(salon.storefront_photo || salon.namecard_photo) && (

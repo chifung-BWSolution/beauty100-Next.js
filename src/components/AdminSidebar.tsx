@@ -15,6 +15,7 @@ import {
   MessageSquare,
   UserCog,
   ArrowLeftRight,
+  FileText,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
@@ -66,6 +67,7 @@ export default function AdminSidebar({ isMobile = false, onClose = () => {} }: A
     { name: '申請管理', href: '/admin/dashboard', icon: CheckSquare, badge: pendingCount > 0 ? pendingCount : null },
     { name: '表單查詢', href: '/admin/enquiries', icon: MessageSquare },
     { name: '所有美容院', href: '/admin/salons', icon: Store },
+    { name: '文章管理', href: '/admin/articles', icon: FileText },
     { name: '用戶管理', href: '/admin/users', icon: Shield },
     { name: 'Staff 管理', href: '/admin/staff', icon: UserCog },
     { name: '用戶日誌', href: '/admin/logs', icon: Activity },

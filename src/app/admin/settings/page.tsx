@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MessageCircle, Save, CheckCircle, Tag, Plus, Pencil, Trash2, Check, X, Send, RefreshCw, Clock, AlertCircle, Code, Settings } from 'lucide-react';
+import { Phone, MessageCircle, Save, CheckCircle, Tag, Plus, Pencil, Trash2, Check, X, Send, RefreshCw, Clock, AlertCircle, Code, Settings, FileText, AtSign } from 'lucide-react';
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -466,6 +466,190 @@ function TrackingCodesTab() {
   );
 }
 
+// ─── Dynamic Fields for @ mentions ───────────────────────────────────────────
+const DYNAMIC_FIELDS = [
+  { key: 'redeem_end_date', label: '兌換截止日期', description: '療程設定中嘅兌換截止日期' },
+  { key: 'redeem_start_date', label: '兌換開始日期', description: '療程設定中嘅兌換開始日期' },
+  { key: 'purchase_end_date', label: '購買截止日期', description: '療程設定中嘅購買截止日期' },
+  { key: 'purchase_start_date', label: '購買開始日期', description: '療程設定中嘅購買開始日期' },
+  { key: 'treatment_name', label: '療程名稱', description: '療程嘅名稱' },
+  { key: 'salon_name', label: '美容院名稱', description: '適用嘅美容院名稱' },
+];
+
+// ─── Fixed Treatment Terms Tab ──────────────────────────────────────────────
+function FixedTermsTab() {
+  const [terms, setTerms] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [showFieldDropdown, setShowFieldDropdown] = useState(false);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.from('system_settings').select('*').eq('key', 'fixed_treatment_terms').single();
+        if (data) setTerms(data.value || '');
+      } catch (e) { console.error(e); } finally { setLoading(false); }
+    })();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await supabase.from('system_settings').update({ value: terms, updated_at: new Date().toISOString() }).eq('key', 'fixed_treatment_terms');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) { console.error(e); } finally { setSaving(false); }
+  };
+
+  const insertField = (fieldKey: string) => {
+    const tag = `{{${fieldKey}}}`;
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newValue = terms.substring(0, start) + tag + terms.substring(end);
+      setTerms(newValue);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + tag.length, start + tag.length);
+      }, 0);
+    } else {
+      setTerms(prev => prev + tag);
+    }
+    setShowFieldDropdown(false);
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-12">
+      <div className="w-6 h-6 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin" />
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f9a8d4 0%, #ec4899 100%)' }}>
+              <FileText className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-base text-slate-800">固定療程條款</CardTitle>
+              <CardDescription className="text-sm text-slate-500 mt-0.5">設定所有療程共用嘅固定條款，商戶無法修改，只可額外新增</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Dynamic field insertion */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-slate-600 font-medium">插入動態欄位：</span>
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFieldDropdown(!showFieldDropdown)}
+                className="gap-1.5 text-sm border-pink-200 text-pink-600 hover:bg-pink-50"
+              >
+                <AtSign className="w-3.5 h-3.5" />
+                選擇欄位
+              </Button>
+              {showFieldDropdown && (
+                <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[240px]">
+                  {DYNAMIC_FIELDS.map(field => (
+                    <button
+                      key={field.key}
+                      onClick={() => insertField(field.key)}
+                      className="w-full text-left px-3 py-2 hover:bg-pink-50 transition-colors"
+                    >
+                      <span className="text-sm font-medium text-slate-700">{field.label}</span>
+                      <span className="text-xs text-slate-400 ml-2">{'{{' + field.key + '}}'}</span>
+                      <p className="text-xs text-slate-400 mt-0.5">{field.description}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Preview of current dynamic field tags in content */}
+          {terms && (() => {
+            const usedFields = DYNAMIC_FIELDS.filter(f => terms.includes(`{{${f.key}}}`));
+            if (usedFields.length === 0) return null;
+            return (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-slate-400">已使用動態欄位：</span>
+                {usedFields.map(f => (
+                  <Badge key={f.key} variant="secondary" className="text-xs bg-pink-50 text-pink-600 border-pink-200">
+                    @{f.label}
+                  </Badge>
+                ))}
+              </div>
+            );
+          })()}
+
+          {/* Terms Editor */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium text-slate-600">條款內容</Label>
+            <Textarea
+              ref={textareaRef}
+              value={terms}
+              onChange={e => setTerms(e.target.value)}
+              placeholder={'輸入固定療程條款...\n\n例如：\n1. 此優惠需於 {{redeem_end_date}} 或之前兌換\n2. 不可轉讓或退款\n3. 如有任何爭議，以本公司最終決定為準'}
+              className="min-h-[300px] border-slate-200 focus:border-pink-400 focus:ring-pink-400/20 font-mono text-sm leading-relaxed"
+            />
+            <p className="text-xs text-slate-400 mt-1">
+              💡 使用 <code className="bg-slate-100 px-1 rounded">{'{{欄位名}}'}</code> 嚟插入動態內容，例如 <code className="bg-slate-100 px-1 rounded">{'{{redeem_end_date}}'}</code> 會顯示該療程嘅兌換截止日期
+            </p>
+          </div>
+
+          {/* Preview */}
+          {terms && (
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium text-slate-600">預覽效果</Label>
+              <div className="bg-amber-50/60 rounded-lg p-4 border border-amber-100">
+                <p className="text-sm font-semibold text-slate-700 mb-2">📝 條款及細則</p>
+                <div className="text-sm text-slate-600 whitespace-pre-line">
+                  {terms.split('\n').map((line, i) => (
+                    <p key={i} className="mb-1">
+                      {line.split(/(\{\{[^}]+\}\})/).map((part, j) => {
+                        const match = part.match(/^\{\{([^}]+)\}\}$/);
+                        if (match) {
+                          const field = DYNAMIC_FIELDS.find(f => f.key === match[1]);
+                          return <span key={j} className="inline-flex items-center bg-pink-100 text-pink-700 px-1.5 py-0.5 rounded text-xs font-medium">@{field?.label || match[1]}</span>;
+                        }
+                        return <span key={j}>{part}</span>;
+                      })}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+            <p className="text-xs text-blue-600 font-medium mb-1">💡 使用說明</p>
+            <ul className="text-xs text-blue-500 space-y-0.5">
+              <li>• 呢度設定嘅條款會自動加入所有療程，商戶無法修改</li>
+              <li>• 商戶只可以喺呢個固定條款之後新增額外條款</li>
+              <li>• 使用「@選擇欄位」按鈕插入動態數據（如兌換日期）</li>
+              <li>• 動態欄位會根據每個療程嘅實際設定自動替換</li>
+            </ul>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button onClick={handleSave} disabled={saving} className="gap-2 text-white" style={{ background: saved ? '#10b981' : 'linear-gradient(135deg, #f9a8d4 0%, #ec4899 100%)', border: 'none' }}>
+              {saved ? <><CheckCircle className="w-4 h-4" />已儲存！</> : saving ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />儲存中...</> : <><Save className="w-4 h-4" />儲存設定</>}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Main Settings Page ─────────────────────────────────────────────────────
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('tags');
@@ -505,6 +689,12 @@ export default function AdminSettingsPage() {
           >
             <Code className="w-3.5 h-3.5" />追蹤碼
           </button>
+          <button
+            onClick={() => setActiveTab('fixed_terms')}
+            className={`py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'fixed_terms' ? 'bg-white text-pink-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            <FileText className="w-3.5 h-3.5" />固定條款
+          </button>
         </div>
       </div>
 
@@ -512,6 +702,7 @@ export default function AdminSettingsPage() {
         {activeTab === 'tags' && <SalonTagsTab />}
         {activeTab === 'whatsapp' && <WhatsAppSettingsTab />}
         {activeTab === 'tracking' && <TrackingCodesTab />}
+        {activeTab === 'fixed_terms' && <FixedTermsTab />}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -564,8 +565,8 @@ export default function SalonReviews({ salonId }: SalonReviewsProps) {
       </div>
 
       {/* Review Dialog/Popup */}
-      {showReviewDialog && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowReviewDialog(false)}>
+      {showReviewDialog && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowReviewDialog(false)}>
           <div
             className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
@@ -690,13 +691,14 @@ export default function SalonReviews({ salonId }: SalonReviewsProps) {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Fancybox-style Gallery Lightbox */}
-      {showGallery && galleryImages.length > 0 && (
+      {showGallery && galleryImages.length > 0 && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center"
           onClick={closeGallery}
         >
           {/* Close button */}
@@ -757,7 +759,8 @@ export default function SalonReviews({ salonId }: SalonReviewsProps) {
               ))}
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

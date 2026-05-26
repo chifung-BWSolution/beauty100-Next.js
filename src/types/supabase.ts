@@ -116,6 +116,44 @@ export type Database = {
         }
         Relationships: []
       }
+      cart_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          member_id: string
+          quantity: number
+          salon_profile_id: string | null
+          treatment_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          member_id: string
+          quantity?: number
+          salon_profile_id?: string | null
+          treatment_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          member_id?: string
+          quantity?: number
+          salon_profile_id?: string | null
+          treatment_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_submissions: {
         Row: {
           created_at: string | null
@@ -349,6 +387,125 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string | null
+          member_id: string
+          name: string
+          order_id: string
+          quantity: number
+          redeem_end_date: string | null
+          redeem_start_date: string | null
+          redeemed_at: string | null
+          refunded_at: string | null
+          salon_name: string | null
+          salon_profile_id: string | null
+          settled_at: string | null
+          status: string
+          treatment_id: string
+          unit_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          member_id: string
+          name: string
+          order_id: string
+          quantity?: number
+          redeem_end_date?: string | null
+          redeem_start_date?: string | null
+          redeemed_at?: string | null
+          refunded_at?: string | null
+          salon_name?: string | null
+          salon_profile_id?: string | null
+          settled_at?: string | null
+          status?: string
+          treatment_id: string
+          unit_price: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          member_id?: string
+          name?: string
+          order_id?: string
+          quantity?: number
+          redeem_end_date?: string | null
+          redeem_start_date?: string | null
+          redeemed_at?: string | null
+          refunded_at?: string | null
+          salon_name?: string | null
+          salon_profile_id?: string | null
+          settled_at?: string | null
+          status?: string
+          treatment_id?: string
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string | null
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          id: string
+          items: Json
+          member_id: string
+          paid_at: string | null
+          status: string
+          stripe_client_secret: string | null
+          stripe_payment_intent_id: string | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          items?: Json
+          member_id: string
+          paid_at?: string | null
+          status?: string
+          stripe_client_secret?: string | null
+          stripe_payment_intent_id?: string | null
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          items?: Json
+          member_id?: string
+          paid_at?: string | null
+          status?: string
+          stripe_client_secret?: string | null
+          stripe_payment_intent_id?: string | null
+          total_amount?: number
           updated_at?: string | null
         }
         Relationships: []
@@ -775,6 +932,30 @@ export type Database = {
           },
         ]
       }
+      salon_qr_codes: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean
+          qr_secret: string
+          salon_profile_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          qr_secret: string
+          salon_profile_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          qr_secret?: string
+          salon_profile_id?: string
+        }
+        Relationships: []
+      }
       salon_reviews: {
         Row: {
           comment: string | null
@@ -889,6 +1070,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          value: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Relationships: []
       }
       tracking_codes: {
         Row: {
@@ -1093,6 +1298,14 @@ export type Database = {
     }
     Functions: {
       cleanup_old_unstarred_versions: { Args: never; Returns: number }
+      decrement_treatment_stock: {
+        Args: { p_quantity?: number; p_treatment_id: string }
+        Returns: undefined
+      }
+      generate_salon_qr_secret: {
+        Args: { p_salon_profile_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

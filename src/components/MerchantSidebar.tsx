@@ -15,6 +15,7 @@ import {
   Package,
   Menu,
   X,
+  Receipt,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
@@ -46,6 +47,7 @@ export default function MerchantSidebar({ hasApprovedProfile, isMobile = false, 
     { name: '申請狀態', href: '/application-status', icon: CheckSquare, show: true },
     { name: '我的美容院', href: '/salon-profile', icon: Store, show: hasApprovedProfile },
     { name: '我的療程', href: '/my-treatments', icon: Package, show: hasApprovedProfile },
+    { name: '訂單紀錄', href: '/merchant-orders', icon: Receipt, show: hasApprovedProfile },
     { name: 'KOL 推廣', href: '/kol-promotion', icon: Megaphone, show: true },
   ].filter(l => l.show);
 

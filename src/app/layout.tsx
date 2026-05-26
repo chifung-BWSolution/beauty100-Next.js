@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
+import { CartProvider } from "@/lib/CartContext";
 import AppLayout from "@/components/AppLayout";
 import dynamic from "next/dynamic";
 import ErrorBoundaryScript from "@/components/ErrorBoundaryScript";
@@ -11,6 +12,16 @@ import TrackingScripts from "@/components/TrackingScripts";
 import TrackingNoscriptBody from "@/components/TrackingNoscriptBody";
 
 const WhatsAppWidget = dynamic(() => import("@/components/WhatsAppWidget"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const CartDrawer = dynamic(() => import("@/components/CartDrawer"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const CartFloatingButton = dynamic(() => import("@/components/CartFloatingButton"), {
   ssr: false,
   loading: () => null,
 });
@@ -160,12 +171,16 @@ export default function RootLayout({
         <TrackingNoscriptBody />
         <ErrorBoundaryScript />
         <AuthProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
-          <WhatsAppWidget />
-          <Toaster />
-          <SonnerToaster />
+          <CartProvider>
+            <AppLayout>
+              {children}
+            </AppLayout>
+            <CartFloatingButton />
+            <CartDrawer />
+            <WhatsAppWidget />
+            <Toaster />
+            <SonnerToaster />
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>
