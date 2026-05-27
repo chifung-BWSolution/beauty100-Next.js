@@ -57,7 +57,7 @@ export function useSidebarData(currentCategory: string): SidebarData {
         // 2. 編輯推薦 - all categories, articles with multiple tags (indicates richer/featured content)
         const { data: editorData } = await supabase
           .from('blog_articles')
-          .select('title, handle, cover_image_url, published_at, tags, category, blog_title')
+          .select('title, handle, cover_image_url, published_at, tags, category, is_celebrity')
           .eq('status', 'active')
           .order('published_at', { ascending: false })
           .limit(50);

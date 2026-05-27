@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MessageCircle, Save, CheckCircle, Tag, Plus, Pencil, Trash2, Check, X, Send, RefreshCw, Clock, AlertCircle, Code, Settings, FileText, AtSign } from 'lucide-react';
+import { Phone, MessageCircle, Save, CheckCircle, Tag, Plus, Pencil, Trash2, Check, X, Send, RefreshCw, Clock, AlertCircle, Code, Settings, FileText, AtSign, ShieldCheck } from 'lucide-react';
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -650,6 +650,191 @@ function FixedTermsTab() {
   );
 }
 
+// ─── Page Permissions Tab ────────────────────────────────────────────────────
+const ADMIN_PAGES = [
+  { path: '/admin/dashboard', label: '申請管理' },
+  { path: '/admin/enquiries', label: '表單查詢' },
+  { path: '/admin/salons', label: '所有美容院' },
+  { path: '/admin/articles', label: '文章管理' },
+  { path: '/admin/users', label: '用戶管理' },
+  { path: '/admin/staff', label: 'Staff 管理' },
+  { path: '/admin/logs', label: '用戶日誌' },
+  { path: '/admin/settings', label: '系統設定' },
+];
+
+const AVAILABLE_ROLES = [
+  { key: 'admin', label: '管理員 (Admin)' },
+  { key: 'marketing', label: '市場推廣 (Marketing)' },
+];
+
+function PagePermissionsTab() {
+  const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.from('role_page_permissions').select('*');
+        if (data) {
+          const map: Record<string, Record<string, boolean>> = {};
+          for (const row of data) {
+            if (!map[row.role]) map[row.role] = {};
+            map[row.role][row.page_path] = row.allowed;
+          }
+          // Ensure all roles/pages have entries
+          for (const role of AVAILABLE_ROLES) {
+            if (!map[role.key]) map[role.key] = {};
+            for (const page of ADMIN_PAGES) {
+              if (map[role.key][page.path] === undefined) {
+                map[role.key][page.path] = role.key === 'admin'; // admin defaults true
+              }
+            }
+          }
+          setPermissions(map);
+        }
+      } catch (e) { console.error(e); } finally { setLoading(false); }
+    })();
+  }, []);
+
+  const togglePermission = (role: string, pagePath: string) => {
+    setPermissions(prev => ({
+      ...prev,
+      [role]: { ...prev[role], [pagePath]: !prev[role]?.[pagePath] }
+    }));
+  };
+
+  const toggleAllForRole = (role: string, value: boolean) => {
+    setPermissions(prev => {
+      const updated = { ...prev[role] };
+      for (const page of ADMIN_PAGES) {
+        updated[page.path] = value;
+      }
+      return { ...prev, [role]: updated };
+    });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      for (const role of AVAILABLE_ROLES) {
+        for (const page of ADMIN_PAGES) {
+          const allowed = permissions[role.key]?.[page.path] ?? false;
+          await supabase.from('role_page_permissions').upsert(
+            { role: role.key, page_path: page.path, page_label: page.label, allowed, updated_at: new Date().toISOString() },
+            { onConflict: 'role,page_path' }
+          );
+        }
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) { console.error(e); } finally { setSaving(false); }
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-12">
+      <div className="w-6 h-6 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin" />
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f9a8d4 0%, #ec4899 100%)' }}>
+              <ShieldCheck className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-base text-slate-800">頁面權限設定</CardTitle>
+              <CardDescription className="text-sm text-slate-500 mt-0.5">設定每個角色可以存取嘅後台頁面</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Permission matrix table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-3 px-3 font-semibold text-slate-700">頁面</th>
+                  {AVAILABLE_ROLES.map(role => (
+                    <th key={role.key} className="text-center py-3 px-3 font-semibold text-slate-700 min-w-[140px]">
+                      <div>{role.label}</div>
+                      <div className="flex items-center justify-center gap-2 mt-1">
+                        <button
+                          onClick={() => toggleAllForRole(role.key, true)}
+                          className="text-xs text-pink-500 hover:text-pink-600 underline"
+                        >
+                          全選
+                        </button>
+                        <span className="text-slate-300">|</span>
+                        <button
+                          onClick={() => toggleAllForRole(role.key, false)}
+                          className="text-xs text-slate-400 hover:text-slate-600 underline"
+                        >
+                          全不選
+                        </button>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {ADMIN_PAGES.map(page => (
+                  <tr key={page.path} className="border-b border-slate-100 hover:bg-slate-50/50">
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-700 font-medium">{page.label}</span>
+                        <span className="text-xs text-slate-400 font-mono">{page.path}</span>
+                      </div>
+                    </td>
+                    {AVAILABLE_ROLES.map(role => (
+                      <td key={role.key} className="text-center py-3 px-3">
+                        <button
+                          onClick={() => togglePermission(role.key, page.path)}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto transition-all ${
+                            permissions[role.key]?.[page.path]
+                              ? 'bg-green-100 text-green-600 border border-green-200 hover:bg-green-200'
+                              : 'bg-slate-100 text-slate-400 border border-slate-200 hover:bg-slate-200'
+                          }`}
+                        >
+                          {permissions[role.key]?.[page.path] ? (
+                            <Check className="w-4 h-4" />
+                          ) : (
+                            <X className="w-4 h-4" />
+                          )}
+                        </button>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+            <p className="text-xs text-blue-600 font-medium mb-1">💡 使用說明</p>
+            <ul className="text-xs text-blue-500 space-y-0.5">
+              <li>• 綠色 ✓ 代表該角色可以存取該頁面</li>
+              <li>• 灰色 ✕ 代表該角色無法存取該頁面</li>
+              <li>• 儲存後，Sidebar 會根據設定自動隱藏無權限嘅頁面</li>
+              <li>• Admin 角色建議保留所有頁面存取權限</li>
+            </ul>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button onClick={handleSave} disabled={saving} className="gap-2 text-white" style={{ background: saved ? '#10b981' : 'linear-gradient(135deg, #f9a8d4 0%, #ec4899 100%)', border: 'none' }}>
+              {saved ? <><CheckCircle className="w-4 h-4" />已儲存！</> : saving ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />儲存中...</> : <><Save className="w-4 h-4" />儲存設定</>}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Main Settings Page ─────────────────────────────────────────────────────
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('tags');
@@ -695,6 +880,12 @@ export default function AdminSettingsPage() {
           >
             <FileText className="w-3.5 h-3.5" />固定條款
           </button>
+          <button
+            onClick={() => setActiveTab('permissions')}
+            className={`py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'permissions' ? 'bg-white text-pink-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />頁面權限
+          </button>
         </div>
       </div>
 
@@ -703,6 +894,7 @@ export default function AdminSettingsPage() {
         {activeTab === 'whatsapp' && <WhatsAppSettingsTab />}
         {activeTab === 'tracking' && <TrackingCodesTab />}
         {activeTab === 'fixed_terms' && <FixedTermsTab />}
+        {activeTab === 'permissions' && <PagePermissionsTab />}
       </div>
     </div>
   );

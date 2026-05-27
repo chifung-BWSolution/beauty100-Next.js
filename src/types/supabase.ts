@@ -17,8 +17,6 @@ export type Database = {
       blog_articles: {
         Row: {
           author: string | null
-          blog_handle: string | null
-          blog_title: string | null
           category: string | null
           cover_image_alt: string | null
           cover_image_url: string | null
@@ -26,6 +24,7 @@ export type Database = {
           handle: string
           id: string
           intro: Json | null
+          is_celebrity: boolean | null
           published_at: string | null
           section_1_content: Json | null
           section_1_images: string[] | null
@@ -50,8 +49,6 @@ export type Database = {
         }
         Insert: {
           author?: string | null
-          blog_handle?: string | null
-          blog_title?: string | null
           category?: string | null
           cover_image_alt?: string | null
           cover_image_url?: string | null
@@ -59,6 +56,7 @@ export type Database = {
           handle: string
           id?: string
           intro?: Json | null
+          is_celebrity?: boolean | null
           published_at?: string | null
           section_1_content?: Json | null
           section_1_images?: string[] | null
@@ -83,8 +81,6 @@ export type Database = {
         }
         Update: {
           author?: string | null
-          blog_handle?: string | null
-          blog_title?: string | null
           category?: string | null
           cover_image_alt?: string | null
           cover_image_url?: string | null
@@ -92,6 +88,7 @@ export type Database = {
           handle?: string
           id?: string
           intro?: Json | null
+          is_celebrity?: boolean | null
           published_at?: string | null
           section_1_content?: Json | null
           section_1_images?: string[] | null
@@ -506,6 +503,36 @@ export type Database = {
           stripe_client_secret?: string | null
           stripe_payment_intent_id?: string | null
           total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      role_page_permissions: {
+        Row: {
+          allowed: boolean | null
+          created_at: string | null
+          id: string
+          page_label: string
+          page_path: string
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          allowed?: boolean | null
+          created_at?: string | null
+          id?: string
+          page_label: string
+          page_path: string
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          allowed?: boolean | null
+          created_at?: string | null
+          id?: string
+          page_label?: string
+          page_path?: string
+          role?: string
           updated_at?: string | null
         }
         Relationships: []

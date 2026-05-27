@@ -451,7 +451,7 @@ function mapSupabaseToArticle(record: any): ArticleData {
     .reduce((acc, b) => acc + ((b as any).text?.length || 0), 0);
   const readTime = `${Math.max(1, Math.ceil(wordCount / 400))} 分鐘`;
 
-  const rawCategory = record.category || record.blog_title || '美容護膚';
+  const rawCategory = record.category || '美容護膚';
   const resolvedCategoryLabel = getCategoryLabel(rawCategory);
 
   return {

@@ -147,7 +147,7 @@ async function fetchPageData() {
       .limit(8),
     supabase
       .from('blog_articles')
-      .select('handle, title, seo_description, cover_image_url, tags, published_at, category, blog_title')
+      .select('handle, title, seo_description, cover_image_url, tags, published_at, category, is_celebrity')
       .eq('status', 'active')
       .order('published_at', { ascending: false })
       .limit(100),
@@ -271,7 +271,7 @@ async function fetchPageData() {
     editorPicks = editorFallback.map((item: any) => ({
       title: item.title,
       href: getArticleDetailPath(item.category || '', item.handle),
-      tag: item.blog_title?.includes('明星') ? '明星推薦' : (item.tags?.[0] || '編輯推薦'),
+      tag: item.is_celebrity ? '明星推薦' : (item.tags?.[0] || '編輯推薦'),
     }));
 
     // Popular tags

@@ -241,7 +241,7 @@ export default function HealthyDietPage() {
             date: item.published_at
               ? new Date(item.published_at).toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric' })
               : '',
-            tag: item.blog_title?.includes('明星') ? '明星推薦' : (item.tags?.[0] || '編輯精選'),
+            tag: item.is_celebrity ? '明星推薦' : (item.tags?.[0] || '編輯精選'),
           }));
           setEditorPicks(editorMapped);
         }

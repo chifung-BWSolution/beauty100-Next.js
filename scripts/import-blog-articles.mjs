@@ -221,7 +221,7 @@ async function main() {
       seo_title: row['Metafield: title_tag [string]'] || '',
       seo_description: row['Metafield: description_tag [string]'] || '',
       blog_handle: row['Blog: Handle'] || '',
-      blog_title: row['Blog: Title'] || '',
+      is_celebrity: (row['Blog: Title'] || '').includes('明星'),
       tags: parseTags(row['Tags']),
       published_at: row['Published At'] ? new Date(row['Published At']).toISOString() : null,
       cover_image_url: coverImageUrl,

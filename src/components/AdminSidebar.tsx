@@ -30,6 +30,36 @@ export default function AdminSidebar({ isMobile = false, onClose = () => {} }: A
   const router = useRouter();
   const { user } = useAuth();
   const [pendingCount, setPendingCount] = useState(0);
+  const [allowedPages, setAllowedPages] = useState<Set<string> | null>(null);
+
+  // Fetch role-based page permissions
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      const userRole = (user as any)?.role || (user as any)?.user_metadata?.role;
+      if (!userRole) return;
+      
+      try {
+        const { data, error } = await supabase.from('role_page_permissions').select('page_path, allowed').eq('role', userRole);
+        if (error) throw error;
+        if (data && data.length > 0) {
+          const allowed = new Set(data.filter(r => r.allowed).map(r => r.page_path));
+          setAllowedPages(allowed);
+        } else {
+          // If no permissions configured for this role, admin sees all, others see nothing
+          if (userRole === 'admin') {
+            setAllowedPages(null); // null = show all
+          } else {
+            setAllowedPages(new Set());
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch page permissions:', e);
+        // On error, show all for admin as fallback
+        if (userRole === 'admin') setAllowedPages(null);
+      }
+    };
+    fetchPermissions();
+  }, [user]);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,16 +93,19 @@ export default function AdminSidebar({ isMobile = false, onClose = () => {} }: A
     if (isMobile) onClose();
   };
 
-  const adminLinks = [
+  const marketingLinks = [
     { name: '申請管理', href: '/admin/dashboard', icon: CheckSquare, badge: pendingCount > 0 ? pendingCount : null },
     { name: '表單查詢', href: '/admin/enquiries', icon: MessageSquare },
     { name: '所有美容院', href: '/admin/salons', icon: Store },
     { name: '文章管理', href: '/admin/articles', icon: FileText },
+  ].filter(link => allowedPages === null || allowedPages.has(link.href));
+
+  const adminLinks = [
     { name: '用戶管理', href: '/admin/users', icon: Shield },
     { name: 'Staff 管理', href: '/admin/staff', icon: UserCog },
     { name: '用戶日誌', href: '/admin/logs', icon: Activity },
     { name: '系統設定', href: '/admin/settings', icon: Settings },
-  ];
+  ].filter(link => allowedPages === null || allowedPages.has(link.href));
 
   const NavLink = ({ link }: { link: { name: string; href: string; icon: React.ComponentType<{ className?: string }>; badge?: number | null } }) => {
     const Icon = link.icon;
@@ -136,12 +169,22 @@ export default function AdminSidebar({ isMobile = false, onClose = () => {} }: A
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-2 space-y-5 overflow-y-auto">
-        <div>
-          <p className="text-cyan-400/60 text-[14px] font-bold uppercase tracking-widest px-3 mb-2">管理後台</p>
-          <div className="space-y-0.5">
-            {adminLinks.map(link => <NavLink key={link.href} link={link as any} />)}
+        {marketingLinks.length > 0 && (
+          <div>
+            <p className="text-cyan-400/60 text-[14px] font-bold uppercase tracking-widest px-3 mb-2">市場營銷</p>
+            <div className="space-y-0.5">
+              {marketingLinks.map(link => <NavLink key={link.href} link={link as any} />)}
+            </div>
           </div>
-        </div>
+        )}
+        {adminLinks.length > 0 && (
+          <div>
+            <p className="text-cyan-400/60 text-[14px] font-bold uppercase tracking-widest px-3 mb-2">管理後台</p>
+            <div className="space-y-0.5">
+              {adminLinks.map(link => <NavLink key={link.href} link={link as any} />)}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Bottom: User + Logout */}
