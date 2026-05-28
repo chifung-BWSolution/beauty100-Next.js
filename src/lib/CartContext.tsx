@@ -174,7 +174,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
           .from('salon_profiles')
           .select('name')
           .eq('id', profileId)
-          .single();
+          .maybeSingle();
         salonName = salonData?.name || null;
       }
       setItems(prev => [{ ...(data as CartItem), salon_name: salonName }, ...prev]);

@@ -14,7 +14,9 @@ import { ArrowLeft, Loader2, ShoppingCart, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import PublicLayout from '@/components/public/PublicLayout';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
 
 export default function CheckoutPage() {
   const { user } = useAuth();
@@ -235,7 +237,14 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {user && items.length > 0 && !isLoading && (
+            {user && items.length > 0 && !isLoading && !stripePromise && (
+              <div className="text-center py-8">
+                <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
+                <p className="text-sm text-slate-600">付款系統暫時無法使用，請稍後再試</p>
+              </div>
+            )}
+
+            {user && items.length > 0 && !isLoading && stripePromise && (
               <EmbeddedCheckoutProvider
                 stripe={stripePromise}
                 options={{
