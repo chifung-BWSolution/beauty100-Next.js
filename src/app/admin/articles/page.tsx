@@ -401,6 +401,15 @@ function ArticleRichTextEditor({ value, onChange, placeholder }: { value: string
         branding: false,
         statusbar: false,
         promotion: false,
+        setup: (editor: any) => {
+          editor.on('init', () => {
+            // Ensure TinyMCE aux container has high z-index
+            const auxContainers = document.querySelectorAll('.tox-tinymce-aux');
+            auxContainers.forEach((el: Element) => {
+              (el as HTMLElement).style.zIndex = '99999';
+            });
+          });
+        },
       }}
     />
   );
@@ -712,9 +721,22 @@ export default function AdminArticlesPage() {
           </CardContent>
         </Card>
 
-        {/* Create/Edit Form Dialog */}
-        <Dialog open={showForm} onOpenChange={setShowForm}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-white">
+        {/* Create/Edit Form Dialog - modal={false} to allow TinyMCE dialogs to receive focus */}
+        {showForm && <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => {}} />}
+        <Dialog open={showForm} onOpenChange={setShowForm} modal={false}>
+          <DialogContent
+            className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-white z-50"
+            onPointerDownOutside={(e) => {
+              // With modal={false}, prevent all outside clicks from closing
+              e.preventDefault();
+            }}
+            onInteractOutside={(e) => {
+              e.preventDefault();
+            }}
+            onFocusOutside={(e) => {
+              e.preventDefault();
+            }}
+          >
             <DialogHeader>
               <DialogTitle className="text-white">{editingId ? '編輯文章' : '新增文章'}</DialogTitle>
             </DialogHeader>

@@ -1,6 +1,15 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+    async redirects() {
+        return [
+            {
+                source: '/admin/images',
+                destination: '/admin/dashboard',
+                permanent: true,
+            },
+        ];
+    },
     images: {
         remotePatterns: [
             {

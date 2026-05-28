@@ -40,6 +40,7 @@ interface Treatment {
   redeem_start_date?: string | null;
   redeem_end_date?: string | null;
   limited_quantity?: number | null;
+  limit_one_per_customer?: boolean;
   salon_profile_id?: string | null;
   salon_profile_ids?: string[] | null;
   terms?: string | null;
@@ -75,6 +76,7 @@ export default function MyTreatmentsPage() {
   const [formRedeemStartDate, setFormRedeemStartDate] = useState("");
   const [formRedeemEndDate, setFormRedeemEndDate] = useState("");
   const [formLimitedQty, setFormLimitedQty] = useState("");
+  const [formLimitOnePerCustomer, setFormLimitOnePerCustomer] = useState(false);
   const [formSalonIds, setFormSalonIds] = useState<string[]>([]);
   const [formTerms, setFormTerms] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -224,6 +226,7 @@ export default function MyTreatmentsPage() {
       redeem_start_date: formRedeemStartDate || null,
       redeem_end_date: formRedeemEndDate || null,
       limited_quantity: formLimitedQty ? parseInt(formLimitedQty) : null,
+      limit_one_per_customer: formLimitOnePerCustomer,
       salon_profile_id: formSalonIds.length > 0 ? formSalonIds[0] : null,
       salon_profile_ids: formSalonIds.length > 0 ? formSalonIds : null,
       terms: formTerms || null,
@@ -255,6 +258,7 @@ export default function MyTreatmentsPage() {
     setFormRedeemStartDate("");
     setFormRedeemEndDate("");
     setFormLimitedQty("");
+    setFormLimitOnePerCustomer(false);
     setFormSalonIds([]);
     setFormTerms("");
   };
@@ -271,6 +275,7 @@ export default function MyTreatmentsPage() {
     setFormRedeemStartDate(treatment.redeem_start_date || "");
     setFormRedeemEndDate(treatment.redeem_end_date || "");
     setFormLimitedQty(treatment.limited_quantity ? String(treatment.limited_quantity) : "");
+    setFormLimitOnePerCustomer(treatment.limit_one_per_customer || false);
     setFormSalonIds(treatment.salon_profile_ids || (treatment.salon_profile_id ? [treatment.salon_profile_id] : []));
     setFormTerms(treatment.terms || "");
     setShowForm(true);
@@ -294,6 +299,7 @@ export default function MyTreatmentsPage() {
       redeem_start_date: formRedeemStartDate || null,
       redeem_end_date: formRedeemEndDate || null,
       limited_quantity: formLimitedQty ? parseInt(formLimitedQty) : null,
+      limit_one_per_customer: formLimitOnePerCustomer,
       salon_profile_id: formSalonIds.length > 0 ? formSalonIds[0] : null,
       salon_profile_ids: formSalonIds.length > 0 ? formSalonIds : null,
       terms: formTerms || null,
@@ -608,6 +614,20 @@ export default function MyTreatmentsPage() {
                       type="number"
                       min="0"
                     />
+                  </div>
+
+                  {/* 每位客戶限購一次 */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="limitOnePerCustomer"
+                      checked={formLimitOnePerCustomer}
+                      onChange={(e) => setFormLimitOnePerCustomer(e.target.checked)}
+                      className="w-4 h-4 text-pink-600 border-slate-300 rounded focus:ring-pink-500"
+                    />
+                    <label htmlFor="limitOnePerCustomer" className="text-sm font-medium text-slate-700">
+                      每位客戶限購一次
+                    </label>
                   </div>
 
                   {/* 固定條款 + 條款及細則 */}
@@ -959,6 +979,12 @@ export default function MyTreatmentsPage() {
                             <span className="text-slate-700">
                               {treatment.limited_quantity} 個
                             </span>
+                          </div>
+                        )}
+                        {treatment.limit_one_per_customer && (
+                          <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4 text-amber-500" />
+                            <span className="text-amber-700 font-medium">每位客戶限購一次</span>
                           </div>
                         )}
                       </div>

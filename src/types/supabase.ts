@@ -408,6 +408,7 @@ export type Database = {
           treatment_id: string
           unit_price: number
           updated_at: string | null
+          voucher_number: string | null
         }
         Insert: {
           created_at?: string | null
@@ -428,6 +429,7 @@ export type Database = {
           treatment_id: string
           unit_price: number
           updated_at?: string | null
+          voucher_number?: string | null
         }
         Update: {
           created_at?: string | null
@@ -448,6 +450,7 @@ export type Database = {
           treatment_id?: string
           unit_price?: number
           updated_at?: string | null
+          voucher_number?: string | null
         }
         Relationships: [
           {
@@ -459,6 +462,33 @@ export type Database = {
           },
         ]
       }
+      order_number_sequences: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_seq: number
+          salon_profile_id: string
+          updated_at: string | null
+          year_month: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_seq?: number
+          salon_profile_id: string
+          updated_at?: string | null
+          year_month: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_seq?: number
+          salon_profile_id?: string
+          updated_at?: string | null
+          year_month?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string | null
@@ -468,7 +498,9 @@ export type Database = {
           id: string
           items: Json
           member_id: string
+          order_number: string | null
           paid_at: string | null
+          salon_profile_id: string | null
           status: string
           stripe_client_secret: string | null
           stripe_payment_intent_id: string | null
@@ -483,7 +515,9 @@ export type Database = {
           id?: string
           items?: Json
           member_id: string
+          order_number?: string | null
           paid_at?: string | null
+          salon_profile_id?: string | null
           status?: string
           stripe_client_secret?: string | null
           stripe_payment_intent_id?: string | null
@@ -498,7 +532,9 @@ export type Database = {
           id?: string
           items?: Json
           member_id?: string
+          order_number?: string | null
           paid_at?: string | null
+          salon_profile_id?: string | null
           status?: string
           stripe_client_secret?: string | null
           stripe_payment_intent_id?: string | null
@@ -823,6 +859,7 @@ export type Database = {
           raw_data: Json | null
           renovation_date: string | null
           reopened_date: string | null
+          salon_code: string
           salon_name: string | null
           salon_status: string | null
           selected_tags: Json | null
@@ -874,6 +911,7 @@ export type Database = {
           raw_data?: Json | null
           renovation_date?: string | null
           reopened_date?: string | null
+          salon_code: string
           salon_name?: string | null
           salon_status?: string | null
           selected_tags?: Json | null
@@ -925,6 +963,7 @@ export type Database = {
           raw_data?: Json | null
           renovation_date?: string | null
           reopened_date?: string | null
+          salon_code?: string
           salon_name?: string | null
           salon_status?: string | null
           selected_tags?: Json | null
@@ -1157,6 +1196,7 @@ export type Database = {
           id: string
           image_url: string | null
           images: string[] | null
+          limit_one_per_customer: boolean
           limited_quantity: number | null
           name: string
           original_price: number
@@ -1179,6 +1219,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           images?: string[] | null
+          limit_one_per_customer?: boolean
           limited_quantity?: number | null
           name: string
           original_price: number
@@ -1201,6 +1242,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           images?: string[] | null
+          limit_one_per_customer?: boolean
           limited_quantity?: number | null
           name?: string
           original_price?: number
@@ -1329,10 +1371,16 @@ export type Database = {
         Args: { p_quantity?: number; p_treatment_id: string }
         Returns: undefined
       }
+      generate_order_number: {
+        Args: { p_salon_profile_id: string }
+        Returns: string
+      }
       generate_salon_qr_secret: {
         Args: { p_salon_profile_id: string }
         Returns: string
       }
+      generate_unique_salon_code: { Args: never; Returns: string }
+      generate_voucher_number: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never

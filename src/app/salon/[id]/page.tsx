@@ -258,6 +258,8 @@ function TreatmentItem({ treatment: t, showPromo, displayImage, fixedTerms, salo
                         alert('已達到此療程嘅購買限量！');
                       } else if (result.error === 'sold_out') {
                         alert('此療程已售罄！');
+                      } else if (result.error === 'limit_one_per_customer' || result.error === 'already_purchased') {
+                        alert('此療程每位客戶限購一次！');
                       }
                     });
                   }}
@@ -412,6 +414,8 @@ function TreatmentItem({ treatment: t, showPromo, displayImage, fixedTerms, salo
                     alert('已達到此療程嘅購買限量！');
                   } else if (result.error === 'sold_out') {
                     alert('此療程已售罄！');
+                  } else if (result.error === 'limit_one_per_customer' || result.error === 'already_purchased') {
+                    alert('此療程每位客戶限購一次！');
                   }
                 });
               }}
@@ -938,7 +942,7 @@ export default function SalonDetailPage() {
           )}
           {!isClaimed && (
             <Link
-              href={`/merchant-signup?type=claim&salon=${encodeURIComponent(JSON.stringify({ salon_name: salon.salon_name, salon_id: salon.id, district: salon.district_name || salon.district || '' }))}`}
+              href={`/merchant-signup?type=claim&salon=${encodeURIComponent(JSON.stringify({ salon_name: salon.salon_name, salon_profile_id: salon.id, district: salon.district_name || salon.district || '' }))}`}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-rose-600 bg-rose-50 px-4 py-2 rounded-full hover:bg-rose-100 transition-colors border border-rose-200"
             >
               <Store className="w-4 h-4" />

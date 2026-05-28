@@ -69,3 +69,35 @@
     border-radius: 9999px;
   }
 }
+
+/* TinyMCE dialogs must appear above Radix Dialog overlay (z-50 = 50) */
+.tox-tinymce-aux,
+.tox-tinymce-aux * {
+  z-index: 99999 !important;
+}
+.tox-dialog-wrap {
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+}
+.tox-dialog-wrap__backdrop {
+  z-index: 99998 !important;
+}
+.tox-dialog {
+  pointer-events: auto !important;
+}
+.tox-dialog input,
+.tox-dialog button,
+.tox-dialog textarea,
+.tox-dialog select,
+.tox-dialog .tox-textfield,
+.tox-dialog .tox-listbox,
+.tox-dialog .tox-collection__item {
+  pointer-events: auto !important;
+}
+/* Ensure TinyMCE toolbar dropdowns work above Radix */
+.tox .tox-menu,
+.tox .tox-collection,
+.tox .tox-swatches-menu {
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+}

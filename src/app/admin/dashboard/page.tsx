@@ -105,22 +105,52 @@ export default function AdminDashboardPage() {
     setProcessing(true);
     try {
       await base44.entities.SalonApplication.update(app.id, { status: 'approved' });
-      const existing = await base44.entities.SalonProfile.filter({ application_id: app.id });
-      if (existing.length === 0) {
-        await base44.entities.SalonProfile.create({
-          application_id: app.id, salon_name: app.salon_name, contact_person: app.contact_person || '',
-          contact_number: app.contact_number, whatsapp_number: app.whatsapp_number || '',
-          email: app.email, website: app.website || '', storefront_photo: app.storefront_photo || '',
-          namecard_photo: app.namecard_photo || '', address: app.address || '', district: app.district || '',
-          tags: app.tags || '', selected_tags: app.selected_tags || [], highlight_tags: app.highlight_tags || [],
-          description: app.description || '', handle: app.handle || '', seo_title: app.seo_title || '',
-          seo_description: app.seo_description || '', office_hr_mon: app.office_hr_mon || '',
-          office_hr_tue: app.office_hr_tue || '', office_hr_wed: app.office_hr_wed || '',
-          office_hr_thu: app.office_hr_thu || '', office_hr_fri: app.office_hr_fri || '',
-          office_hr_sat: app.office_hr_sat || '', office_hr_sun: app.office_hr_sun || '',
-          product_media: app.product_media || [], is_active: true,
-        });
+
+      // If this is a CLAIM application with an existing salon_profile_id,
+      // update the existing profile instead of creating a new one
+      if (app.application_type === 'claim' && app.salon_profile_id) {
+        // Update existing salon profile to assign ownership
+        const updatePayload: Record<string, unknown> = {
+          created_by: app.created_by || null,
+        };
+        // If application has district info, update it on the profile
+        if (app.district) {
+          updatePayload.district_name = app.district;
+        }
+        if (app.contact_person) {
+          updatePayload.contact_person = app.contact_person;
+        }
+        if (app.contact_number) {
+          updatePayload.contact_number = app.contact_number;
+        }
+        if (app.whatsapp_number) {
+          updatePayload.whatsapp_number = app.whatsapp_number;
+        }
+        if (app.email) {
+          updatePayload.email = app.email;
+        }
+        await base44.entities.SalonProfile.update(app.salon_profile_id, updatePayload);
+      } else {
+        // For NEW applications, create a new salon profile
+        const existing = await base44.entities.SalonProfile.filter({ application_id: app.id });
+        if (existing.length === 0) {
+          await base44.entities.SalonProfile.create({
+            application_id: app.id, salon_name: app.salon_name, contact_person: app.contact_person || '',
+            contact_number: app.contact_number, whatsapp_number: app.whatsapp_number || '',
+            email: app.email, website: app.website || '', storefront_photo: app.storefront_photo || '',
+            namecard_photo: app.namecard_photo || '', address: app.address || '', district: app.district || '',
+            tags: app.tags || '', selected_tags: app.selected_tags || [], highlight_tags: app.highlight_tags || [],
+            description: app.description || '', handle: app.handle || '', seo_title: app.seo_title || '',
+            seo_description: app.seo_description || '', office_hr_mon: app.office_hr_mon || '',
+            office_hr_tue: app.office_hr_tue || '', office_hr_wed: app.office_hr_wed || '',
+            office_hr_thu: app.office_hr_thu || '', office_hr_fri: app.office_hr_fri || '',
+            office_hr_sat: app.office_hr_sat || '', office_hr_sun: app.office_hr_sun || '',
+            product_media: app.product_media || [], is_active: true,
+            created_by: app.created_by || null,
+          });
+        }
       }
+
       try {
         const user = await base44.auth.me();
         await base44.entities.UserActivityLog.create({
@@ -298,7 +328,7 @@ export default function AdminDashboardPage() {
         // Update the version record with the new profile_id
         await base44.entities.SalonProfileVersion.update(version.id, { status: 'approved', profile_id: newProfile.id });
       } else {
-        await base44.entities.SalonProfile.update(profile_id, { ...finalProfileData, ...statusFields });
+        await base44.entities.SalonProfile.update(profile_id, { ...finalProfileData, ...statusFields, shopify_sync_pending: false });
         await base44.entities.SalonProfileVersion.update(version.id, { status: 'approved' });
       }
       try {
@@ -323,7 +353,7 @@ export default function AdminDashboardPage() {
     setProcessing(true);
     try {
       await base44.entities.SalonProfileVersion.update(selectedVersion.id, { status: 'rejected', rejection_reason: rejectionReason });
-      await base44.entities.SalonProfile.update(selectedVersion.profile_id, {});
+      await base44.entities.SalonProfile.update(selectedVersion.profile_id, { shopify_sync_pending: false });
       try {
         const user = await base44.auth.me();
         await base44.entities.UserActivityLog.create({

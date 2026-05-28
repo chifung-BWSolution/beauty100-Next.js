@@ -1,4 +1,4 @@
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -22,8 +22,12 @@ Deno.serve(async (req) => {
       throw new Error("STRIPE_SECRET_KEY not configured");
     }
 
+    if (!stripeWebhookSecret) {
+      throw new Error("STRIPE_WEBHOOK_SECRET not configured. This is required for production security.");
+    }
+
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2023-10-16",
+      apiVersion: "2025-03-31.basil",
     });
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -35,18 +39,17 @@ Deno.serve(async (req) => {
 
     let event: Stripe.Event;
 
-    if (stripeWebhookSecret && signature) {
-      event = await stripe.webhooks.constructEventAsync(
-        body,
-        signature,
-        stripeWebhookSecret,
-        undefined,
-        cryptoProvider
-      );
-    } else {
-      // For development without webhook secret, parse body directly
-      event = JSON.parse(body);
+    if (!signature) {
+      throw new Error("Missing stripe-signature header");
     }
+
+    event = await stripe.webhooks.constructEventAsync(
+      body,
+      signature,
+      stripeWebhookSecret,
+      undefined,
+      cryptoProvider
+    );
 
     console.log("Webhook event type:", event.type);
 

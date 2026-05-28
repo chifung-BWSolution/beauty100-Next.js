@@ -19,6 +19,7 @@ export interface CartItem {
     promo_price: number | null;
     promo_expiry: string | null;
     limited_quantity: number | null;
+    limit_one_per_customer: boolean;
     status: string;
     salon_profile_id: string | null;
     redeem_start_date: string | null;
@@ -61,7 +62,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         .from('cart_items')
         .select(`
           *,
-          treatment:treatments(id, name, image_url, original_price, promo_price, promo_expiry, limited_quantity, status, salon_profile_id, redeem_start_date, redeem_end_date)
+          treatment:treatments(id, name, image_url, original_price, promo_price, promo_expiry, limited_quantity, limit_one_per_customer, status, salon_profile_id, redeem_start_date, redeem_end_date)
         `)
         .eq('member_id', user.id)
         .order('created_at', { ascending: false });
@@ -111,6 +112,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     // Check if already in cart
     const existing = items.find(item => item.treatment_id === treatmentId);
     if (existing) {
+      // If limit_one_per_customer, don't allow adding more
+      if (existing.treatment?.limit_one_per_customer) {
+        return { success: false, error: 'limit_one_per_customer' };
+      }
       // Check limited_quantity before incrementing
       const limit = existing.treatment?.limited_quantity;
       if (limit != null && existing.quantity >= limit) {
@@ -121,15 +126,29 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       return { success: true };
     }
 
-    // For new additions, check limited_quantity from DB
+    // For new additions, check limited_quantity and limit_one_per_customer from DB
     const { data: treatmentData } = await supabase
       .from('treatments')
-      .select('limited_quantity')
+      .select('limited_quantity, limit_one_per_customer')
       .eq('id', treatmentId)
       .single();
 
     if (treatmentData?.limited_quantity != null && treatmentData.limited_quantity <= 0) {
       return { success: false, error: 'sold_out' };
+    }
+
+    // Check if customer already purchased this treatment before (limit_one_per_customer)
+    if (treatmentData?.limit_one_per_customer) {
+      const { data: existingOrder } = await supabase
+        .from('order_items')
+        .select('id')
+        .eq('member_id', user.id)
+        .eq('treatment_id', treatmentId)
+        .limit(1);
+      
+      if (existingOrder && existingOrder.length > 0) {
+        return { success: false, error: 'already_purchased' };
+      }
     }
 
     const { data, error } = await supabase
@@ -142,7 +161,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       })
       .select(`
         *,
-        treatment:treatments(id, name, image_url, original_price, promo_price, promo_expiry, limited_quantity, status, salon_profile_id, redeem_start_date, redeem_end_date)
+        treatment:treatments(id, name, image_url, original_price, promo_price, promo_expiry, limited_quantity, limit_one_per_customer, status, salon_profile_id, redeem_start_date, redeem_end_date)
       `)
       .single();
 

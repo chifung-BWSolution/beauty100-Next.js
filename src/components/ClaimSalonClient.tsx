@@ -45,7 +45,7 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
       while (hasMore) {
         const { data, error } = await supabase
           .from('salon_profiles')
-          .select('id, salon_name, district_name, image_src, address, product_media')
+          .select('id, salon_name, district_name, district, image_src, address, product_media')
           .is('created_by', null)
           .or('is_active.eq.true,is_active.is.null')
           .order('salon_name')
@@ -86,7 +86,7 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
       // Build districts if not already provided
       if (initialDistricts.length === 0) {
         const uniqueDistricts = Array.from(
-          new Set(available.map((s: any) => s.district_name).filter(Boolean))
+          new Set(available.map((s: any) => s.district_name || s.district).filter(Boolean))
         ) as string[];
         setDistricts(uniqueDistricts.sort());
       }
@@ -104,7 +104,7 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
   const filteredSalons = salons.filter((s) => {
     const matchSearch =
       (s.salon_name || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchDistrict = districtFilter === 'all' || s.district_name === districtFilter;
+    const matchDistrict = districtFilter === 'all' || (s.district_name || s.district) === districtFilter;
     return matchSearch && matchDistrict;
   });
 
@@ -118,10 +118,10 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
       JSON.stringify({
         salon_name: selectedSalon.salon_name,
         salon_profile_id: selectedSalon.id,
-        district: selectedSalon.district_name || '',
+        district: selectedSalon.district_name || selectedSalon.district || '',
       })
     );
-    router.push(`/merchant-signup?type=claim&salon=${salonData}`);
+    router.replace(`/merchant-signup?type=claim&salon=${salonData}`);
   };
 
   // Get the first image from product_media or use image_src
@@ -203,8 +203,8 @@ export default function ClaimSalonClient({ initialDistricts }: Props) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-slate-800 text-sm truncate">{salon.salon_name}</p>
-                      {salon.district_name && (
-                        <p className="text-sm text-purple-500 mt-0.5">{salon.district_name}</p>
+                      {(salon.district_name || salon.district) && (
+                        <p className="text-sm text-purple-500 mt-0.5">{salon.district_name || salon.district}</p>
                       )}
                     </div>
                     {selectedSalon?.id === salon.id && (

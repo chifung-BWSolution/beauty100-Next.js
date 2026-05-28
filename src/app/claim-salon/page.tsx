@@ -50,7 +50,7 @@ export default function ClaimSalonPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.back()}
+            onClick={() => router.push('/merchant-onboarding')}
             className="mb-4 -ml-2 text-slate-600 hover:text-slate-800 hover:bg-rose-50"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />

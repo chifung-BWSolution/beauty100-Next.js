@@ -223,15 +223,19 @@ export default function MerchantSignupForm({
                   districts={initialDistricts}
                   value={formData.district}
                   onChange={(val) => handleChange('district', val)}
-                  triggerClassName="h-12 border-rose-100 bg-rose-50/30 focus:border-rose-300"
+                  triggerClassName={`h-12 border-rose-100 bg-rose-50/30 focus:border-rose-300 ${applicationType === 'claim' && formData.district ? 'opacity-60 pointer-events-none' : ''}`}
                 />
               ) : (
                 <Input
                   value={formData.district}
                   onChange={(e) => handleChange('district', e.target.value)}
                   placeholder="例：中環、銅鑼灣"
-                  className="h-12 rounded-xl border-rose-100 bg-rose-50/30 text-sm"
+                  disabled={applicationType === 'claim' && !!formData.district}
+                  className="h-12 rounded-xl border-rose-100 bg-rose-50/30 text-sm disabled:opacity-60"
                 />
+              )}
+              {applicationType === 'claim' && formData.district && (
+                <p className="text-xs text-slate-400 mt-1">認領美容院時地區已自動帶入</p>
               )}
             </div>
             <div className="md:col-span-2">
@@ -281,7 +285,7 @@ export default function MerchantSignupForm({
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push(applicationType === 'claim' ? '/claim-salon' : '/merchant-onboarding')}
+              onClick={() => router.replace(applicationType === 'claim' ? '/claim-salon' : '/merchant-onboarding')}
               className="flex-1 h-12 rounded-xl border-rose-200 text-slate-600 hover:bg-rose-50"
             >
               返回

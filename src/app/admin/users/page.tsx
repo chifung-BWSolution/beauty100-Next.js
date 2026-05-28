@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Users, Plus, Search, Mail, Shield } from 'lucide-react';
+import { Users, Plus, Search, Mail, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
 
@@ -32,10 +32,11 @@ export default function AdminUsersPage() {
   const [newUserData, setNewUserData] = useState({ email: '', fullName: '', roles: ['merchant'] as string[] });
   const [creating, setCreating] = useState(false);
 
-  // Edit user roles dialog
+  // Edit user dialog
   const [editRolesDialogOpen, setEditRolesDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [editRoles, setEditRoles] = useState<string[]>([]);
+  const [editName, setEditName] = useState('');
   const [savingRoles, setSavingRoles] = useState(false);
 
   useEffect(() => { loadData(); }, []);
@@ -100,7 +101,7 @@ export default function AdminUsersPage() {
     if (newUserData.roles.length === 0) { toast.error('請至少選擇一個角色'); return; }
     setCreating(true);
     try {
-      await base44.functions.invoke('inviteAdminUser', {
+      const { data: result } = await base44.functions.invoke('inviteAdminUser', {
         email: newUserData.email, role: newUserData.roles[0], full_name: newUserData.fullName,
       });
       // Update roles array
@@ -109,7 +110,11 @@ export default function AdminUsersPage() {
         await supabase.from('users').update({ roles: newUserData.roles, role: newUserData.roles[0] }).eq('id', newUser.id);
       }
       await loadData();
-      toast.success(`已邀請 ${newUserData.email}`);
+      if (result?.temp_password) {
+        toast.success(`用戶已建立！臨時密碼：${result.temp_password}`, { duration: 15000 });
+      } else {
+        toast.success(`已邀請 ${newUserData.email}`);
+      }
       setDialogOpen(false);
       setNewUserData({ email: '', fullName: '', roles: ['merchant'] });
     } catch (error) {
@@ -123,18 +128,21 @@ export default function AdminUsersPage() {
   const openEditRolesDialog = (user: any) => {
     setEditingUser(user);
     setEditRoles(user.roles || (user.role ? [user.role] : ['merchant']));
+    setEditName(user.full_name || '');
     setEditRolesDialogOpen(true);
   };
 
-  const handleSaveRoles = async () => {
+  const handleSaveUser = async () => {
     if (!editingUser) return;
     if (editRoles.length === 0) { toast.error('請至少選擇一個角色'); return; }
+    if (!editName.trim()) { toast.error('姓名不能為空'); return; }
     setSavingRoles(true);
     try {
+      const updatePayload = { roles: editRoles, role: editRoles[0], full_name: editName.trim() };
       // Try updating by user id first
       const { data, error } = await supabase
         .from('users')
-        .update({ roles: editRoles, role: editRoles[0] })
+        .update(updatePayload)
         .eq('id', editingUser.id)
         .select();
 
@@ -146,7 +154,7 @@ export default function AdminUsersPage() {
       if (!data || data.length === 0) {
         const { data: data2, error: error2 } = await supabase
           .from('users')
-          .update({ roles: editRoles, role: editRoles[0] })
+          .update(updatePayload)
           .eq('email', editingUser.email)
           .select();
         if (error2) throw error2;
@@ -160,15 +168,15 @@ export default function AdminUsersPage() {
       // Update local state immediately so UI reflects the change
       setUsers(prev => prev.map(u => {
         if (u.id === editingUser.id || u.email === editingUser.email) {
-          return { ...u, roles: editRoles, role: editRoles[0] };
+          return { ...u, roles: editRoles, role: editRoles[0], full_name: editName.trim() };
         }
         return u;
       }));
 
-      toast.success('角色已更新');
+      toast.success('用戶資料已更新');
       setEditRolesDialogOpen(false);
     } catch (error: any) {
-      console.error('Error updating roles:', error);
+      console.error('Error updating user:', error);
       toast.error('更新失敗：' + (error.message || '未知錯誤'));
     } finally {
       setSavingRoles(false);
@@ -355,7 +363,7 @@ export default function AdminUsersPage() {
                       </TableCell>
                       <TableCell>
                         <Button size="sm" variant="outline" className="text-xs h-7 whitespace-nowrap" onClick={() => openEditRolesDialog(u)}>
-                          <Shield className="w-3 h-3 mr-1" />角色
+                          <Pencil className="w-3 h-3 mr-1" />編輯
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -370,14 +378,24 @@ export default function AdminUsersPage() {
           </div>
         </Card>
 
-        {/* Edit Roles Dialog */}
+        {/* Edit User Dialog */}
         <Dialog open={editRolesDialogOpen} onOpenChange={setEditRolesDialogOpen}>
           <DialogContent>
-            <DialogHeader><DialogTitle>編輯角色</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>編輯用戶</DialogTitle></DialogHeader>
             {editingUser && (
               <div className="space-y-4">
                 <div className="text-sm text-slate-600">
-                  用戶：<span className="font-semibold">{editingUser.full_name || editingUser.email}</span>
+                  電郵：<span className="font-semibold">{editingUser.email}</span>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">姓名</Label>
+                  <Input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="用戶姓名"
+                    className="h-10 mt-1"
+                  />
                 </div>
                 <div>
                   <Label className="text-sm font-medium">角色（可多選）</Label>
@@ -395,7 +413,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="flex gap-3 justify-end pt-2">
                   <Button variant="outline" onClick={() => setEditRolesDialogOpen(false)}>取消</Button>
-                  <Button onClick={handleSaveRoles} disabled={savingRoles} className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white">
+                  <Button onClick={handleSaveUser} disabled={savingRoles} className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white">
                     {savingRoles ? '儲存中...' : '儲存'}
                   </Button>
                 </div>

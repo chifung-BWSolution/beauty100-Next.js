@@ -20,6 +20,7 @@ export default function CheckoutSuccessPage() {
   const { user, isLoadingAuth } = useAuth();
   const [status, setStatus] = useState<VerificationStatus>('loading');
   const [errorMsg, setErrorMsg] = useState('');
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoadingAuth) return;
@@ -56,6 +57,9 @@ export default function CheckoutSuccessPage() {
 
         if (data?.payment_status === 'paid') {
           setStatus('paid');
+          if (data.order_number) {
+            setOrderNumber(data.order_number);
+          }
           await clearCart();
         } else if (data?.status === 'expired') {
           setStatus('failed');
@@ -95,13 +99,13 @@ export default function CheckoutSuccessPage() {
               </div>
               <h2 className="text-2xl font-bold text-slate-800 mb-2">付款成功！</h2>
               <p className="text-slate-500 mb-2">感謝你的購買</p>
-              {sessionId && (
+              {orderNumber && (
                 <p className="text-xs text-slate-400 mb-2">
-                  訂單編號：{sessionId.slice(0, 8).toUpperCase()}
+                  訂單編號：{orderNumber}
                 </p>
               )}
               <p className="text-sm text-slate-400 mb-6">
-                我們會透過 WhatsApp 聯絡你確認療程預約詳情
+                購買後請儘早聯絡商戶進行預約
               </p>
               <div className="flex flex-col gap-3">
                 <Link href="/">

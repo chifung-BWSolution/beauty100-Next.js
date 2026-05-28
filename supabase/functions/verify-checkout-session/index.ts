@@ -74,11 +74,28 @@ Deno.serve(async (req) => {
     }
 
     // Return the actual payment status from Stripe
-    const result = {
+    const result: any = {
       status: session.status, // "open", "complete", "expired"
       payment_status: session.payment_status, // "paid", "unpaid", "no_payment_required"
       customer_email: session.customer_details?.email || session.customer_email,
     };
+
+    // Fetch order_number from our DB to return to the client
+    const orderForNumber = order || (await (async () => {
+      if (session.payment_intent) {
+        const { data } = await supabase
+          .from("orders")
+          .select("order_number")
+          .eq("stripe_payment_intent_id", session.payment_intent as string)
+          .eq("member_id", user.id)
+          .single();
+        return data;
+      }
+      return null;
+    })());
+    if (orderForNumber?.order_number) {
+      result.order_number = orderForNumber.order_number;
+    }
 
     // If the session is complete AND paid, update the order status in our DB
     // (in case webhook hasn't fired yet)
@@ -155,6 +172,21 @@ Deno.serve(async (req) => {
           })
           .eq("stripe_payment_intent_id", session.payment_intent)
           .eq("status", "pending");
+      }
+    }
+
+    // Re-fetch order_number AFTER status updates (trigger generates it on paid)
+    if (session.payment_status === "paid" && !result.order_number) {
+      const { data: freshOrder } = await supabase
+        .from("orders")
+        .select("order_number")
+        .or(`stripe_payment_intent_id.eq.${session_id}${session.payment_intent ? `,stripe_payment_intent_id.eq.${session.payment_intent}` : ''}`)
+        .eq("member_id", user.id)
+        .not("order_number", "is", null)
+        .limit(1)
+        .single();
+      if (freshOrder?.order_number) {
+        result.order_number = freshOrder.order_number;
       }
     }
 

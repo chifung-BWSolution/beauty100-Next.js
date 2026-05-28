@@ -1,5 +1,4 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,26 +15,43 @@ Deno.serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-    // Verify that the caller is an admin
+    // Verify that the caller is authenticated
     const authHeader = req.headers.get('Authorization')?.replace('Bearer ', '');
-    const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${authHeader}` } }
-    });
-    const { data: { user: caller } } = await callerClient.auth.getUser();
-    if (!caller) {
+    if (!authHeader) {
       return new Response(
         JSON.stringify({ error: '未授權' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
 
-    // Check caller is admin
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
-    const { data: callerProfile } = await adminClient
-      .from('users')
-      .select('role')
-      .eq('id', caller.id)
-      .single();
+    // Get caller user from auth token
+    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        'Authorization': `Bearer ${authHeader}`,
+        'apikey': supabaseAnonKey,
+      },
+    });
+    if (!userRes.ok) {
+      return new Response(
+        JSON.stringify({ error: '未授權' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+    const caller = await userRes.json();
+
+    // Check caller is admin via REST
+    const profileRes = await fetch(
+      `${supabaseUrl}/rest/v1/users?select=role&id=eq.${caller.id}`,
+      {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    const profiles = await profileRes.json();
+    const callerProfile = profiles?.[0];
 
     if (!callerProfile || (callerProfile.role !== 'admin' && callerProfile.role !== 'marketing')) {
       return new Response(
@@ -59,14 +75,21 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Reset the password using admin API
-    const { error } = await adminClient.auth.admin.updateUser(user_id, {
-      password: new_password,
+    // Reset the password using Supabase Auth Admin REST API directly
+    const updateRes = await fetch(`${supabaseUrl}/auth/v1/admin/users/${user_id}`, {
+      method: 'PUT',
+      headers: {
+        'apikey': supabaseServiceKey,
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password: new_password }),
     });
 
-    if (error) {
+    if (!updateRes.ok) {
+      const errorBody = await updateRes.json();
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({ error: errorBody.message || errorBody.msg || '密碼重設失敗' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
