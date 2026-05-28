@@ -75,7 +75,7 @@ export default function MemberSettingsPage() {
           .from('members')
           .select('*')
           .eq('auth_user_id', session.user.id)
-          .single();
+          .maybeSingle();
         if (!memberData) {
           router.push('/member-login');
           return;

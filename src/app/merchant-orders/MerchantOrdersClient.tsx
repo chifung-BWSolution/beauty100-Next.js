@@ -130,7 +130,7 @@ export default function MerchantOrdersClient({
                 .from("members")
                 .select("id, email, full_name, nickname")
                 .eq("id", newRecord.member_id)
-                .single()
+                .maybeSingle()
                 .then(({ data }) => {
                   if (data) {
                     setMemberMap((prev) => ({ ...prev, [data.id]: data }));

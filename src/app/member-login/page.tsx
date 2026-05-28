@@ -34,7 +34,7 @@ export default function MemberLoginPage() {
       .then(async ({ data: { session } }: any) => {
         clearTimeout(timeout);
         if (session?.user) {
-          const { data: member } = await supabase.from('members').select('id').eq('auth_user_id', session.user.id).single();
+          const { data: member } = await supabase.from('members').select('id').eq('auth_user_id', session.user.id).maybeSingle();
           if (member) {
             router.push('/');
           }
@@ -55,7 +55,7 @@ export default function MemberLoginPage() {
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
 
-      const { data: member } = await supabase.from('members').select('id').eq('auth_user_id', data.user.id).single();
+      const { data: member } = await supabase.from('members').select('id').eq('auth_user_id', data.user.id).maybeSingle();
       if (!member) {
         await supabase.auth.signOut();
         setError('此帳號不是會員帳號，請使用商戶登入。');

@@ -67,7 +67,7 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
             .from('members')
             .select('id, full_name, avatar_url, email')
             .eq('auth_user_id', session.user.id)
-            .single();
+            .maybeSingle();
           if (memberData) {
             setMember(memberData);
           } else {
@@ -96,7 +96,7 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
           .from('members')
           .select('id, full_name, avatar_url, email')
           .eq('auth_user_id', session.user.id)
-          .single()
+          .maybeSingle()
           .then(({ data }) => {
             if (data) {
               setMember(data);
