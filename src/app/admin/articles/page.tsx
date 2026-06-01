@@ -23,6 +23,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import dynamic from 'next/dynamic';
+import { revalidateArticle } from '@/app/actions/revalidate';
 
 // Dynamically load TinyMCE
 const TinyMCEEditor = dynamic(
@@ -395,7 +396,12 @@ function ArticleRichTextEditor({ value, onChange, placeholder }: { value: string
         automatic_uploads: true,
         paste_data_images: true,
         images_upload_handler: handleImagesUpload,
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; color: #e2e8f0; background: #1e293b; padding: 8px; } p { margin: 0 0 8px; } ul, ol { padding-left: 20px; } li { margin-bottom: 4px; }',
+        invalid_styles: { '*': 'font-size line-height font-family' },
+        paste_preprocess: (_plugin: any, args: any) => {
+          // Strip inline styles on paste to keep clean HTML
+          args.content = args.content.replace(/\s*style="[^"]*"/gi, '');
+        },
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 15px; line-height: 1.85; color: #e2e8f0; background: #1e293b; padding: 8px; } p { margin: 0 0 12px; } h2 { font-size: 17px; font-weight: bold; border-left: 3px solid #2563eb; padding-left: 12px; margin: 24px 0 8px; } h3 { font-size: 16px; font-weight: 600; } ul, ol { padding-left: 20px; } li { margin-bottom: 4px; }',
         skin: 'oxide-dark',
         content_css: 'dark',
         branding: false,
@@ -548,6 +554,10 @@ export default function AdminArticlesPage() {
         if (error) throw error;
         toast.success('文章已建立');
       }
+      // Revalidate the article page cache
+      if (form.category && form.handle) {
+        await revalidateArticle(form.category, form.handle).catch(() => {});
+      }
       setShowForm(false);
       loadArticles();
     } catch (e: any) { toast.error('儲存失敗：' + (e.message || '未知錯誤')); }
@@ -558,9 +568,15 @@ export default function AdminArticlesPage() {
     if (!confirm('確定要刪除此文章？此操作不可撤銷。')) return;
     setDeleting(id);
     try {
+      // Get article info before deleting for cache revalidation
+      const { data: articleInfo } = await supabase.from('blog_articles').select('category, handle').eq('id', id).maybeSingle();
       const { error } = await supabase.from('blog_articles').delete().eq('id', id);
       if (error) throw error;
       toast.success('文章已刪除');
+      // Revalidate the deleted article's page
+      if (articleInfo?.category && articleInfo?.handle) {
+        await revalidateArticle(articleInfo.category, articleInfo.handle).catch(() => {});
+      }
       loadArticles();
     } catch (e: any) { toast.error('刪除失敗：' + (e.message || '未知錯誤')); }
     finally { setDeleting(null); }

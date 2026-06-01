@@ -396,6 +396,7 @@ export type Database = {
           member_id: string
           name: string
           order_id: string
+          payout_id: string | null
           quantity: number
           redeem_end_date: string | null
           redeem_start_date: string | null
@@ -417,6 +418,7 @@ export type Database = {
           member_id: string
           name: string
           order_id: string
+          payout_id?: string | null
           quantity?: number
           redeem_end_date?: string | null
           redeem_start_date?: string | null
@@ -438,6 +440,7 @@ export type Database = {
           member_id?: string
           name?: string
           order_id?: string
+          payout_id?: string | null
           quantity?: number
           redeem_end_date?: string | null
           redeem_start_date?: string | null
@@ -458,6 +461,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "payouts"
             referencedColumns: ["id"]
           },
         ]
@@ -540,6 +550,144 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           total_amount?: number
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      payout_items: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          order_item_id: string
+          payout_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          order_item_id: string
+          payout_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          order_item_id?: string
+          payout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_items_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_items_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_settings: {
+        Row: {
+          account_holder_name: string | null
+          bank_account_number: string | null
+          bank_code: string | null
+          bank_name: string | null
+          branch_code: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          payout_currency: string | null
+          payout_day: number
+          salon_profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          account_holder_name?: string | null
+          bank_account_number?: string | null
+          bank_code?: string | null
+          bank_name?: string | null
+          branch_code?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          payout_currency?: string | null
+          payout_day?: number
+          salon_profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          account_holder_name?: string | null
+          bank_account_number?: string | null
+          bank_code?: string | null
+          bank_name?: string | null
+          branch_code?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          payout_currency?: string | null
+          payout_day?: number
+          salon_profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      payouts: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          item_count: number
+          net_amount: number
+          notes: string | null
+          paid_at: string | null
+          period_end: string
+          period_start: string
+          platform_fee: number
+          salon_profile_id: string | null
+          status: string
+          total_amount: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          item_count?: number
+          net_amount?: number
+          notes?: string | null
+          paid_at?: string | null
+          period_end: string
+          period_start: string
+          platform_fee?: number
+          salon_profile_id?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          item_count?: number
+          net_amount?: number
+          notes?: string | null
+          paid_at?: string | null
+          period_end?: string
+          period_start?: string
+          platform_fee?: number
+          salon_profile_id?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

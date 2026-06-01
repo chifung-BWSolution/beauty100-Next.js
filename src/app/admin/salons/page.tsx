@@ -15,6 +15,7 @@ import { Search, Store, RefreshCw, ExternalLink, User, Eye, ChevronLeft, Chevron
 import SalonOwnerModal from '@/components/admin/SalonOwnerModal';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { revalidateSalon } from '@/app/actions/revalidate';
 
 const REGION_GROUPS = [
   { region: '香港島', emoji: '🏙️', districts: ['中環', '上環', '灣仔', '銅鑼灣', '北角', '鰂魚涌', '天后', '炮台山', '柴灣', '西灣河', '西營盤', '香港仔', '堅尼地城', '半山區', '跑馬地'] },
@@ -66,6 +67,8 @@ export default function AdminSalonsPage() {
       const { error } = await supabase.from('salon_profiles').update(updates).eq('id', profileId);
       if (error) throw error;
       toast.success(`已更新美容院狀態為「${newStatus === 'active' ? '營業中' : newStatus === 'closed' ? '已結業' : newStatus === 'renovation' ? '裝修中' : newStatus === 'new_opening' ? '新開張' : newStatus}」`);
+      // Revalidate salon page cache
+      await revalidateSalon(profileId).catch(() => {});
       if (viewDetailsSalon) {
         setViewDetailsSalon({ ...viewDetailsSalon, salon_status: newStatus });
       }

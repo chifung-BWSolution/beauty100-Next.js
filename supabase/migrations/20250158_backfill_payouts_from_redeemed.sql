@@ -1,0 +1,71 @@
+-- Backfill payouts for already-redeemed order_items
+-- Groups redeemed items by salon + month and creates payout records
+
+DO $$
+DECLARE
+  rec RECORD;
+  v_payout_id UUID;
+  v_period_start DATE;
+  v_period_end DATE;
+BEGIN
+  -- For each redeemed order_item that doesn't have a payout_id yet
+  FOR rec IN
+    SELECT 
+      oi.id AS order_item_id,
+      oi.salon_profile_id,
+      oi.unit_price * oi.quantity AS amount,
+      oi.redeemed_at,
+      oi.settled_at,
+      -- Calculate payout period: if redeemed before 7th, same month; otherwise next month
+      CASE 
+        WHEN EXTRACT(DAY FROM oi.redeemed_at) < 7 THEN
+          date_trunc('month', oi.redeemed_at)::DATE
+        ELSE
+          (date_trunc('month', oi.redeemed_at) + INTERVAL '1 month')::DATE
+      END AS payout_month_start
+    FROM order_items oi
+    WHERE oi.status IN ('redeemed', 'settled')
+      AND oi.redeemed_at IS NOT NULL
+      AND oi.salon_profile_id IS NOT NULL
+      AND oi.payout_id IS NULL
+    ORDER BY oi.redeemed_at ASC
+  LOOP
+    v_period_start := rec.payout_month_start;
+    v_period_end := (v_period_start + INTERVAL '1 month' - INTERVAL '1 day')::DATE;
+
+    -- Find or create payout for this salon + period
+    SELECT id INTO v_payout_id
+    FROM payouts
+    WHERE salon_profile_id = rec.salon_profile_id
+      AND period_start = v_period_start
+      AND period_end = v_period_end;
+
+    IF v_payout_id IS NULL THEN
+      INSERT INTO payouts (salon_profile_id, period_start, period_end, total_amount, platform_fee, net_amount, item_count, status)
+      VALUES (
+        rec.salon_profile_id,
+        v_period_start,
+        v_period_end,
+        0, 0, 0, 0,
+        CASE WHEN rec.settled_at IS NOT NULL THEN 'paid' ELSE 'pending' END
+      )
+      RETURNING id INTO v_payout_id;
+    END IF;
+
+    -- Insert payout item
+    INSERT INTO payout_items (payout_id, order_item_id, amount)
+    VALUES (v_payout_id, rec.order_item_id, rec.amount)
+    ON CONFLICT (payout_id, order_item_id) DO NOTHING;
+
+    -- Update order_item with payout_id
+    UPDATE order_items SET payout_id = v_payout_id WHERE id = rec.order_item_id;
+
+    -- Update payout totals
+    UPDATE payouts SET
+      total_amount = (SELECT COALESCE(SUM(amount), 0) FROM payout_items WHERE payout_id = v_payout_id),
+      item_count = (SELECT COUNT(*) FROM payout_items WHERE payout_id = v_payout_id),
+      net_amount = (SELECT COALESCE(SUM(amount), 0) FROM payout_items WHERE payout_id = v_payout_id),
+      updated_at = NOW()
+    WHERE id = v_payout_id;
+  END LOOP;
+END $$;

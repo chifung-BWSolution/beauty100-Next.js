@@ -173,6 +173,97 @@ Deno.serve(async (req) => {
       );
     }
 
+    // 7. Auto-create/update payout record
+    try {
+      const amount = (orderItem.unit_price || 0) * (orderItem.quantity || 1);
+      const day = now.getDate();
+      let periodStart: Date;
+      if (day < 7) {
+        periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else {
+        periodStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      }
+      const periodEnd = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, 0);
+
+      const periodStartStr = periodStart.toISOString().split("T")[0];
+      const periodEndStr = periodEnd.toISOString().split("T")[0];
+
+      // Find existing payout for this salon + period
+      const { data: existingPayout } = await supabase
+        .from("payouts")
+        .select("id")
+        .eq("salon_profile_id", qrSalonId)
+        .eq("period_start", periodStartStr)
+        .eq("period_end", periodEndStr)
+        .maybeSingle();
+
+      let payoutId: string;
+
+      if (existingPayout) {
+        payoutId = existingPayout.id;
+      } else {
+        const { data: newPayout, error: payoutInsertErr } = await supabase
+          .from("payouts")
+          .insert({
+            salon_profile_id: qrSalonId,
+            period_start: periodStartStr,
+            period_end: periodEndStr,
+            total_amount: 0,
+            platform_fee: 0,
+            net_amount: 0,
+            item_count: 0,
+            status: "pending",
+          })
+          .select("id")
+          .single();
+
+        if (payoutInsertErr || !newPayout) {
+          console.error("Failed to create payout:", payoutInsertErr);
+          // Don't fail the redeem - payout can be backfilled later
+        }
+        payoutId = newPayout?.id || "";
+      }
+
+      if (payoutId) {
+        // Insert payout item
+        await supabase
+          .from("payout_items")
+          .insert({
+            payout_id: payoutId,
+            order_item_id: order_item_id,
+            amount: amount,
+          })
+          .select()
+          .maybeSingle();
+
+        // Update order_item with payout_id
+        await supabase
+          .from("order_items")
+          .update({ payout_id: payoutId })
+          .eq("id", order_item_id);
+
+        // Recalculate payout totals
+        const { data: itemsSum } = await supabase
+          .from("payout_items")
+          .select("amount")
+          .eq("payout_id", payoutId);
+
+        const totalAmount = (itemsSum || []).reduce((sum: number, i: any) => sum + (i.amount || 0), 0);
+        const itemCount = (itemsSum || []).length;
+
+        await supabase
+          .from("payouts")
+          .update({
+            total_amount: totalAmount,
+            item_count: itemCount,
+            updated_at: now.toISOString(),
+          })
+          .eq("id", payoutId);
+      }
+    } catch (payoutErr) {
+      console.error("Payout creation error (non-fatal):", payoutErr);
+    }
+
     // Get salon name for the response
     const { data: salonData } = await supabase
       .from("salon_profiles")

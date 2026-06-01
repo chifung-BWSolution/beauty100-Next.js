@@ -74,10 +74,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         if (salonProfileIds.length > 0) {
           const { data: salons } = await supabase
             .from('salon_profiles')
-            .select('id, name')
+            .select('id, salon_name')
             .in('id', salonProfileIds);
           if (salons) {
-            salons.forEach((s: any) => { salonNameMap[s.id] = s.name || ''; });
+            salons.forEach((s: any) => { salonNameMap[s.id] = s.salon_name || ''; });
           }
         }
         const enrichedItems = (data as any[]).map(item => ({
@@ -172,10 +172,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       if (profileId) {
         const { data: salonData } = await supabase
           .from('salon_profiles')
-          .select('name')
+          .select('salon_name')
           .eq('id', profileId)
           .maybeSingle();
-        salonName = salonData?.name || null;
+        salonName = salonData?.salon_name || null;
       }
       setItems(prev => [{ ...(data as CartItem), salon_name: salonName }, ...prev]);
       return { success: true };

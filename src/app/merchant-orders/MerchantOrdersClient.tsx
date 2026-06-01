@@ -17,6 +17,8 @@ import {
   Info,
   CalendarDays,
   Store,
+  Banknote,
+  CreditCard,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +50,7 @@ interface OrderItemRecord {
   refunded_at: string | null;
   created_at: string;
   voucher_number: string | null;
+  payout_id: string | null;
 }
 
 interface MemberInfo {
@@ -91,6 +94,41 @@ export default function MerchantOrdersClient({
   const [dateTo, setDateTo] = useState<string>("");
   const [salonProfiles] = useState<SalonProfile[]>(initialSalonProfiles);
   const [selectedQrSalonId, setSelectedQrSalonId] = useState<string>("");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    if (salonProfileIds.length === 0) return;
+    setRefreshing(true);
+    try {
+      const { data: items } = await supabase
+        .from("order_items")
+        .select("*")
+        .in("salon_profile_id", salonProfileIds)
+        .order("created_at", { ascending: false });
+
+      const fetchedItems = items || [];
+      setOrderItems(fetchedItems);
+
+      // Fetch member info for any new member_ids
+      const memberIds = [...new Set(fetchedItems.map((i) => i.member_id))];
+      const missingIds = memberIds.filter((id) => !memberMap[id]);
+      if (missingIds.length > 0) {
+        const { data: members } = await supabase
+          .from("members")
+          .select("id, email, full_name, nickname")
+          .in("id", missingIds);
+        if (members) {
+          const newMap = { ...memberMap };
+          members.forEach((m) => { newMap[m.id] = m; });
+          setMemberMap(newMap);
+        }
+      }
+    } catch (err) {
+      console.error("Refresh error:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Realtime subscription for order_items updates
   useEffect(() => {
@@ -310,13 +348,24 @@ export default function MerchantOrdersClient({
                 </p>
               </div>
             </div>
-            <Button
-              onClick={() => handleShowQR()}
-              className="bg-gradient-to-r from-purple-500 to-violet-600 text-white hover:from-purple-600 hover:to-violet-700 gap-2 hidden sm:flex"
-            >
-              <QrCode className="w-4 h-4" />
-              我的 QR Code
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                variant="outline"
+                className="gap-2 hidden sm:flex border-purple-200 text-purple-600 hover:bg-purple-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                重新整理
+              </Button>
+              <Button
+                onClick={() => handleShowQR()}
+                className="bg-gradient-to-r from-purple-500 to-violet-600 text-white hover:from-purple-600 hover:to-violet-700 gap-2 hidden sm:flex"
+              >
+                <QrCode className="w-4 h-4" />
+                我的 QR Code
+              </Button>
+            </div>
           </div>
 
           {/* Stats */}
@@ -616,7 +665,7 @@ export default function MerchantOrdersClient({
         </DialogContent>
       </Dialog>
 
-      {/* Order Detail Dialog */}
+      {/* Order Detail Dialog - Shopify-style timeline */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -657,122 +706,192 @@ export default function MerchantOrdersClient({
                 {getStatusBadge(detailItem.status)}
               </div>
 
-              {/* Customer */}
-              <div className="p-3 bg-slate-50 rounded-lg">
-                <p className="text-xs text-slate-400 mb-1">客戶</p>
-                <p className="text-sm text-slate-700 font-medium">
-                  {getMemberDisplay(detailItem.member_id)}
-                </p>
-              </div>
-
-              {/* Timeline / Log */}
+              {/* Shopify-style Timeline */}
               <div className="border border-slate-100 rounded-lg overflow-hidden">
                 <div className="px-3 py-2 bg-slate-50 border-b border-slate-100">
                   <p className="text-xs font-medium text-slate-600">訂單時間線</p>
                 </div>
-                <div className="p-3 space-y-3">
-                  {/* Purchase */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Calendar className="w-3 h-3 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-700">客戶購買</p>
-                      <p className="text-xs text-slate-400">
-                        {formatDateTime(detailItem.created_at)}
-                      </p>
-                    </div>
-                  </div>
+                <div className="p-3">
+                  <div className="relative">
+                    {/* Vertical line */}
+                    <div className="absolute left-[11px] top-3 bottom-3 w-[2px] bg-slate-200" />
 
-                  {/* Redeem period */}
-                  {(detailItem.redeem_start_date || detailItem.redeem_end_date) && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Clock className="w-3 h-3 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-700">兌換有效期</p>
-                        <p className="text-xs text-slate-400">
-                          {detailItem.redeem_start_date
-                            ? formatDate(detailItem.redeem_start_date)
-                            : "—"}{" "}
-                          至{" "}
-                          {detailItem.redeem_end_date
-                            ? formatDate(detailItem.redeem_end_date)
-                            : "—"}
-                        </p>
-                        {detailItem.redeem_end_date &&
-                          new Date(detailItem.redeem_end_date) < new Date() &&
-                          detailItem.status !== "redeemed" &&
-                          detailItem.status !== "settled" && (
-                            <p className="text-xs text-red-500 mt-0.5">已過期</p>
-                          )}
-                      </div>
-                    </div>
-                  )}
+                    <div className="space-y-4">
+                      {/* Payout scheduled - show after redeem */}
+                      {detailItem.redeemed_at && (() => {
+                        const redeemDate = new Date(detailItem.redeemed_at!);
+                        const payoutMonth = redeemDate.getDate() < 7 
+                          ? redeemDate 
+                          : new Date(redeemDate.getFullYear(), redeemDate.getMonth() + 1, 1);
+                        const payoutDate = new Date(payoutMonth.getFullYear(), payoutMonth.getMonth(), 7);
+                        const payoutDateStr = payoutDate.toLocaleDateString("zh-HK", { year: "numeric", month: "long", day: "numeric" });
+                        const isPaid = detailItem.settled_at != null;
+                        return (
+                          <div className="flex items-start gap-3 relative">
+                            <div className={`w-6 h-6 rounded-full ${isPaid ? "bg-green-100" : "bg-emerald-50 border-2 border-emerald-200"} flex items-center justify-center flex-shrink-0 z-10`}>
+                              <Banknote className={`w-3 h-3 ${isPaid ? "text-green-600" : "text-emerald-500"}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className={`text-sm font-medium ${isPaid ? "text-green-700" : "text-slate-700"}`}>
+                                  {isPaid ? "已發放至帳戶" : `將加入 ${payoutDateStr} 的結算`}
+                                </p>
+                              </div>
+                              <p className="text-xs text-slate-400 mt-0.5">
+                                結算金額：HK${detailItem.unit_price * detailItem.quantity} (未扣除平台費用)
+                              </p>
+                              {isPaid && (
+                                <p className="text-xs text-green-600 mt-0.5">
+                                  結算日期：{formatDateTime(detailItem.settled_at)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
-                  {/* Redeemed */}
-                  {detailItem.redeemed_at && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <CheckCircle2 className="w-3 h-3 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-700">客戶兌換</p>
-                        <p className="text-xs text-slate-400">
-                          {formatDateTime(detailItem.redeemed_at)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Settled */}
-                  {detailItem.settled_at && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <DollarSign className="w-3 h-3 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-700">已結算</p>
-                        <p className="text-xs text-slate-400">
-                          {formatDateTime(detailItem.settled_at)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Refunded */}
-                  {detailItem.refunded_at && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <AlertCircle className="w-3 h-3 text-red-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-700">已退款</p>
-                        <p className="text-xs text-slate-400">
-                          {formatDateTime(detailItem.refunded_at)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Pending - no action yet */}
-                  {detailItem.status === "pending_use" &&
-                    !detailItem.redeemed_at &&
-                    !detailItem.settled_at &&
-                    !detailItem.refunded_at && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Clock className="w-3 h-3 text-amber-600" />
+                      {/* Redeemed */}
+                      {detailItem.redeemed_at && (
+                        <div className="flex items-start gap-3 relative">
+                          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 z-10">
+                            <CheckCircle2 className="w-3 h-3 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium text-slate-700">客戶已兌換療程</p>
+                              <span className="text-xs text-slate-400 flex-shrink-0">
+                                {new Date(detailItem.redeemed_at).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              {new Date(detailItem.redeemed_at).toLocaleDateString("zh-HK", { year: "numeric", month: "long", day: "numeric" })}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-700">等待客戶使用</p>
-                          <p className="text-xs text-slate-400">
-                            客戶尚未兌換此療程
+                      )}
+
+                      {/* Refunded */}
+                      {detailItem.refunded_at && (
+                        <div className="flex items-start gap-3 relative">
+                          <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 z-10">
+                            <AlertCircle className="w-3 h-3 text-red-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium text-red-700">已退款予客戶</p>
+                              <span className="text-xs text-slate-400 flex-shrink-0">
+                                {new Date(detailItem.refunded_at).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              {new Date(detailItem.refunded_at).toLocaleDateString("zh-HK", { year: "numeric", month: "long", day: "numeric" })}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Expired */}
+                      {detailItem.status === "expired" && !detailItem.redeemed_at && (
+                        <div className="flex items-start gap-3 relative">
+                          <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 z-10">
+                            <Clock className="w-3 h-3 text-slate-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium text-slate-500">療程已過期未使用</p>
+                            </div>
+                            {detailItem.redeem_end_date && (
+                              <p className="text-xs text-slate-400 mt-0.5">
+                                有效期至 {formatDate(detailItem.redeem_end_date)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Pending use - waiting */}
+                      {detailItem.status === "pending_use" &&
+                        !detailItem.redeemed_at &&
+                        !detailItem.refunded_at && (
+                          <div className="flex items-start gap-3 relative">
+                            <div className="w-6 h-6 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center flex-shrink-0 z-10">
+                              <Clock className="w-3 h-3 text-amber-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-amber-700">等待客戶兌換</p>
+                              </div>
+                              {detailItem.redeem_end_date && (
+                                <p className="text-xs text-slate-400 mt-0.5">
+                                  有效期至 {formatDate(detailItem.redeem_end_date)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                      {/* Redeem period available */}
+                      {(detailItem.redeem_start_date || detailItem.redeem_end_date) && (
+                        <div className="flex items-start gap-3 relative">
+                          <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 z-10">
+                            <CalendarDays className="w-3 h-3 text-orange-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium text-slate-700">兌換有效期已設定</p>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              {detailItem.redeem_start_date
+                                ? formatDate(detailItem.redeem_start_date)
+                                : "—"}{" "}
+                              至{" "}
+                              {detailItem.redeem_end_date
+                                ? formatDate(detailItem.redeem_end_date)
+                                : "—"}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stripe payment captured */}
+                      <div className="flex items-start gap-3 relative">
+                        <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 z-10">
+                          <CreditCard className="w-3 h-3 text-purple-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-slate-700">
+                              HK${detailItem.unit_price * detailItem.quantity} 已收款
+                            </p>
+                            <span className="text-xs text-slate-400 flex-shrink-0">
+                              {new Date(detailItem.created_at).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            透過 Stripe 支付
                           </p>
                         </div>
                       </div>
-                    )}
+
+                      {/* Order placed */}
+                      <div className="flex items-start gap-3 relative">
+                        <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0 z-10">
+                          <Calendar className="w-3 h-3 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-slate-700">客戶下單購買</p>
+                            <span className="text-xs text-slate-400 flex-shrink-0">
+                              {new Date(detailItem.created_at).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {new Date(detailItem.created_at).toLocaleDateString("zh-HK", { year: "numeric", month: "long", day: "numeric" })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

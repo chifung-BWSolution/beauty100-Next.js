@@ -75,6 +75,40 @@
 .tox-tinymce-aux * {
   z-index: 99999 !important;
 }
+
+/* Article body prose: override any inline styles from TinyMCE output */
+.article-body .prose p,
+.article-body .prose li,
+.article-body .prose span,
+.article-body .prose a,
+.article-body .prose strong,
+.article-body .prose em,
+.article-body .prose b,
+.article-body .prose i,
+.article-body .prose u {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-family: inherit !important;
+  color: inherit !important;
+}
+.article-body .prose h2,
+.article-body .prose h3,
+.article-body .prose h4,
+.article-body .prose h2 span,
+.article-body .prose h3 span,
+.article-body .prose h4 span {
+  font-family: inherit !important;
+}
+/* Wildcard: strip ALL inline font styles from any element inside article-body */
+.article-body * {
+  font-family: inherit !important;
+}
+.article-body p *,
+.article-body li * {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-family: inherit !important;
+}
 .tox-dialog-wrap {
   z-index: 99999 !important;
   pointer-events: auto !important;

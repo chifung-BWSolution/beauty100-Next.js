@@ -835,6 +835,118 @@ function PagePermissionsTab() {
   );
 }
 
+// ─── Payout Settings Tab ─────────────────────────────────────────────────────
+function PayoutSettingsTab() {
+  const [feePercentage, setFeePercentage] = useState('30');
+  const [payoutDay, setPayoutDay] = useState('7');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.from('system_settings').select('key, value').in('key', ['platform_fee_percentage', 'payout_day']);
+        if (data) {
+          for (const row of data) {
+            if (row.key === 'platform_fee_percentage') setFeePercentage(row.value || '30');
+            if (row.key === 'payout_day') setPayoutDay(row.value || '7');
+          }
+        }
+      } catch (e) { console.error(e); } finally { setLoading(false); }
+    })();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await supabase.from('system_settings').update({ value: feePercentage, updated_at: new Date().toISOString() }).eq('key', 'platform_fee_percentage');
+      await supabase.from('system_settings').update({ value: payoutDay, updated_at: new Date().toISOString() }).eq('key', 'payout_day');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) { console.error(e); } finally { setSaving(false); }
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-12">
+      <div className="w-6 h-6 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin" />
+    </div>
+  );
+
+  const salonPayout = 100 - parseInt(feePercentage || '0');
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)' }}>
+              <Settings className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-base text-slate-800">結算設定</CardTitle>
+              <CardDescription className="text-sm text-slate-500 mt-0.5">設定平台抽成比例及結算日期</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-slate-700">平台抽成比例 (%)</Label>
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                value={feePercentage}
+                onChange={e => setFeePercentage(e.target.value)}
+                className="border-slate-200 focus:border-pink-400 focus:ring-pink-400/20 w-32"
+              />
+              <span className="text-sm text-slate-500">%</span>
+            </div>
+            <div className="flex items-center gap-2 mt-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              <p className="text-sm text-amber-700">
+                平台收取 <strong>{feePercentage}%</strong>，美容院獲得 <strong>{salonPayout}%</strong> 的訂單金額
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-slate-700">每月結算日</Label>
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                min="1"
+                max="28"
+                value={payoutDay}
+                onChange={e => setPayoutDay(e.target.value)}
+                className="border-slate-200 focus:border-pink-400 focus:ring-pink-400/20 w-32"
+              />
+              <span className="text-sm text-slate-500">號</span>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">每月第 {payoutDay} 日進行結算，將上一期已兌換的訂單金額發放給美容院</p>
+          </div>
+
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+            <p className="text-sm font-medium text-slate-700 mb-2">結算規則說明</p>
+            <ul className="text-sm text-slate-500 space-y-1.5 list-disc list-inside">
+              <li>客戶兌換療程後，訂單金額進入待結算狀態</li>
+              <li>每月 {payoutDay} 號前兌換的訂單，計入當月結算</li>
+              <li>每月 {payoutDay} 號後兌換的訂單，計入下月結算</li>
+              <li>平台收取 {feePercentage}% 手續費，美容院實收 {salonPayout}%</li>
+            </ul>
+          </div>
+
+          <Button onClick={handleSave} disabled={saving} className="bg-pink-600 hover:bg-pink-700 text-white">
+            {saving ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : saved ? <CheckCircle className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+            {saved ? '已儲存' : '儲存設定'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Main Settings Page ─────────────────────────────────────────────────────
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('tags');
@@ -886,6 +998,12 @@ export default function AdminSettingsPage() {
           >
             <ShieldCheck className="w-3.5 h-3.5" />頁面權限
           </button>
+          <button
+            onClick={() => setActiveTab('payout')}
+            className={`py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'payout' ? 'bg-white text-pink-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            <Settings className="w-3.5 h-3.5" />結算設定
+          </button>
         </div>
       </div>
 
@@ -895,6 +1013,7 @@ export default function AdminSettingsPage() {
         {activeTab === 'tracking' && <TrackingCodesTab />}
         {activeTab === 'fixed_terms' && <FixedTermsTab />}
         {activeTab === 'permissions' && <PagePermissionsTab />}
+        {activeTab === 'payout' && <PayoutSettingsTab />}
       </div>
     </div>
   );

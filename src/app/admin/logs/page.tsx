@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import AdminLogsClient from '@/components/admin/AdminLogsClient';
+import { startOfDay, endOfDay } from 'date-fns';
 
 export default function AdminLogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -11,11 +12,16 @@ export default function AdminLogsPage() {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
+        const today = new Date();
+        const fromDate = startOfDay(today).toISOString();
+        const toDate = endOfDay(today).toISOString();
         const { data } = await supabase
           .from('user_activity_logs')
           .select('*')
+          .gte('created_date', fromDate)
+          .lte('created_date', toDate)
           .order('created_date', { ascending: false })
-          .limit(500);
+          .limit(2000);
         setLogs(data || []);
       } catch (e) {
         console.error('Failed to fetch logs:', e);

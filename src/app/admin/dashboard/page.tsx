@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import VersionCompareModal from '@/components/admin/VersionCompareModal';
 import { supabase } from '@/lib/supabase';
+import { revalidateSalon } from '@/app/actions/revalidate';
 
 export default function AdminDashboardPage() {
   const [applications, setApplications] = useState<any[]>([]);
@@ -339,6 +340,10 @@ export default function AdminDashboardPage() {
           details: isNewOpening ? `批准新開張並建立美容院：${version.salon_name}` : `批准了美容院資料更新：${version.salon_name}`
         });
       } catch (e) { console.error('Failed to log activity', e); }
+      // Revalidate salon page cache
+      if (profile_id) {
+        await revalidateSalon(profile_id).catch(() => {});
+      }
       await loadData();
       setShowVersionModal(false);
     } catch (e: any) {

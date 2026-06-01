@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -13,6 +13,8 @@ const TABS = { login: 'login', signup: 'signup' };
 
 export default function UserLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   const [tab, setTab] = useState(TABS.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,26 +32,45 @@ export default function UserLoginPage() {
 
   useEffect(() => {
     const timeout = setTimeout(() => setCheckingSession(false), 3000);
-    Promise.race([
-      supabase.auth.getSession(),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500)),
-    ])
-      .then(async ({ data: { session } }: any) => {
-        clearTimeout(timeout);
-        if (session?.user) {
-          const redirected = await redirectByRole(session.user);
+    const checkAuth = async () => {
+      try {
+        // If we have a returnTo param, force refresh the session first to avoid redirect loops
+        if (returnTo) {
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError || !refreshData?.session) {
+            // Session truly expired - show login form, don't redirect
+            setCheckingSession(false);
+            clearTimeout(timeout);
+            return;
+          }
+          // Session refreshed successfully, now redirect
+          const redirected = await redirectByRole(refreshData.session.user);
           if (!redirected) {
-            // Member already logged in - show upgrade modal
-            setPendingUser(session.user);
+            setPendingUser(refreshData.session.user);
             setShowUpgradeModal(true);
           }
+        } else {
+          const result = await Promise.race([
+            supabase.auth.getSession(),
+            new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500)),
+          ]);
+          const session = (result as any)?.data?.session;
+          if (session?.user) {
+            const redirected = await redirectByRole(session.user);
+            if (!redirected) {
+              setPendingUser(session.user);
+              setShowUpgradeModal(true);
+            }
+          }
         }
-        setCheckingSession(false);
-      })
-      .catch(() => {
+      } catch {
+        // Timeout or error - show login form
+      } finally {
         clearTimeout(timeout);
         setCheckingSession(false);
-      });
+      }
+    };
+    checkAuth();
   }, []);
 
   const redirectByRole = async (user: any) => {
@@ -61,6 +82,12 @@ export default function UserLoginPage() {
     if ((roles.includes('merchant') || roles.includes('sub_merchant')) && !roles.includes('member')) {
       const updatedRoles = [...roles, 'member'];
       await supabase.from('users').update({ roles: updatedRoles }).eq('id', user.id);
+    }
+
+    // If there's a returnTo parameter, redirect there directly (user was redirected from a valid page)
+    if (returnTo) {
+      router.push(returnTo);
+      return true;
     }
 
     if (roles.includes('admin') || roles.includes('marketing') || primaryRole === 'admin' || primaryRole === 'marketing') {
@@ -86,7 +113,7 @@ export default function UserLoginPage() {
       const roles: string[] = profile?.roles || (profile?.role ? [profile.role] : [data.user.user_metadata?.role || '']);
       const primaryRole = profile?.role || data.user.user_metadata?.role;
 
-      if (roles.includes('admin') || roles.includes('marketing') || primaryRole === 'admin' || primaryRole === 'marketing') {
+      if (!returnTo && (roles.includes('admin') || roles.includes('marketing') || primaryRole === 'admin' || primaryRole === 'marketing')) {
         await supabase.auth.signOut();
         setError('員工帳號請使用員工登入頁面。');
         setLoading(false);

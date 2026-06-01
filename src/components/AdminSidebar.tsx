@@ -16,6 +16,7 @@ import {
   UserCog,
   ArrowLeftRight,
   FileText,
+  Banknote,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
@@ -30,6 +31,7 @@ export default function AdminSidebar({ isMobile = false, onClose = () => {} }: A
   const router = useRouter();
   const { user } = useAuth();
   const [pendingCount, setPendingCount] = useState(0);
+  const [enquiryPendingCount, setEnquiryPendingCount] = useState(0);
   const [allowedPages, setAllowedPages] = useState<Set<string> | null>(null);
 
   // Fetch role-based page permissions
@@ -66,14 +68,21 @@ export default function AdminSidebar({ isMobile = false, onClose = () => {} }: A
 
     const fetchPending = async () => {
       try {
-        const [appsResult, editsResult] = await Promise.allSettled([
+        const [appsResult, editsResult, contactResult, kolResult, promoResult] = await Promise.allSettled([
           supabase.from('salon_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
           supabase.from('salon_profile_versions').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
+          supabase.from('contact_submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+          supabase.from('kol_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+          supabase.from('kol_promotion_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         ]);
         if (cancelled) return;
         const appsCount = appsResult.status === 'fulfilled' ? ((appsResult.value as any).count ?? 0) : 0;
         const editsCount = editsResult.status === 'fulfilled' ? ((editsResult.value as any).count ?? 0) : 0;
+        const contactCount = contactResult.status === 'fulfilled' ? ((contactResult.value as any).count ?? 0) : 0;
+        const kolCount = kolResult.status === 'fulfilled' ? ((kolResult.value as any).count ?? 0) : 0;
+        const promoCount = promoResult.status === 'fulfilled' ? ((promoResult.value as any).count ?? 0) : 0;
         setPendingCount(appsCount + editsCount);
+        setEnquiryPendingCount(contactCount + kolCount + promoCount);
       } catch (e) {}
     };
     fetchPending();
@@ -95,7 +104,7 @@ export default function AdminSidebar({ isMobile = false, onClose = () => {} }: A
 
   const marketingLinks = [
     { name: '申請管理', href: '/admin/dashboard', icon: CheckSquare, badge: pendingCount > 0 ? pendingCount : null },
-    { name: '表單查詢', href: '/admin/enquiries', icon: MessageSquare },
+    { name: '表單查詢', href: '/admin/enquiries', icon: MessageSquare, badge: enquiryPendingCount > 0 ? enquiryPendingCount : null },
     { name: '所有美容院', href: '/admin/salons', icon: Store },
     { name: '文章管理', href: '/admin/articles', icon: FileText },
   ].filter(link => allowedPages === null || allowedPages.has(link.href));
@@ -103,6 +112,7 @@ export default function AdminSidebar({ isMobile = false, onClose = () => {} }: A
   const adminLinks = [
     { name: '用戶管理', href: '/admin/users', icon: Shield },
     { name: 'Staff 管理', href: '/admin/staff', icon: UserCog },
+    { name: '結算管理', href: '/admin/payouts', icon: Banknote },
     { name: '用戶日誌', href: '/admin/logs', icon: Activity },
     { name: '系統設定', href: '/admin/settings', icon: Settings },
   ].filter(link => allowedPages === null || allowedPages.has(link.href));

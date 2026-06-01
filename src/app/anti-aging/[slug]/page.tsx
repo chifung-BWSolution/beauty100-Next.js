@@ -71,6 +71,7 @@ type ContentBlock =
   | { type: "paragraph"; text: string }
   | { type: "heading"; text: string }
   | { type: "bold-paragraph"; text: string }
+  | { type: "html"; html: string }
   | { type: "image"; src: string; caption?: string }
   | { type: "gallery"; images: GalleryImage[] }
   | { type: "quote"; text: string; author?: string }
@@ -144,6 +145,10 @@ function safeParseJson(value: any): any {
   }
 }
 
+function isHtmlContent(text: string): boolean {
+  return /<[a-z][\s\S]*>/i.test(text);
+}
+
 function extractTextFromRichText(data: any): string[] {
   if (
     data &&
@@ -196,13 +201,26 @@ function buildContentBlocks(record: any): ContentBlock[] {
       const introData = safeParseJson(record.intro);
       if (Array.isArray(introData)) {
         introData.forEach((p: string) => {
-          if (typeof p === "string" && p.trim())
-            blocks.push({ type: "paragraph", text: p });
+          if (typeof p === "string" && p.trim()) {
+            if (isHtmlContent(p)) {
+              blocks.push({ type: "html", html: p });
+            } else {
+              blocks.push({ type: "paragraph", text: p });
+            }
+          }
         });
       } else if (typeof introData === "string" && introData.trim()) {
-        blocks.push({ type: "paragraph", text: introData });
+        if (isHtmlContent(introData)) {
+          blocks.push({ type: "html", html: introData });
+        } else {
+          blocks.push({ type: "paragraph", text: introData });
+        }
       } else if (introData?.text && typeof introData.text === "string") {
-        blocks.push({ type: "paragraph", text: introData.text });
+        if (isHtmlContent(introData.text)) {
+          blocks.push({ type: "html", html: introData.text });
+        } else {
+          blocks.push({ type: "paragraph", text: introData.text });
+        }
       } else if (introData?.type === "root") {
         const texts = extractTextFromRichText(introData);
         texts.forEach((t) => blocks.push({ type: "paragraph", text: t }));
@@ -222,13 +240,26 @@ function buildContentBlocks(record: any): ContentBlock[] {
         const contentData = safeParseJson(content);
         if (Array.isArray(contentData)) {
           contentData.forEach((p: string) => {
-            if (typeof p === "string" && p.trim())
-              blocks.push({ type: "paragraph", text: p });
+            if (typeof p === "string" && p.trim()) {
+              if (isHtmlContent(p)) {
+                blocks.push({ type: "html", html: p });
+              } else {
+                blocks.push({ type: "paragraph", text: p });
+              }
+            }
           });
         } else if (typeof contentData === "string" && contentData.trim()) {
-          blocks.push({ type: "paragraph", text: contentData });
+          if (isHtmlContent(contentData)) {
+            blocks.push({ type: "html", html: contentData });
+          } else {
+            blocks.push({ type: "paragraph", text: contentData });
+          }
         } else if (contentData?.text && typeof contentData.text === "string") {
-          blocks.push({ type: "paragraph", text: contentData.text });
+          if (isHtmlContent(contentData.text)) {
+            blocks.push({ type: "html", html: contentData.text });
+          } else {
+            blocks.push({ type: "paragraph", text: contentData.text });
+          }
         } else if (contentData?.type === "root") {
           const texts = extractTextFromRichText(contentData);
           texts.forEach((t) => blocks.push({ type: "paragraph", text: t }));
@@ -277,8 +308,11 @@ function mapSupabaseToArticle(record: any): ArticleData {
 
   const body = buildContentBlocks(record);
   const wordCount = body
-    .filter((b) => b.type === "paragraph" || b.type === "bold-paragraph")
-    .reduce((acc, b) => acc + ((b as any).text?.length || 0), 0);
+    .filter((b) => b.type === "paragraph" || b.type === "bold-paragraph" || b.type === "html")
+    .reduce((acc, b) => {
+      if (b.type === "html") return acc + ((b as any).html.replace(/<[^>]*>/g, '').length || 0);
+      return acc + ((b as any).text?.length || 0);
+    }, 0);
   const readTime = `${Math.max(1, Math.ceil(wordCount / 400))} 分鐘`;
 
   return {
@@ -593,6 +627,14 @@ function ArticleBody({
                 >
                   {block.text}
                 </p>
+              );
+            case "html":
+              return (
+                <div
+                  key={idx}
+                  className="text-[15px] sm:text-base leading-[1.85] text-slate-700 prose max-w-none [&_p]:text-[15px] [&_p]:sm:text-base [&_p]:leading-[1.85] [&_p]:mb-4 [&_p]:text-slate-700 [&_h2]:text-[17px] [&_h2]:sm:text-lg [&_h2]:font-bold [&_h2]:text-slate-900 [&_h2]:border-l-[3px] [&_h2]:border-blue-600 [&_h2]:pl-3 [&_h2]:pt-6 [&_h2]:pb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-slate-800 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_li]:text-[15px] [&_li]:sm:text-base [&_li]:leading-[1.85] [&_li]:text-slate-700 [&_strong]:font-semibold [&_strong]:text-slate-800 [&_a]:text-violet-500 [&_a]:underline [&_img]:rounded-lg [&_img]:my-4"
+                  dangerouslySetInnerHTML={{ __html: (block as any).html }}
+                />
               );
             case "bold-paragraph":
               return (

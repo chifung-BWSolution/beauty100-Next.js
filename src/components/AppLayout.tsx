@@ -48,6 +48,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setMobileMenuOpen(false);
   }, [pathname]);
 
+  // Prevent body scroll when sidebar layout is active (prevents double scrollbar)
+  useEffect(() => {
+    if (!hideSidebar) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+      };
+    }
+  }, [hideSidebar]);
+
   if (hideSidebar) {
     return <>{children}</>;
   }
