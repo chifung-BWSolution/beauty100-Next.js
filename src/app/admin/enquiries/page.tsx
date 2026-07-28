@@ -52,8 +52,13 @@ interface ContactSubmission {
 interface KolApplication {
   id: string;
   name: string;
+  title?: string | null;
   phone: string;
   email: string;
+  age_range?: string | null;
+  birth_month?: string | null;
+  residence_district?: string | null;
+  work_district?: string | null;
   platform_name: string;
   platform_link: string;
   followers: string;
@@ -61,6 +66,8 @@ interface KolApplication {
   region: string;
   experience: string | null;
   introduction: string;
+  form_data?: Record<string, any> | null;
+  photo_urls?: string[] | null;
   status: FormStatus;
   handled_by: string | null;
   handled_at: string | null;
@@ -682,7 +689,7 @@ export default function AdminEnquiriesPage() {
 
       {/* KOL Detail Modal */}
       <Dialog open={!!selectedKol} onOpenChange={() => setSelectedKol(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>KOL 申請詳情</DialogTitle>
           </DialogHeader>
@@ -691,7 +698,7 @@ export default function AdminEnquiriesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-slate-500">姓名</p>
-                  <p className="font-medium">{selectedKol.name}</p>
+                  <p className="font-medium">{selectedKol.name}{selectedKol.title ? `（${selectedKol.title}）` : ''}</p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">電話</p>
@@ -704,40 +711,98 @@ export default function AdminEnquiriesPage() {
                   <p className="font-medium">{selectedKol.email}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">地區</p>
-                  <p className="font-medium">{selectedKol.region}</p>
+                  <p className="text-xs text-slate-500">年齡層 / 出生月份</p>
+                  <p className="font-medium">{selectedKol.age_range || '-'} / {selectedKol.birth_month || '-'}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-slate-500">居住地區</p>
+                  <p className="font-medium">{selectedKol.residence_district || selectedKol.region || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">工作地區</p>
+                  <p className="font-medium">{selectedKol.work_district || '-'}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-slate-500">平台</p>
-                  <p className="font-medium">{selectedKol.platform_name}</p>
+                  <p className="font-medium">{selectedKol.platform_name || '-'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">粉絲數</p>
-                  <p className="font-medium">{selectedKol.followers}</p>
+                  <p className="font-medium">{selectedKol.followers || '-'}</p>
                 </div>
               </div>
-              <div>
-                <p className="text-xs text-slate-500">平台連結</p>
-                <a href={selectedKol.platform_link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline break-all">
-                  {selectedKol.platform_link}
-                </a>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">內容方向</p>
-                <p className="text-sm">{selectedKol.content_direction}</p>
-              </div>
-              {selectedKol.experience && (
+              {selectedKol.platform_link && (
                 <div>
-                  <p className="text-xs text-slate-500">合作經驗</p>
-                  <p className="text-sm">{selectedKol.experience}</p>
+                  <p className="text-xs text-slate-500">主要平台連結</p>
+                  <a href={selectedKol.platform_link.startsWith('http') ? selectedKol.platform_link : `https://${selectedKol.platform_link}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline break-all">
+                    {selectedKol.platform_link}
+                  </a>
                 </div>
               )}
               <div>
-                <p className="text-xs text-slate-500">自我介紹</p>
-                <p className="text-sm bg-slate-50 rounded-lg p-3 whitespace-pre-wrap">{selectedKol.introduction}</p>
+                <p className="text-xs text-slate-500">內容主題</p>
+                <p className="text-sm">{selectedKol.content_direction || '-'}</p>
               </div>
+              {selectedKol.experience && (
+                <div>
+                  <p className="text-xs text-slate-500">試用經驗</p>
+                  <p className="text-sm">{selectedKol.experience}</p>
+                </div>
+              )}
+              {selectedKol.introduction && (
+                <div>
+                  <p className="text-xs text-slate-500">摘要</p>
+                  <p className="text-sm bg-slate-50 rounded-lg p-3 whitespace-pre-wrap">{selectedKol.introduction}</p>
+                </div>
+              )}
+              {selectedKol.form_data && Object.keys(selectedKol.form_data).length > 0 && (
+                <div className="space-y-3 border-t pt-3">
+                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">完整申請資料</p>
+                  {[
+                    ['試用頻率', selectedKol.form_data.trial_frequency],
+                    ['合作興趣', (selectedKol.form_data.cooperation_interests || []).join('、')],
+                    ['影片分享', selectedKol.form_data.video_sharing],
+                    ['可參加時間', (selectedKol.form_data.available_times || []).join('、')],
+                    ['KOL Club', selectedKol.form_data.club_interest],
+                    ['Model 經驗', selectedKol.form_data.model_experience],
+                    ['上鏡經驗', selectedKol.form_data.camera_experience],
+                    ['Live 主播', selectedKol.form_data.live_interest],
+                  ].filter(([, v]) => v).map(([label, value]) => (
+                    <div key={String(label)}>
+                      <p className="text-xs text-slate-500">{label}</p>
+                      <p className="text-sm">{String(value)}</p>
+                    </div>
+                  ))}
+                  {selectedKol.form_data.platforms && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                      {Object.entries(selectedKol.form_data.platforms)
+                        .filter(([, v]) => v)
+                        .map(([k, v]) => (
+                          <div key={k}>
+                            <p className="text-xs text-slate-500">{k}</p>
+                            <p className="break-all">{String(v)}</p>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {selectedKol.photo_urls && selectedKol.photo_urls.length > 0 && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-2">相片</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedKol.photo_urls.map((url) => (
+                      <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                        <img src={url} alt="KOL photo" className="h-24 w-24 object-cover rounded-lg border" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-slate-500">狀態</p>
