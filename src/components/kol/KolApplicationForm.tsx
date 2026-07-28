@@ -304,88 +304,51 @@ export default function KolApplicationForm() {
       if (photo1) photoUrls.push(await uploadPhoto(photo1, 'personal'));
       if (photo2) photoUrls.push(await uploadPhoto(photo2, 'work'));
 
-      const primaryLink =
-        form.instagram ||
-        form.xiaohongshu ||
-        form.facebook ||
-        form.youtube ||
-        form.tiktok ||
-        form.openriceUrl ||
-        form.blogUrl ||
-        form.otherChannels ||
-        '';
-      const primaryFollowers =
-        form.instagramFollowers ||
-        form.xiaohongshuFollowers ||
-        form.facebookLikes ||
-        form.youtubeSubscribers ||
-        form.tiktokFollowers ||
-        form.blogSubscribers ||
-        form.otherFollowers ||
-        form.openriceLevel ||
-        '';
-
-      const { error: dbError } = await supabase.from('kol_applications').insert({
-        name: form.name,
-        title: form.title,
-        phone: form.phone,
-        email: form.email,
-        age_range: form.ageRange,
-        birth_month: form.birthMonth,
-        residence_district: form.residenceDistrict || null,
-        work_district: form.workDistrict || null,
-        region: form.residenceDistrict || form.workDistrict || '',
-        platform_name: form.publishPlatforms.join(', '),
-        platform_link: primaryLink,
-        followers: primaryFollowers,
-        content_direction: form.contentTopics.join(', '),
-        experience: form.trialExperience,
-        introduction: [
-          `試用頻率：${form.trialFrequency}`,
-          `合作興趣：${form.cooperationInterests.join('、') || '—'}`,
-          `影片分享：${form.videoSharing}`,
-          `可參加時間：${form.availableTimes.join('、')}`,
-        ].join('\n'),
-        photo_urls: photoUrls,
-        form_data: {
+      const res = await fetch('/api/kol-apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
           title: form.title,
-          age_range: form.ageRange,
-          birth_month: form.birthMonth,
-          residence_district: form.residenceDistrict,
-          work_district: form.workDistrict,
-          trial_frequency: form.trialFrequency,
-          trial_experience: form.trialExperience,
-          publish_platforms: form.publishPlatforms,
-          platforms: {
-            openrice_url: form.openriceUrl,
-            openrice_level: form.openriceLevel,
-            instagram: form.instagram,
-            instagram_followers: form.instagramFollowers,
-            facebook: form.facebook,
-            facebook_likes: form.facebookLikes,
-            xiaohongshu: form.xiaohongshu,
-            xiaohongshu_followers: form.xiaohongshuFollowers,
-            youtube: form.youtube,
-            youtube_subscribers: form.youtubeSubscribers,
-            tiktok: form.tiktok,
-            tiktok_followers: form.tiktokFollowers,
-            blog_url: form.blogUrl,
-            blog_subscribers: form.blogSubscribers,
-            other_channels: form.otherChannels,
-            other_followers: form.otherFollowers,
-          },
-          content_topics: form.contentTopics,
-          cooperation_interests: form.cooperationInterests,
-          video_sharing: form.videoSharing,
-          available_times: form.availableTimes,
-          club_interest: form.clubInterest,
-          model_experience: form.modelExperience,
-          camera_experience: form.cameraExperience,
-          live_interest: form.liveInterest,
-        },
+          email: form.email,
+          phone: form.phone,
+          ageRange: form.ageRange,
+          birthMonth: form.birthMonth,
+          residenceDistrict: form.residenceDistrict,
+          workDistrict: form.workDistrict,
+          trialFrequency: form.trialFrequency,
+          trialExperience: form.trialExperience,
+          publishPlatforms: form.publishPlatforms,
+          openriceUrl: form.openriceUrl,
+          openriceLevel: form.openriceLevel,
+          instagram: form.instagram,
+          instagramFollowers: form.instagramFollowers,
+          facebook: form.facebook,
+          facebookLikes: form.facebookLikes,
+          xiaohongshu: form.xiaohongshu,
+          xiaohongshuFollowers: form.xiaohongshuFollowers,
+          youtube: form.youtube,
+          youtubeSubscribers: form.youtubeSubscribers,
+          tiktok: form.tiktok,
+          tiktokFollowers: form.tiktokFollowers,
+          blogUrl: form.blogUrl,
+          blogSubscribers: form.blogSubscribers,
+          otherChannels: form.otherChannels,
+          otherFollowers: form.otherFollowers,
+          contentTopics: form.contentTopics,
+          cooperationInterests: form.cooperationInterests,
+          videoSharing: form.videoSharing,
+          availableTimes: form.availableTimes,
+          clubInterest: form.clubInterest,
+          modelExperience: form.modelExperience,
+          cameraExperience: form.cameraExperience,
+          liveInterest: form.liveInterest,
+          photoUrls,
+        }),
       });
 
-      if (dbError) throw dbError;
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || '提交失敗，請稍後再試');
       setSubmitted(true);
     } catch (err: any) {
       setError(err.message || '提交失敗，請稍後再試');
