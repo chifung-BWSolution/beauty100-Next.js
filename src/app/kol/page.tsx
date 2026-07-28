@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import PublicLayout from '@/components/public/PublicLayout';
 import { Button } from '@/components/ui/button';
-import KolApplicationForm from '@/components/kol/KolApplicationForm';
 import {
   Sparkles, Users, Megaphone, HeadphonesIcon,
   ClipboardList, Search, UserCheck,
   CheckCircle2, ChevronDown, ChevronUp,
-  ArrowRight, Gift,
+  ArrowRight, Gift, ClipboardPenLine,
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -34,8 +34,8 @@ export default function KolJoinPage() {
         {/* ═══════════ 4. 我們正在尋找 ═══════════ */}
         <LookingForSection />
 
-        {/* ═══════════ 5. 申請加入 Form ═══════════ */}
-        <KolApplicationForm />
+        {/* ═══════════ 5. 申請加入 CTA ═══════════ */}
+        <ApplyCTASection />
 
         {/* ═══════════ 6. FAQ ═══════════ */}
         <FAQSection />
@@ -55,10 +55,6 @@ export default function KolJoinPage() {
    ═══════════════════════════════════════════════════════════════ */
 
 function HeroSection() {
-  const scrollToForm = () => {
-    document.getElementById('application-form')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-teal-50 via-white to-rose-50">
       {/* Decorative elements */}
@@ -80,12 +76,14 @@ function HeroSection() {
         </p>
 
         <Button
-          onClick={scrollToForm}
+          asChild
           className="mt-8 bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 text-base rounded-full shadow-lg shadow-teal-200 hover:shadow-xl hover:shadow-teal-200 transition-all"
           size="lg"
         >
-          立即申請
-          <ArrowRight className="w-4 h-4 ml-2" />
+          <Link href="/kol/apply">
+            立即申請
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Link>
         </Button>
       </div>
     </section>
@@ -261,6 +259,40 @@ function LookingForSection() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   APPLY CTA SECTION
+   ═══════════════════════════════════════════════════════════════ */
+
+function ApplyCTASection() {
+  return (
+    <section className="py-16 sm:py-20 bg-gradient-to-b from-white to-teal-50/30">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-teal-100 bg-white shadow-sm p-8 sm:p-10 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center mx-auto mb-5">
+            <ClipboardPenLine className="w-7 h-7 text-teal-600" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            申請加入
+          </h2>
+          <p className="mt-3 text-base text-slate-600 leading-relaxed max-w-xl mx-auto">
+            填寫申請表，提交你的平台資料與合作意向。我們的專員將盡快與你聯繫。
+          </p>
+          <Button
+            asChild
+            className="mt-7 bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 text-base rounded-full shadow-md hover:shadow-lg transition-all"
+            size="lg"
+          >
+            <Link href="/kol/apply">
+              前往填寫申請表
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
    FAQ SECTION
    ═══════════════════════════════════════════════════════════════ */
 
@@ -361,10 +393,6 @@ function BrandCooperationBlock() {
    ═══════════════════════════════════════════════════════════════ */
 
 function BottomCTASection() {
-  const scrollToForm = () => {
-    document.getElementById('application-form')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <section className="py-16 sm:py-20 bg-gradient-to-br from-teal-600 to-teal-700">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -375,12 +403,14 @@ function BottomCTASection() {
           提交你的資料，讓我們更了解你，開啟更多合作與曝光機會。
         </p>
         <Button
-          onClick={scrollToForm}
+          asChild
           className="mt-8 bg-white text-teal-700 hover:bg-teal-50 px-8 py-3 text-base rounded-full shadow-lg hover:shadow-xl transition-all font-semibold"
           size="lg"
         >
-          立即申請
-          <ArrowRight className="w-4 h-4 ml-2" />
+          <Link href="/kol/apply">
+            立即申請
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Link>
         </Button>
       </div>
     </section>
