@@ -78,7 +78,7 @@ const PUBLISH_PLATFORMS = [
 ] as const;
 
 const CONTENT_TOPICS = [
-  '美麗事件 Beauty',
+  'beauty',
   '護膚 Skincare',
   '化妝 Makeup',
   '療程 Treatment',
@@ -618,9 +618,13 @@ export default function KolApplicationForm() {
 
           {/* Cooperation */}
           <div className="space-y-5">
-            <h3 className="text-lg font-bold text-slate-900 border-b border-gray-100 pb-2">
-              --------------------------- 合作方案 -----------------------------
-            </h3>
+            <div className="flex items-center gap-3 py-1">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-teal-200 to-teal-300" />
+              <h3 className="text-base sm:text-lg font-bold text-teal-700 tracking-wide shrink-0">
+                合作方案
+              </h3>
+              <div className="h-px flex-1 bg-gradient-to-l from-transparent via-teal-200 to-teal-300" />
+            </div>
 
             <div>
               <FieldLabel>合作層面：上鏡機會、媒體訪問、品牌活動，你有興趣嗎？（可選多項）</FieldLabel>
