@@ -67,6 +67,7 @@ const TRIAL_EXPERIENCE = [
 ] as const;
 
 const PUBLISH_PLATFORMS = [
+  'Openrice',
   'Instagram',
   'Facebook',
   '小紅書',
@@ -75,6 +76,21 @@ const PUBLISH_PLATFORMS = [
   'Blog Website',
   'Threads',
   'Others',
+] as const;
+
+const OPENRICE_LEVELS = [
+  'Level 1',
+  'Level 2',
+  'Level 3',
+  'Level 4',
+  'Level 5',
+  'Level 6',
+  'Level 7',
+  'Level 8',
+  'Level 9',
+  'Level 10',
+  '智尊食家',
+  '未開始',
 ] as const;
 
 const CONTENT_TOPICS = [
@@ -162,6 +178,8 @@ type FormState = {
   trialFrequency: string;
   trialExperience: string;
   publishPlatforms: string[];
+  openriceUrl: string;
+  openriceLevel: string;
   instagram: string;
   instagramFollowers: string;
   facebook: string;
@@ -198,6 +216,8 @@ const INITIAL: FormState = {
   trialFrequency: '',
   trialExperience: '',
   publishPlatforms: [],
+  openriceUrl: '',
+  openriceLevel: '',
   instagram: '',
   instagramFollowers: '',
   facebook: '',
@@ -285,7 +305,15 @@ export default function KolApplicationForm() {
       if (photo2) photoUrls.push(await uploadPhoto(photo2, 'work'));
 
       const primaryLink =
-        form.instagram || form.xiaohongshu || form.facebook || form.youtube || form.tiktok || form.blogUrl || form.otherChannels || '';
+        form.instagram ||
+        form.xiaohongshu ||
+        form.facebook ||
+        form.youtube ||
+        form.tiktok ||
+        form.openriceUrl ||
+        form.blogUrl ||
+        form.otherChannels ||
+        '';
       const primaryFollowers =
         form.instagramFollowers ||
         form.xiaohongshuFollowers ||
@@ -294,6 +322,7 @@ export default function KolApplicationForm() {
         form.tiktokFollowers ||
         form.blogSubscribers ||
         form.otherFollowers ||
+        form.openriceLevel ||
         '';
 
       const { error: dbError } = await supabase.from('kol_applications').insert({
@@ -328,6 +357,8 @@ export default function KolApplicationForm() {
           trial_experience: form.trialExperience,
           publish_platforms: form.publishPlatforms,
           platforms: {
+            openrice_url: form.openriceUrl,
+            openrice_level: form.openriceLevel,
             instagram: form.instagram,
             instagram_followers: form.instagramFollowers,
             facebook: form.facebook,
@@ -537,6 +568,28 @@ export default function KolApplicationForm() {
           <div className="space-y-5">
             <h3 className="text-lg font-bold text-slate-900 border-b border-gray-100 pb-2">社交平台連結</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <FieldLabel>Openrice 食家連結</FieldLabel>
+                <input
+                  className={inputClass}
+                  value={form.openriceUrl}
+                  onChange={(e) => setField('openriceUrl', e.target.value)}
+                  placeholder="https://www.openrice.com/..."
+                />
+              </div>
+              <div>
+                <FieldLabel>Openrice 食家評級</FieldLabel>
+                <select
+                  className={inputClass}
+                  value={form.openriceLevel}
+                  onChange={(e) => setField('openriceLevel', e.target.value)}
+                >
+                  <option value="">請選擇</option>
+                  {OPENRICE_LEVELS.map((level) => (
+                    <option key={level} value={level}>{level}</option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <FieldLabel>Instagram 帳號</FieldLabel>
                 <input className={inputClass} value={form.instagram} onChange={(e) => setField('instagram', e.target.value)} placeholder="@username 或連結" />
