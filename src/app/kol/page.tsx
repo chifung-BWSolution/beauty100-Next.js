@@ -409,8 +409,10 @@ function BottomCTASection() {
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
           開始您的美容院合作
         </h2>
-        <p className="mt-4 text-base sm:text-lg text-teal-50 max-w-xl mx-auto leading-relaxed">
-          填寫一份簡單申請，讓 Beauty100 協助您對接合適的美容院與曝光機會。
+        <p className="mt-4 text-base sm:text-lg text-teal-50 max-w-2xl mx-auto leading-relaxed">
+          填寫一份簡單申請，
+          <br />
+          讓 Beauty100 協助您對接合適的美容院與曝光機會。
         </p>
         <Button
           asChild
