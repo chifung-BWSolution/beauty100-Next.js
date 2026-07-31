@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "申請創作者合作 | Beauty100",
-  description: "填寫 Beauty100 創作者合作申請表，對接美容院合作同曝光機會，專員將盡快與你聯繫。",
+  description: "填寫 Beauty100 創作者合作申請表，對接美容院合作與曝光機會，專員將盡快與您聯繫。",
   openGraph: {
     title: "申請創作者合作 | Beauty100",
-    description: "填寫 Beauty100 創作者合作申請表，對接美容院合作同曝光機會。",
+    description: "填寫 Beauty100 創作者合作申請表，對接美容院合作與曝光機會。",
     url: "/kol/apply",
   },
   alternates: {

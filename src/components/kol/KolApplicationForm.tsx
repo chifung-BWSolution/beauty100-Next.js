@@ -366,10 +366,10 @@ export default function KolApplicationForm() {
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">申請已提交！</h2>
           <p className="text-base text-slate-600 leading-relaxed mb-3">
-            提交後，我們的專員將盡快與你聯繫及對接合作詳情。
+            提交後，我們的專員將盡快與您聯繫及對接合作詳情。
           </p>
           <p className="text-sm text-slate-500">
-            如資料合適，我們將進一步與你溝通合作方向、內容形式與後續安排。
+            如資料合適，我們將進一步與您溝通合作方向、內容形式與後續安排。
           </p>
         </div>
       </section>
@@ -382,7 +382,7 @@ export default function KolApplicationForm() {
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">申請創作者合作</h2>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            請填寫以下資料。我哋會幫你對接美容院合作，專員會盡快聯絡你。
+            請填寫以下資料。我們會協助您對接美容院合作，專員會盡快與您聯絡。
           </p>
         </div>
 
@@ -805,7 +805,7 @@ export default function KolApplicationForm() {
           </div>
 
           <p className="text-center text-sm text-slate-500 pt-2">
-            提交後，我們的專員將盡快與你聯繫及對接合作詳情。
+            提交後，我們的專員將盡快與您聯繫及對接合作詳情。
           </p>
         </form>
       </div>

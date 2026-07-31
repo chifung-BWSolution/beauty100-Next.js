@@ -21,8 +21,7 @@ import {
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
-   創作者合作招募 — /kol
-   清楚說明：招募網紅／內容創作者，同美容院合作
+   創作者合作招募 — /kol（書面語）
    ═══════════════════════════════════════════════════════════════ */
 
 export default function KolJoinPage() {
@@ -61,13 +60,13 @@ function HeroSection() {
           </p>
 
           <h1 className="text-3xl sm:text-5xl lg:text-[3.25rem] font-extrabold text-slate-900 tracking-tight leading-tight">
-            想同美容院合作？
+            想與美容院合作？
             <span className="block mt-2 text-teal-700">歡迎加入 Beauty100</span>
           </h1>
 
           <p className="mt-5 text-base sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            無論你係網紅、內容創作者，定係鍾意喺社交平台分享美容體驗，
-            我哋都可以幫你對接美容院合作同曝光機會。
+            無論您是網紅、內容創作者，或是喜歡在社交平台分享美容體驗的朋友，
+            我們都可以協助您對接美容院合作與曝光機會。
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -85,7 +84,7 @@ function HeroSection() {
               href="#what-is"
               className="w-full sm:w-auto min-h-12 inline-flex items-center justify-center px-6 text-base font-medium text-slate-700 hover:text-teal-700 transition-colors duration-200"
             >
-              先了解係咩計劃
+              先了解計劃詳情
             </a>
           </div>
         </div>
@@ -102,30 +101,30 @@ function WhatIsSection() {
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight text-center">
-            呢個計劃係做咩？
+            這個計劃是什麼？
           </h2>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed text-center">
             Beauty100 會撮合<strong className="font-semibold text-slate-800">內容創作者</strong>
-            同<strong className="font-semibold text-slate-800">美容院／美容品牌</strong>合作。
-            你分享真實體驗，美容院得到曝光，雙方一齊成長。
+            與<strong className="font-semibold text-slate-800">美容院／美容品牌</strong>合作。
+            您分享真實體驗，美容院獲得曝光，雙方共同成長。
           </p>
 
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
             {[
               {
                 icon: Users,
-                title: '你係創作者',
-                desc: '網紅、KOL、KOC，或者鍾意拍片／寫文分享美容嘅人',
+                title: '您是創作者',
+                desc: '網紅、KOL、KOC，或喜歡拍攝／撰文分享美容內容的朋友',
               },
               {
                 icon: Store,
-                title: '對方係美容院',
-                desc: '想搵人真實試療程、拍內容、幫店鋪曝光',
+                title: '合作對象是美容院',
+                desc: '希望邀請真實試療程、拍攝內容，並提升店鋪曝光',
               },
               {
                 icon: Handshake,
-                title: '我哋做橋樑',
-                desc: '審核申請後，專員會同你聯絡，安排合適合作',
+                title: '我們擔任橋樑',
+                desc: '審核申請後，專員會與您聯絡，安排合適合作',
               },
             ].map((item) => (
               <div key={item.title} className="text-center sm:text-left px-2 py-3">
@@ -140,8 +139,8 @@ function WhatIsSection() {
 
           <p className="mt-8 text-sm sm:text-base text-slate-500 text-center leading-relaxed bg-white border border-slate-100 rounded-xl px-4 py-3">
             <span className="font-medium text-slate-700">小知識：</span>
-            「KOL」即係有影響力嘅網紅／內容創作者（Key Opinion Leader）。
-            唔使粉絲好高都可以申請，我哋更重視真實分享。
+            「KOL」是指具影響力的網紅／內容創作者（Key Opinion Leader）。
+            粉絲數量不是唯一條件，我們更重視真實分享。
           </p>
         </div>
       </div>
@@ -154,23 +153,23 @@ function WhatIsSection() {
 const BENEFITS = [
   {
     icon: Megaphone,
-    title: '更多人睇到你嘅內容',
-    description: '你嘅體驗分享有機會出現喺 Beauty100 平台，接觸更多對美容有興趣嘅讀者。',
+    title: '讓更多人看見您的內容',
+    description: '您的體驗分享有機會刊登於 Beauty100 平台，接觸更多對美容有興趣的讀者。',
   },
   {
     icon: Store,
     title: '對接美容院合作',
-    description: '有機會試療程、拍探店內容、同店鋪做真實體驗合作。',
+    description: '有機會試療程、拍攝探店內容，並與店鋪進行真實體驗合作。',
   },
   {
     icon: Camera,
-    title: '建立你嘅美容形象',
-    description: '持續分享護膚、療程、化妝心得，強化你喺美容領域嘅個人風格。',
+    title: '建立您的美容形象',
+    description: '持續分享護膚、療程、化妝心得，強化您在美容領域的個人風格。',
   },
   {
     icon: Sparkles,
-    title: '有專人跟進',
-    description: '交申請之後會有專員聯絡你，解釋合作方式同後續安排。',
+    title: '專人跟進支援',
+    description: '提交申請後會有專員聯絡您，說明合作方式與後續安排。',
   },
 ];
 
@@ -180,10 +179,10 @@ function BenefitsSection() {
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            加入之後有咩好處？
+            加入後有什麼好處？
           </h2>
           <p className="mt-3 text-base sm:text-lg text-slate-600 leading-relaxed">
-            重點唔係術語，而係幫你搵到合適嘅美容院合作，同埋畀更多人睇到你嘅分享。
+            重點不是術語，而是協助您找到合適的美容院合作，並讓更多人看見您的分享。
           </p>
         </div>
 
@@ -208,10 +207,10 @@ function BenefitsSection() {
 /* ─── WHO ─── */
 
 const WHO_ITEMS = [
-  '鍾意分享美容、護膚、化妝、療程體驗',
-  '有 IG、小紅書、YouTube、TikTok 或者其他社交平台',
-  '可以拍短片、寫圖文，或者分享真實心得',
-  '想同美容院建立長期、真誠嘅合作關係',
+  '喜歡分享美容、護膚、化妝、療程體驗',
+  '擁有 Instagram、小紅書、YouTube、TikTok 或其他社交平台',
+  '可以拍攝短片、撰寫圖文，或分享真實心得',
+  '希望與美容院建立長期、真誠的合作關係',
 ];
 
 function WhoSection() {
@@ -221,10 +220,10 @@ function WhoSection() {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-8 sm:mb-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-              邊啲人適合申請？
+              哪些人適合申請？
             </h2>
             <p className="mt-3 text-base sm:text-lg text-slate-600 leading-relaxed">
-              唔一定要係大網紅。只要你真心分享，我哋都歡迎你嚟申請。
+              不一定要是知名網紅。只要您真心分享，我們都歡迎您申請。
             </p>
           </div>
 
@@ -252,19 +251,19 @@ const STEPS = [
     step: '1',
     icon: ClipboardList,
     title: '填寫申請',
-    description: '留下聯絡方法、社交平台同你想做嘅內容方向。',
+    description: '留下聯絡方式、社交平台，以及您希望發展的內容方向。',
   },
   {
     step: '2',
     icon: Search,
-    title: '我哋審核',
-    description: '團隊會睇吓你嘅內容風格，同有冇合適嘅合作空間。',
+    title: '平台審核',
+    description: '團隊會了解您的內容風格，並評估是否有合適的合作空間。',
   },
   {
     step: '3',
     icon: UserCheck,
-    title: '專員聯絡你',
-    description: '通過初步審核後，會有人同你傾合作詳情同安排。',
+    title: '專員聯絡您',
+    description: '通過初步審核後，會有專員與您商討合作詳情與安排。',
   },
 ];
 
@@ -274,10 +273,10 @@ function ProcessSection() {
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            點樣申請？只需三步
+            如何申請？只需三步
           </h2>
           <p className="mt-3 text-base sm:text-lg text-slate-600 leading-relaxed">
-            流程好簡單，交完資料就等我哋聯絡你。
+            流程簡單清晰，提交資料後即可等候我們聯絡。
           </p>
         </div>
 
@@ -315,10 +314,10 @@ function ApplyCTASection() {
     <section className="py-14 sm:py-16 bg-slate-50">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-          準備好申請未？
+          準備好申請了嗎？
         </h2>
         <p className="mt-3 text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl mx-auto">
-          撳下面按鈕去填申請表。大約幾分鐘就搞掂，專員會盡快覆你。
+          請按下方按鈕填寫申請表。大約數分鐘即可完成，專員會盡快回覆您。
         </p>
         <Button
           asChild
@@ -339,20 +338,20 @@ function ApplyCTASection() {
 
 const FAQ_ITEMS = [
   {
-    q: '「KOL」係咩意思？我唔係大網紅都可以申請嗎？',
-    a: 'KOL 即係網紅／內容創作者。粉絲唔使好多都可以申請，我哋更重視你係咪真實分享美容體驗。',
+    q: '「KOL」是什麼意思？我不是知名網紅也可以申請嗎？',
+    a: 'KOL 即網紅／內容創作者。粉絲數量不多也可以申請，我們更重視您是否真實分享美容體驗。',
   },
   {
-    q: '申請之後會做啲咩？',
-    a: '主要係同美容院合作，例如試療程、拍探店、分享真實體驗。具體安排會由專員同你商量。',
+    q: '申請之後會做什麼？',
+    a: '主要是與美容院合作，例如試療程、拍攝探店、分享真實體驗。具體安排會由專員與您商討。',
   },
   {
-    q: '交表之後幾耐會有人聯絡？',
-    a: '一般會喺收到申請後盡快安排專員聯絡你。如資料合適，會再傾合作方向。',
+    q: '提交申請後多久會有人聯絡？',
+    a: '一般會在收到申請後盡快安排專員聯絡您。如資料合適，會再進一步商討合作方向。',
   },
   {
     q: '一定要有拍片經驗嗎？',
-    a: '唔一定。短片、圖文、心得分享都可以。重點係你願意真誠分享。',
+    a: '不一定。短片、圖文、心得分享都可以。重點是您願意真誠分享。',
   },
 ];
 
@@ -408,10 +407,10 @@ function BottomCTASection() {
     <section className="py-16 sm:py-20 bg-gradient-to-br from-teal-600 to-teal-700">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
-          開始你嘅美容院合作
+          開始您的美容院合作
         </h2>
         <p className="mt-4 text-base sm:text-lg text-teal-50 max-w-xl mx-auto leading-relaxed">
-          填一份簡單申請，等 Beauty100 幫你對接合適嘅美容院同曝光機會。
+          填寫一份簡單申請，讓 Beauty100 協助您對接合適的美容院與曝光機會。
         </p>
         <Button
           asChild
