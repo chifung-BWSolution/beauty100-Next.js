@@ -380,9 +380,9 @@ export default function KolApplicationForm() {
     <section id="application-form" className="py-16 sm:py-20 bg-gradient-to-b from-white to-teal-50/30">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">申請加入</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">申請創作者合作</h2>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            請填寫以下資料，我們將盡快安排專員與你聯繫。
+            請填寫以下資料。我哋會幫你對接美容院合作，專員會盡快聯絡你。
           </p>
         </div>
 

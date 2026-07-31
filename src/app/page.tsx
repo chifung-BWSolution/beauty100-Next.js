@@ -405,17 +405,17 @@ export default async function HomePage() {
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-bold text-slate-800 group-hover:text-purple-700 transition-colors">
-                加入KOL實錄
+                想同美容院合作？
               </h3>
               <p className="text-[12px] text-slate-500 mt-0.5">
-                成為我們的美容KOL，分享你的護膚心得同體驗
+                網紅／創作者歡迎申請，分享美容體驗同對接合作
               </p>
             </div>
           </div>
           <Button
             className="h-8 sm:h-9 px-4 sm:px-5 rounded-lg text-xs sm:text-sm font-medium bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-sm hover:shadow-md shrink-0"
           >
-            加入我們
+            立即申請
             <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
           </Button>
         </Link>

@@ -12,7 +12,7 @@ const FOOTER_LINKS = [
       { label: '找美容院', href: '/explore-salons' },
       { label: '焦點話題', href: '/topics' },
       { label: '娛樂圈', href: '/entertainment' },
-      { label: 'KOL實錄', href: '/kol' },
+      { label: '創作者合作', href: '/kol' },
     ],
   },
   {

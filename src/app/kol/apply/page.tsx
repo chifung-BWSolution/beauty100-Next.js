@@ -18,7 +18,7 @@ export default function KolApplyPage() {
             className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-teal-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            返回 KOL 實錄
+            返回創作者合作
           </Link>
         </div>
         <KolApplicationForm />

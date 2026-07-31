@@ -19,7 +19,7 @@ const NAV_ITEMS = [
   { label: '身體保養', href: '/body-care' },
   { label: '化妝護膚', href: '/skincare' },
   { label: '飲食健康', href: '/healthy-diet' },
-  { label: 'KOL實錄', href: '/kol' },
+  { label: '創作者合作', href: '/kol' },
   { label: '聯絡我們', href: '/contact' },
 ];
 

@@ -322,7 +322,7 @@ export default function KolWatchPage() {
               href="/kol"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-pink-600 text-white rounded-full font-medium hover:bg-pink-700 transition-colors"
             >
-              返回 KOL實錄
+              返回創作者合作
             </Link>
           </div>
         </div>
@@ -345,7 +345,7 @@ export default function KolWatchPage() {
           <nav className="flex items-center gap-1.5 text-sm text-gray-400">
             <Link href="/" className="hover:text-pink-500 transition-colors">首頁</Link>
             <ChevronRight className="w-3.5 h-3.5" />
-            <Link href="/kol" className="hover:text-pink-500 transition-colors">KOL實錄</Link>
+            <Link href="/kol" className="hover:text-pink-500 transition-colors">創作者合作</Link>
             <ChevronRight className="w-3.5 h-3.5" />
             <span className="text-gray-600 truncate max-w-[200px]">{video.title}</span>
           </nav>
