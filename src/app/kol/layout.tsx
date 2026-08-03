@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "創作者合作｜與美容院合作，分享美容體驗 | Beauty100",
+  title: "KOL推廣｜美容創作者合作與商戶推廣 | Beauty100",
   description:
-    "歡迎網紅、內容創作者加入 Beauty100。我們協助您對接美容院合作、療程體驗與曝光機會。粉絲數量不是唯一條件，歡迎申請。",
+    "Beauty100 KOL 推廣：連結美容院與內容創作者，提供體驗評測、短片拍攝、宣傳片及節目主播合作。歡迎 KOL 登記與商戶查詢推廣方案。",
   openGraph: {
-    title: "創作者合作｜與美容院合作 | Beauty100",
+    title: "KOL推廣｜美容創作者合作與商戶推廣 | Beauty100",
     description:
-      "歡迎網紅、內容創作者加入 Beauty100，對接美容院合作與曝光機會。",
+      "連結美容院與內容創作者，提供體驗評測、短片拍攝、宣傳片及節目主播合作。",
     url: "/kol",
   },
   alternates: {

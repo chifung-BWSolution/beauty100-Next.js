@@ -405,10 +405,10 @@ export default async function HomePage() {
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-bold text-slate-800 group-hover:text-purple-700 transition-colors">
-                想與美容院合作？
+                想做 KOL 推廣合作？
               </h3>
               <p className="text-[12px] text-slate-500 mt-0.5">
-                網紅／創作者歡迎申請，分享美容體驗並對接合作
+                網紅／創作者歡迎登記，對接美容院體驗與曝光機會
               </p>
             </div>
           </div>
