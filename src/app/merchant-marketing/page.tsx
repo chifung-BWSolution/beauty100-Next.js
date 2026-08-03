@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import MerchantCTABanner from "@/components/MerchantCTABanner";
+import ZoneTopBar from "@/components/public/ZoneTopBar";
 
 export default function MerchantMarketingPage() {
   const [whatsappLink, setWhatsappLink] = useState("");
@@ -111,6 +112,7 @@ export default function MerchantMarketingPage() {
 
   return (
     <div className="bg-white text-foreground overflow-x-hidden">
+      <ZoneTopBar />
       {/* Navbar */}
       <nav className="bg-white border-b border-gray-100">
         <div className="max-w-[1280px] mx-auto flex items-center justify-between py-4 px-4 sm:px-6 lg:px-8">

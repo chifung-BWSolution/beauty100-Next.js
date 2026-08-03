@@ -1,19 +1,23 @@
 'use client';
 
 import React from 'react';
-import PublicLayout from '@/components/public/PublicLayout';
-import KolHubNav from '@/components/kol/KolHubNav';
+import ZoneTopBar from '@/components/public/ZoneTopBar';
+import PublicFooter from '@/components/public/PublicFooter';
+import KolNavbar from '@/components/kol/KolNavbar';
 
+/** Full KOL zone chrome: zone top bar + KOL navbar (replaces main site nav) */
 export default function KolHubShell({ children }: { children: React.ReactNode }) {
   return (
-    <PublicLayout activeHref="/kol">
-      <KolHubNav />
-      <div
-        className="min-h-[50vh] bg-white"
+    <div className="min-h-screen flex flex-col bg-white">
+      <ZoneTopBar />
+      <KolNavbar />
+      <main
+        className="flex-1"
         style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
       >
         {children}
-      </div>
-    </PublicLayout>
+      </main>
+      <PublicFooter />
+    </div>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -377,7 +376,7 @@ export default function KolApplicationForm() {
   }
 
   return (
-    <section id="application-form" className="py-16 sm:py-20 bg-gradient-to-b from-white to-teal-50/30">
+    <section id="application-form" className="py-12 sm:py-16 pb-24 sm:pb-28 bg-gradient-to-b from-white to-rose-50/40">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">KOL 登記</h2>
@@ -388,7 +387,7 @@ export default function KolApplicationForm() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 lg:p-10 space-y-8"
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 lg:p-10 space-y-8 overflow-visible"
         >
           {/* Basic info */}
           <div className="space-y-5">
@@ -771,7 +770,7 @@ export default function KolApplicationForm() {
                 <input
                   type="file"
                   accept="image/*"
-                  className={inputClass}
+                  className="block w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-rose-50 file:text-rose-700 file:font-medium hover:file:bg-rose-100"
                   onChange={(e) => setPhoto1(e.target.files?.[0] || null)}
                 />
               </div>
@@ -780,7 +779,7 @@ export default function KolApplicationForm() {
                 <input
                   type="file"
                   accept="image/*"
-                  className={inputClass}
+                  className="block w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-rose-50 file:text-rose-700 file:font-medium hover:file:bg-rose-100"
                   onChange={(e) => setPhoto2(e.target.files?.[0] || null)}
                 />
               </div>
@@ -793,18 +792,17 @@ export default function KolApplicationForm() {
             </div>
           )}
 
-          <div className="pt-2">
-            <Button
+          <div className="pt-4 pb-2">
+            <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 text-base rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-60"
-              size="lg"
+              className="w-full min-h-12 inline-flex items-center justify-center rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-base font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-60 disabled:pointer-events-none"
             >
               {submitting ? '提交中...' : '提交申請'}
-            </Button>
+            </button>
           </div>
 
-          <p className="text-center text-sm text-slate-500 pt-2">
+          <p className="text-center text-sm text-slate-500 pt-1 pb-2">
             提交後，我們的專員將盡快與您聯繫及對接合作詳情。
           </p>
         </form>

@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export function KolSectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -22,16 +21,13 @@ export function KolPrimaryButton({
   className?: string;
 }) {
   return (
-    <Button
-      asChild
-      size="lg"
-      className={`min-h-12 rounded-full bg-rose-600 hover:bg-rose-700 text-white px-7 text-base shadow-lg shadow-rose-200/70 transition-all duration-200 ${className}`}
+    <Link
+      href={href}
+      className={`inline-flex items-center justify-center min-h-12 rounded-full bg-rose-600 hover:bg-rose-700 text-white px-7 text-base font-medium shadow-lg shadow-rose-200/70 transition-all duration-200 ${className}`}
     >
-      <Link href={href}>
-        {children}
-        <ArrowRight className="w-4 h-4 ml-2" aria-hidden />
-      </Link>
-    </Button>
+      {children}
+      <ArrowRight className="w-4 h-4 ml-2 shrink-0" aria-hidden />
+    </Link>
   );
 }
 
@@ -45,14 +41,12 @@ export function KolSecondaryButton({
   className?: string;
 }) {
   return (
-    <Button
-      asChild
-      size="lg"
-      variant="outline"
-      className={`min-h-12 rounded-full border-rose-300 text-rose-700 hover:bg-rose-50 px-7 text-base transition-all duration-200 ${className}`}
+    <Link
+      href={href}
+      className={`inline-flex items-center justify-center min-h-12 rounded-full border-2 border-rose-300 text-rose-700 hover:bg-rose-50 px-7 text-base font-medium transition-all duration-200 ${className}`}
     >
-      <Link href={href}>{children}</Link>
-    </Button>
+      {children}
+    </Link>
   );
 }
 
@@ -90,35 +84,37 @@ export function KolBottomCta({
   secondaryLabel?: string;
 }) {
   return (
-    <section className="relative py-16 sm:py-20 overflow-hidden bg-gradient-to-br from-rose-600 to-rose-700">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.12),_transparent_55%)]" />
-      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight text-balance">
+    <section className="relative py-16 sm:py-20 bg-rose-600">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse at top, rgba(255,255,255,0.14), transparent 55%)',
+        }}
+        aria-hidden
+      />
+      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
           {title}
         </h2>
-        <p className="mt-4 text-base sm:text-lg text-rose-50 leading-relaxed text-balance">
+        <div className="mt-4 text-base sm:text-lg text-rose-50 leading-relaxed">
           {description}
-        </p>
+        </div>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Button
-            asChild
-            size="lg"
-            className="min-h-12 rounded-full bg-white text-rose-700 hover:bg-rose-50 px-8 text-base font-semibold shadow-lg"
+          <Link
+            href={primaryHref}
+            className="inline-flex items-center justify-center min-h-12 rounded-full bg-white text-rose-700 hover:bg-rose-50 px-8 text-base font-semibold shadow-lg transition-colors"
           >
-            <Link href={primaryHref}>
-              {primaryLabel}
-              <ArrowRight className="w-4 h-4 ml-2" aria-hidden />
-            </Link>
-          </Button>
+            {primaryLabel}
+            <ArrowRight className="w-4 h-4 ml-2 shrink-0" aria-hidden />
+          </Link>
           {secondaryHref && secondaryLabel && (
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="min-h-12 rounded-full border-white/70 bg-transparent text-white hover:bg-white/10 px-8 text-base"
+            <Link
+              href={secondaryHref}
+              className="inline-flex items-center justify-center min-h-12 rounded-full border-2 border-white text-white hover:bg-white/10 px-8 text-base font-medium transition-colors"
             >
-              <Link href={secondaryHref}>{secondaryLabel}</Link>
-            </Button>
+              {secondaryLabel}
+            </Link>
           )}
         </div>
       </div>
