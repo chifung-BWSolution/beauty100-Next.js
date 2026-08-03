@@ -9,8 +9,15 @@ import { supabase } from '@/lib/supabase';
 import { useCart } from '@/lib/CartContext';
 import NavbarSearch from './NavbarSearch';
 
-const NAV_ITEMS = [
-  { label: '首頁', href: '/' },
+export type PublicNavItem = {
+  label: string;
+  href: string;
+  /** default: exact for `/`, prefix for others */
+  match?: 'exact' | 'prefix';
+};
+
+export const MAIN_NAV_ITEMS: PublicNavItem[] = [
+  { label: '首頁', href: '/', match: 'exact' },
   { label: '找美容院', href: '/explore-salons' },
   { label: '焦點話題', href: '/topics' },
   { label: '娛樂圈', href: '/entertainment' },
@@ -21,6 +28,15 @@ const NAV_ITEMS = [
   { label: '飲食健康', href: '/healthy-diet' },
   { label: 'KOL推廣', href: '/kol' },
   { label: '聯絡我們', href: '/contact' },
+];
+
+export const MERCHANT_NAV_ITEMS: PublicNavItem[] = [
+  { label: '主頁', href: '/merchant', match: 'exact' },
+  { label: '商戶註冊', href: '/merchant-registration' },
+  { label: '宣傳營銷', href: '/merchant-marketing' },
+  { label: '創業顧問', href: '/merchant-consulting' },
+  { label: '商務合作', href: '/merchant-cooperation' },
+  { label: '聯絡我們', href: '/merchant-contact' },
 ];
 
 interface MemberInfo {
@@ -49,7 +65,15 @@ function CartNavButton() {
   );
 }
 
-export default function PublicNavbar({ activeHref }: { activeHref?: string } = {}) {
+export default function PublicNavbar({
+  activeHref,
+  items = MAIN_NAV_ITEMS,
+  logoHref = '/',
+}: {
+  activeHref?: string;
+  items?: PublicNavItem[];
+  logoHref?: string;
+} = {}) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [member, setMember] = useState<MemberInfo | null>(null);
@@ -134,13 +158,11 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
     window.location.href = '/';
   };
 
-  const isActive = (href: string) => {
-    if (activeHref) {
-      if (href === '/') return activeHref === '/';
-      return activeHref === href || activeHref.startsWith(href + '/');
-    }
-    if (href === '/') return pathname === '/';
-    return pathname.startsWith(href);
+  const isActive = (item: PublicNavItem) => {
+    const current = activeHref || pathname;
+    const mode = item.match || (item.href === '/' ? 'exact' : 'prefix');
+    if (mode === 'exact') return current === item.href;
+    return current === item.href || current.startsWith(item.href + '/');
   };
 
   const memberInitials = member?.full_name
@@ -160,7 +182,7 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[60px]">
           {/* Logo */}
-          <Link href="/" className="shrink-0">
+          <Link href={logoHref} className="shrink-0">
             <Image
               src="/images/beauty-100_logo.png"
               alt="Beauty 100 Magazine"
@@ -174,12 +196,12 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
 
           {/* Desktop Nav — all items visible, no dropdowns */}
           <nav className="hidden xl:flex items-center gap-0" style={{ contain: 'layout' }}>
-            {NAV_ITEMS.map((item) => (
+            {items.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`group relative px-[10px] py-1.5 text-[14px] leading-tight rounded-md transition-all duration-200 whitespace-nowrap ${
-                  isActive(item.href)
+                  isActive(item)
                     ? 'text-rose-600 font-semibold'
                     : 'text-slate-500 hover:text-rose-600'
                 }`}
@@ -188,7 +210,7 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
                 {/* Active underline indicator */}
                 <span
                   className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] rounded-full transition-all duration-200 ${
-                    isActive(item.href)
+                    isActive(item)
                       ? 'w-5 opacity-100'
                       : 'w-0 opacity-0 group-hover:w-3 group-hover:opacity-60'
                   }`}
@@ -294,13 +316,13 @@ export default function PublicNavbar({ activeHref }: { activeHref?: string } = {
         }}
       >
         <div className="px-4 py-3 space-y-0.5 max-h-[calc(100vh-4rem)] overflow-y-auto">
-          {NAV_ITEMS.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setMobileMenuOpen(false)}
               className={`block px-3 py-2.5 text-sm rounded-lg transition-all duration-150 ${
-                isActive(item.href)
+                isActive(item)
                   ? 'text-rose-600 font-semibold bg-rose-50'
                   : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50/50'
               }`}

@@ -84,38 +84,46 @@ export function KolBottomCta({
   secondaryLabel?: string;
 }) {
   return (
-    <section className="relative py-16 sm:py-20 bg-rose-600">
+    <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="rounded-2xl border border-rose-100/70 px-5 sm:px-8 py-7 sm:py-8 shadow-sm"
         style={{
           background:
-            'radial-gradient(ellipse at top, rgba(255,255,255,0.14), transparent 55%)',
+            'linear-gradient(135deg, #fff1f2 0%, #fdf2f8 45%, #faf5ff 100%)',
         }}
-        aria-hidden
-      />
-      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
-          {title}
-        </h2>
-        <div className="mt-4 text-base sm:text-lg text-rose-50 leading-relaxed">
-          {description}
-        </div>
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link
-            href={primaryHref}
-            className="inline-flex items-center justify-center min-h-12 rounded-full bg-white text-rose-700 hover:bg-rose-50 px-8 text-base font-semibold shadow-lg transition-colors"
-          >
-            {primaryLabel}
-            <ArrowRight className="w-4 h-4 ml-2 shrink-0" aria-hidden />
-          </Link>
-          {secondaryHref && secondaryLabel && (
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="flex items-start gap-4 min-w-0">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-gradient-to-br from-rose-400 to-pink-500 shadow-sm shrink-0">
+              <ArrowRight className="w-5 h-5 text-white rotate-[-45deg]" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
+                {title}
+              </h2>
+              <div className="mt-1.5 text-sm sm:text-[15px] text-slate-500 leading-relaxed">
+                {description}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0 lg:pl-4">
             <Link
-              href={secondaryHref}
-              className="inline-flex items-center justify-center min-h-12 rounded-full border-2 border-white text-white hover:bg-white/10 px-8 text-base font-medium transition-colors"
+              href={primaryHref}
+              className="inline-flex items-center justify-center min-h-10 rounded-lg px-5 text-sm font-medium text-white shadow-sm transition-all bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700"
             >
-              {secondaryLabel}
+              {primaryLabel}
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5" aria-hidden />
             </Link>
-          )}
+            {secondaryHref && secondaryLabel && (
+              <Link
+                href={secondaryHref}
+                className="inline-flex items-center justify-center min-h-10 rounded-lg px-5 text-sm font-medium text-rose-600 bg-white border border-rose-200 hover:bg-rose-50 transition-colors"
+              >
+                {secondaryLabel}
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </section>

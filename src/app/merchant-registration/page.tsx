@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import MerchantCTABanner from "@/components/MerchantCTABanner";
-import ZoneTopBar from "@/components/public/ZoneTopBar";
+import MerchantShell from "@/components/merchant/MerchantShell";
 
 export default function MerchantRegistrationPage() {
   const [whatsappLink, setWhatsappLink] = useState("");
@@ -45,47 +45,7 @@ export default function MerchantRegistrationPage() {
   };
 
   return (
-    <div className="bg-white text-foreground overflow-x-hidden">
-      <ZoneTopBar />
-      {/* Navbar */}
-      <nav className="bg-white border-b border-gray-100">
-        <div className="max-w-[1280px] mx-auto flex items-center justify-between py-4 px-4 sm:px-6 lg:px-8">
-          <a href="/" className="flex items-center">
-            <img
-              src="/images/beauty-100_logo.png"
-              alt="Beauty 100 Magazine"
-              className="h-[30px] w-auto object-contain"
-            />
-          </a>
-          <div className="flex items-center gap-12">
-            <a href="/merchant" className="text-gray-700 font-medium text-sm hover:text-pink-500">
-              主頁
-            </a>
-            <a href="/merchant-registration" className="text-pink-500 font-medium text-sm">
-              商戶註冊
-            </a>
-            <a href="/merchant-marketing" className="text-gray-700 font-medium text-sm hover:text-pink-500">
-              宣傳營銷
-            </a>
-            <a href="/merchant-consulting" className="text-gray-700 font-medium text-sm hover:text-pink-500">
-              創業顧問
-            </a>
-            <a href="/merchant-cooperation" className="text-gray-700 font-medium text-sm hover:text-pink-500">
-              商務合作
-            </a>
-            <a href="/merchant-contact" className="text-gray-700 font-medium text-sm hover:text-pink-500">
-              聯絡我們
-            </a>
-          </div>
-          <a
-            href="/login"
-            className="bg-pink-500 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-pink-600 transition-colors"
-          >
-            商戶登入
-          </a>
-        </div>
-      </nav>
-
+    <MerchantShell>
       {/* Promotional Banner */}
       <section className="bg-gradient-to-r from-pink-100 to-purple-100 py-4 text-center">
         <p className="text-pink-500 font-bold text-lg">
@@ -619,6 +579,6 @@ export default function MerchantRegistrationPage() {
           </div>
         </div>
       </footer>
-    </div>
+    </MerchantShell>
   );
 }
