@@ -18,7 +18,10 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 import MerchantCTABanner from "@/components/MerchantCTABanner";
+import KolPromotionForm from "@/components/merchant/KolPromotionForm";
+import MerchantRegisterCta from "@/components/merchant/MerchantRegisterCta";
 import MerchantShell from "@/components/merchant/MerchantShell";
 
 export default function MerchantMarketingPage() {
@@ -128,9 +131,15 @@ export default function MerchantMarketingPage() {
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             以數據支撐營銷 締造無限商機
           </h1>
-          <p className="text-base md:text-lg text-white/80">
+          <p className="text-base md:text-lg text-white/80 mb-6">
             連接百萬流量，加速您的美容業務崛起
           </p>
+          <Link
+            href="/merchant-registration"
+            className="inline-flex items-center justify-center min-h-11 px-8 py-3 rounded-full bg-rose-600 text-white text-sm font-semibold hover:bg-rose-700 transition-colors duration-200"
+          >
+            立即註冊商戶
+          </Link>
         </div>
       </section>
 
@@ -479,10 +488,20 @@ export default function MerchantMarketingPage() {
         </div>
       </section>
 
+      <MerchantRegisterCta />
+
+      <section className="py-4">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 text-center mb-2">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900">KOL 推廣合作</h2>
+          <p className="mt-2 text-sm text-slate-600">預約 KOL 為您的店舖提升品牌曝光與客流量</p>
+        </div>
+        <KolPromotionForm showHero={false} />
+      </section>
+
       {/* CTA Banner */}
       <MerchantCTABanner
         ctaHref="/merchant-registration"
-        ctaLabel="立即體驗"
+        ctaLabel="立即註冊"
       />
 
       {/* Footer */}

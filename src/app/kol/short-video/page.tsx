@@ -1,9 +1,17 @@
-'use client';
-
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Clapperboard, Smartphone, Timer, Users } from 'lucide-react';
+import {
+  Clapperboard,
+  Smartphone,
+  Timer,
+  Users,
+  Sparkles,
+  Lightbulb,
+  Drama,
+  Package,
+  ArrowLeftRight,
+} from 'lucide-react';
 import KolHubShell from '@/components/kol/KolHubShell';
 import {
   KolPrimaryButton,
@@ -33,6 +41,42 @@ const POINTS = [
     title: '專業影音團隊',
     description: '由構思、拍攝到剪接一條龍，確保畫面質感與品牌調性一致。',
   },
+];
+
+const VIDEO_STYLES = [
+  {
+    icon: Sparkles,
+    title: 'ASMR 療程體驗',
+    description: '沉浸式視聽享受，展現高端環境與專業手法，建立精緻質感與品牌格調。',
+  },
+  {
+    icon: Lightbulb,
+    title: '痛點科普解構',
+    description: '直擊暗瘡、鬆弛、色斑等常見困擾，以原理說明配合真實試做，說服高意向顧客。',
+  },
+  {
+    icon: Drama,
+    title: '劇情反轉短片',
+    description: '貼近生活的情境劇情（如約會前急救、職場形象提升），具備社交分享與擴散潛力。',
+  },
+  {
+    icon: Package,
+    title: '產品質感開箱',
+    description: '快節奏視覺呈現，近鏡展示產品質地與使用感受，帶動網店及門市查詢。',
+  },
+  {
+    icon: ArrowLeftRight,
+    title: 'Before/After 對比',
+    description: '真實記錄療程前後變化，以清晰對比畫面回應顧客疑慮，提升預約意願。',
+  },
+];
+
+const PIPELINE_STEPS = [
+  '腳本企劃',
+  '現場拍攝與燈光佈置',
+  '專業後期剪接',
+  '初剪審核',
+  '高清成品交付',
 ];
 
 export default function KolShortVideoPage() {
@@ -111,6 +155,48 @@ export default function KolShortVideoPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-20 bg-rose-50/40">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <KolSectionLabel>Video Styles</KolSectionLabel>
+            <h2 className="mt-3 text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              多維度爆款內容企劃
+            </h2>
+            <p className="mt-3 text-base text-slate-600 leading-relaxed">
+              拒絕千篇一律，以視覺與敘事打動目標客群。
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            {VIDEO_STYLES.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl bg-white border border-rose-100 p-5 sm:p-6 hover:border-rose-200 transition-colors duration-200"
+              >
+                <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 inline-flex items-center justify-center mb-4">
+                  <item.icon className="w-5 h-5" aria-hidden />
+                </div>
+                <h3 className="font-bold text-slate-900">{item.title}</h3>
+                <p className="mt-2 text-sm text-slate-600 leading-relaxed">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-14 sm:py-16 bg-white">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <KolSectionLabel>Production Pipeline</KolSectionLabel>
+          <h2 className="mt-3 text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            專業團隊，高效交付
+          </h2>
+          <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
+            由企劃到出片全程銜接：{PIPELINE_STEPS.join(' → ')}。
+            <br className="hidden sm:block" />
+            一般於拍攝後 3–5 個工作天完成初剪交付。
+          </p>
         </div>
       </section>
 

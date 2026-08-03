@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import Image from 'next/image';
 import {
@@ -32,32 +30,38 @@ const VALUE_CARDS = [
   {
     icon: TrendingUp,
     title: '商戶：提升客量與預約',
-    description: '連結超過 2,000 名美容及生活類創作者，以真實分享建立口碑，精準觸達目標顧客。',
+    description:
+      '連結超過 2,000 名美容及生活類創作者，以真實分享建立口碑，精準觸達目標顧客，協助新店開業或主力療程推廣。',
   },
   {
     icon: Megaphone,
     title: '商戶：告別生硬廣告',
-    description: '以真實療程體驗與短片內容，減輕顧客疑慮，提升門市查詢與預約意欲。',
+    description:
+      '以真實療程體驗與痛點科普短片，回應顧客對效果與服務的疑慮，提升門市查詢與預約轉化。',
   },
   {
     icon: Network,
     title: '商戶：一站式跟進',
-    description: '由內容構思、KOL 配對、拍攝到成效追蹤，平台協助統籌，您專注接待客人。',
+    description:
+      '由內容構思、KOL 配對、拍攝到數據追蹤，Beauty100 平台協助統籌，您專注接待客人與服務品質。',
   },
   {
     icon: Sparkles,
     title: 'KOL：免費體驗優質療程',
-    description: '有機會試做皮秒、HIFU、水光針等高階療程，親身體驗後再創作真實內容。',
+    description:
+      '有機會試做皮秒、HIFU、水光針等高階療程，親身體驗後再創作真實內容，提升帳號專業度。',
   },
   {
     icon: MessageCircle,
     title: 'KOL：專人 WhatsApp 配對',
-    description: '登記後由專員跟進，主動配對合適合作，體驗之餘亦可獲拍攝津貼。',
+    description:
+      '登記後由專員主動跟進，配對合適探店、評測或短片合作，體驗之餘亦可獲清晰透明的拍攝津貼。',
   },
   {
     icon: ShieldCheck,
     title: 'KOL：嚴選商戶保障',
-    description: '平台嚴選優質美容院，拒絕劣質硬銷，守護您的個人品牌與口碑。',
+    description:
+      '平台嚴選優質美容院，拒絕劣質硬銷，守護您的個人品牌與長期合作口碑。',
   },
 ];
 
@@ -207,9 +211,9 @@ function HeroSection() {
           </h1>
 
           <p className="mt-5 text-base sm:text-lg text-slate-600 leading-relaxed text-balance">
-            商戶希望提升客量，KOL 希望獲得優質合作？
+            商戶希望提升客量與預約，KOL 希望獲得優質合作與變現機會？
             <br className="hidden sm:block" />
-            我們以精準企劃，連結美容院與內容創作者。
+            Beauty100 以精準企劃連結美容院與內容創作者，由口碑種草到品牌大片，一站式支援。
           </p>
 
           <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-slate-600">
@@ -268,7 +272,7 @@ function ValueSection() {
             不玩虛招！以實力提升品牌與創作者價值
           </h2>
           <p className="mt-3 text-base sm:text-lg text-slate-600 leading-relaxed">
-            拒絕自吹自擂式行銷，打造真實口碑與可衡量的商業回報。
+            拒絕自吹自擂式行銷，以真實體驗內容打造口碑，並以數據追蹤衡量商業回報。
           </p>
         </div>
 
@@ -350,6 +354,11 @@ function TiersSection() {
             </div>
           ))}
         </div>
+
+        <p className="mt-8 text-sm text-slate-500 leading-relaxed text-center max-w-2xl mx-auto">
+          以上各層級對照互動率、優點及最適用場景：Nano 適合大規模種草，Micro 適合產品評測，
+          Mid-tier 適合新品發佈，Macro 及 Mega 則適合品牌形象與大型活動。若不確定如何選擇，歡迎預約免費配對諮詢。
+        </p>
 
         <div className="mt-8 text-center">
           <KolPrimaryButton href={KOL_APPLY_HREF}>免費 KOL 配對諮詢／登記</KolPrimaryButton>

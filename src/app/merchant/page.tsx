@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import MerchantCTABanner from "@/components/MerchantCTABanner";
+import MerchantRegisterCta from "@/components/merchant/MerchantRegisterCta";
 import MerchantShell from "@/components/merchant/MerchantShell";
 
 export default function MerchantPage() {
@@ -62,7 +63,7 @@ export default function MerchantPage() {
             { title: "商戶註冊", desc: "即時解鎖專屬優勢", href: "/merchant-registration" },
             { title: "宣傳營銷", desc: "提升品牌曝光效能", href: "/merchant-marketing" },
             { title: "創業顧問", desc: "專業開業策略指導", href: "/merchant-consulting" },
-            { title: "商務合作", desc: "探索多方合作機會", href: "#" },
+            { title: "商務合作", desc: "探索多方合作機會", href: "/merchant-cooperation" },
           ].map((item, i) => (
             <a
               key={i}
@@ -319,10 +320,12 @@ export default function MerchantPage() {
         </div>
       </section>
 
+      <MerchantRegisterCta />
+
       {/* CTA Section */}
       <MerchantCTABanner
         ctaHref="/merchant-registration"
-        ctaLabel="立即體驗"
+        ctaLabel="立即註冊"
       />
 
       {/* Footer */}

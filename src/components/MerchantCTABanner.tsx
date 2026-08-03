@@ -21,8 +21,8 @@ export default function MerchantCTABanner({
   title = "立即註冊",
   subtitle = "創造營商契機",
   description = "立即註冊成為 Beauty100 用戶會員，解鎖專屬資源及專業支援，讓您的美容業務在香港市場中佔據優勢。通過數據洞察、創意推廣及合作機會，我們助您把握美容業趨勢，實現高效增長與可持續成功。探索更多核心服務，或透過聯繫我們頁面獲取即時協助！",
-  ctaLabel = "立即體驗",
-  ctaHref = "/login",
+  ctaLabel = "立即註冊",
+  ctaHref = "/merchant-registration",
   className = "",
 }: MerchantCTABannerProps) {
   return (

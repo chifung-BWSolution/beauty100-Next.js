@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Check } from 'lucide-react';
 import KolHubShell from '@/components/kol/KolHubShell';
 import {
@@ -15,61 +13,61 @@ const PACKAGES = [
   {
     id: 'seeding',
     name: 'Seeding 口碑包',
-    tagline: '適合新店開業與口碑建立',
+    tagline: '新店開業／新療程首發',
     priceNote: '入門方案',
+    highlighted: false,
     features: [
-      '5–8 位 Nano／Micro KOL',
-      '探店或療程體驗內容',
-      'IG／小紅書圖文或短片',
+      '新店開業／新療程首發',
+      '5–10 位 Micro KOL 體驗派單',
+      'Instagram 曝光與圖文內容',
+      '建立 Google／IG 搜尋口碑',
       '基礎成效報告',
-      '專人 WhatsApp 跟進',
     ],
   },
   {
     id: 'growth',
     name: 'Growth 增長包',
-    tagline: '適合穩定增長與產品推廣',
+    tagline: '主力療程推廣',
     priceNote: '最受歡迎',
+    highlighted: true,
     features: [
-      '8–15 位多層級創作者組合',
-      '短片＋圖文混合內容',
-      '腳本建議與拍攝指引',
+      '主力療程推廣',
+      '中階 KOL 深度試做',
+      '高轉化 Reels 短片拍攝',
+      '廣告素材授權投放',
       '互動與曝光數據追蹤',
-      '兩週推廣節奏規劃',
     ],
   },
   {
     id: 'ultimate',
     name: 'Ultimate 旗艦包',
-    tagline: '適合品牌升級與大型企劃',
+    tagline: '連鎖／品牌旗艦',
     priceNote: '旗艦方案',
+    highlighted: false,
     features: [
-      'Mid-tier 至 Macro 創作者',
-      '品牌宣傳片或主題短片',
-      '活動／發布會支援',
-      '完整數據與優化建議',
+      '連鎖美容院／國際美妝品牌',
+      '頭部 KOL 陣容',
+      '品牌宣傳片或專題節目元素',
+      '線下活動與發布會支援',
       '專屬項目經理跟進',
     ],
   },
   {
     id: 'custom',
     name: '客製化組合',
-    tagline: '按預算與目標靈活配置',
+    tagline: '按預算與 KPI 靈活配置',
     priceNote: '度身訂造',
+    highlighted: false,
     features: [
-      '按目標客群重新配對',
-      '可跨平台組合投放',
+      '按預算與 KPI 自由組合',
+      '跨平台（IG、小紅書、YouTube）',
       '可加入主播／長片元素',
       '報價前免費諮詢',
-      '適合連鎖及多店品牌',
     ],
   },
 ];
 
 export default function KolPackagesPage() {
-  const [active, setActive] = useState(PACKAGES[1].id);
-  const current = PACKAGES.find((p) => p.id === active) || PACKAGES[1];
-
   return (
     <KolHubShell>
       <section className="py-16 sm:py-20 bg-gradient-to-b from-rose-50 via-white to-white">
@@ -83,44 +81,40 @@ export default function KolPackagesPage() {
             <br className="hidden sm:block" />
             無論是新開張店舖，或尋求突破的連鎖品牌，均可按目標靈活選擇。
           </p>
-
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-            {PACKAGES.map((pkg) => (
-              <button
-                key={pkg.id}
-                type="button"
-                onClick={() => setActive(pkg.id)}
-                className={`min-h-10 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  active === pkg.id
-                    ? 'bg-white text-rose-700 shadow-md border border-rose-100'
-                    : 'bg-transparent text-slate-600 hover:text-rose-700'
-                }`}
-              >
-                {pkg.name}
-              </button>
-            ))}
-          </div>
         </div>
       </section>
 
       <section className="pb-16 sm:pb-20">
-        <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl border border-rose-100 bg-white p-6 sm:p-8 shadow-lg shadow-rose-100/50">
-            <p className="text-xs font-semibold uppercase tracking-wider text-rose-500">{current.priceNote}</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900">{current.name}</h2>
-            <p className="mt-1 text-slate-600">{current.tagline}</p>
-            <ul className="mt-6 space-y-3">
-              {current.features.map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-slate-700">
-                  <Check className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" aria-hidden />
-                  <span className="text-sm sm:text-base leading-relaxed">{f}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-              <KolPrimaryButton href={MERCHANT_PROMO_HREF}>索取方案報價</KolPrimaryButton>
-              <KolSecondaryButton href={KOL_APPLY_HREF}>KOL 登記加入</KolSecondaryButton>
-            </div>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {PACKAGES.map((pkg) => (
+              <div
+                key={pkg.id}
+                className={`rounded-3xl border bg-white p-6 sm:p-8 shadow-lg transition-all duration-200 ${
+                  pkg.highlighted
+                    ? 'border-rose-400 ring-2 ring-rose-100 shadow-rose-100/60'
+                    : 'border-rose-100 shadow-rose-100/50'
+                }`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-wider text-rose-500">
+                  {pkg.priceNote}
+                </p>
+                <h2 className="mt-2 text-2xl font-bold text-slate-900">{pkg.name}</h2>
+                <p className="mt-1 text-slate-600">{pkg.tagline}</p>
+                <ul className="mt-6 space-y-3">
+                  {pkg.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-slate-700">
+                      <Check className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" aria-hidden />
+                      <span className="text-sm sm:text-base leading-relaxed">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <KolPrimaryButton href={MERCHANT_PROMO_HREF}>索取方案報價</KolPrimaryButton>
+                  <KolSecondaryButton href={KOL_APPLY_HREF}>KOL 登記</KolSecondaryButton>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

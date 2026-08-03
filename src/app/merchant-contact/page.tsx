@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import MerchantCTABanner from "@/components/MerchantCTABanner";
+import MerchantRegisterCta from "@/components/merchant/MerchantRegisterCta";
 import MerchantShell from "@/components/merchant/MerchantShell";
 
 export default function MerchantContactPage() {
@@ -179,10 +180,12 @@ export default function MerchantContactPage() {
         </div>
       </section>
 
+      <MerchantRegisterCta />
+
       {/* CTA Section */}
       <MerchantCTABanner
         ctaHref="/merchant-registration"
-        ctaLabel="立即體驗"
+        ctaLabel="立即註冊"
       />
 
       {/* Footer */}

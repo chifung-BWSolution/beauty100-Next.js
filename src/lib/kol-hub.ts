@@ -36,4 +36,6 @@ export const KOL_HUB_IMAGES = {
 };
 
 export const KOL_APPLY_HREF = '/kol/apply';
-export const MERCHANT_PROMO_HREF = '/kol-promotion';
+/** Public merchant consult form (no login required) */
+export const MERCHANT_PROMO_HREF = '/merchant-marketing#kol-consult';
+export const MERCHANT_REGISTER_HREF = '/merchant-registration';
