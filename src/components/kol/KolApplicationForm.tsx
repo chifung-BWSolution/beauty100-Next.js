@@ -379,9 +379,9 @@ export default function KolApplicationForm() {
     <section id="application-form" className="py-12 sm:py-16 pb-24 sm:pb-28 bg-gradient-to-b from-white to-rose-50/40">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">KOL 登記</h2>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            請填寫以下資料。我們會協助您對接美容院合作，專員會盡快與您聯絡。
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">填寫登記資料</h2>
+          <p className="mt-3 text-base text-slate-600 leading-relaxed">
+            請填寫以下資料，專員會盡快與您聯絡，安排合適的美容體驗合作。
           </p>
         </div>
 
