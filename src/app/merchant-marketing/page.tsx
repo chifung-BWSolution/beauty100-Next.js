@@ -448,6 +448,8 @@ export default function MerchantMarketingPage() {
         </div>
       </section>
 
+      <KolPromotionForm showHero={false} />
+
       {/* FAQ */}
       <section className="bg-gray-50 py-16">
         <div className="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -489,14 +491,6 @@ export default function MerchantMarketingPage() {
       </section>
 
       <MerchantRegisterCta />
-
-      <section className="py-4">
-        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 text-center mb-2">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900">KOL 推廣合作</h2>
-          <p className="mt-2 text-sm text-slate-600">預約 KOL 為您的店舖提升品牌曝光與客流量</p>
-        </div>
-        <KolPromotionForm showHero={false} />
-      </section>
 
       {/* CTA Banner */}
       <MerchantCTABanner

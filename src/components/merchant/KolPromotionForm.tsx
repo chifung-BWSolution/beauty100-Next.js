@@ -8,7 +8,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
-import { Send, CheckCircle2, Megaphone, Star, Users, Target } from 'lucide-react';
+import Link from 'next/link';
+import { Send, CheckCircle2, Megaphone, Star, Users, Target, ArrowRight } from 'lucide-react';
+import { MERCHANT_REGISTER_HREF } from '@/lib/kol-hub';
 
 const PROMOTION_TYPES = [
   { value: '到店體驗', label: '到店體驗' },
@@ -89,6 +91,11 @@ export default function KolPromotionForm({
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [submittedContact, setSubmittedContact] = useState({
+    email: '',
+    name: '',
+    salon: '',
+  });
 
   const userRole = (user as { role?: string; user_metadata?: { role?: string } })?.role
     || (user as { user_metadata?: { role?: string } })?.user_metadata?.role;
@@ -268,6 +275,11 @@ export default function KolPromotionForm({
 
       if (dbError) throw dbError;
 
+      setSubmittedContact({
+        email: contactEmail,
+        name: contactPerson.split(' / ')[0]?.replace(/^[^:]+:\s*/, '') || contactPerson,
+        salon: formData.salon_name,
+      });
       setSubmitted(true);
       setSelectedSalonIds([]);
       setFormData({
@@ -301,8 +313,29 @@ export default function KolPromotionForm({
     }));
   };
 
+  const registerHref = (() => {
+    const params = new URLSearchParams({
+      tab: 'signup',
+      role: 'merchant',
+      returnTo: '/merchant-onboarding',
+    });
+    if (submittedContact.email) params.set('email', submittedContact.email);
+    if (submittedContact.name) params.set('name', submittedContact.name);
+    if (submittedContact.salon) params.set('salon', submittedContact.salon);
+    return `/login?${params.toString()}`;
+  })();
+
+  const showRegisterCta = !user;
+
   return (
-    <div id={id} className="scroll-mt-28 bg-gradient-to-b from-rose-50 via-white to-white pb-8">
+    <div
+      id={id}
+      className={`scroll-mt-28 ${
+        showHero
+          ? 'bg-gradient-to-b from-rose-50 via-white to-white pb-8'
+          : 'bg-rose-50/60'
+      }`}
+    >
       {showHero && (
         <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8 text-center">
           <div className="inline-flex items-center gap-2 bg-rose-100 text-rose-700 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
@@ -318,23 +351,31 @@ export default function KolPromotionForm({
         </section>
       )}
 
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-rose-100">
+      <section className={`max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${showHero ? 'pb-8' : 'pt-10 pb-5'}`}>
+        {!showHero && (
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">KOL 推廣合作</h2>
+            <p className="mt-2 text-sm sm:text-base text-slate-600">
+              預約 KOL 為您的店舖提升品牌曝光與客流量
+            </p>
+          </div>
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-rose-100">
             <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center mb-3">
               <Star className="w-5 h-5 text-rose-600" />
             </div>
             <h3 className="font-semibold text-slate-800 mb-1">精準配對</h3>
             <p className="text-sm text-slate-500">根據您的需求配對最合適的 KOL</p>
           </div>
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-rose-100">
+          <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-rose-100">
             <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center mb-3">
               <Users className="w-5 h-5 text-rose-600" />
             </div>
             <h3 className="font-semibold text-slate-800 mb-1">多平台覆蓋</h3>
             <p className="text-sm text-slate-500">Instagram、小紅書、YouTube 等主流平台全面覆蓋</p>
           </div>
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-rose-100">
+          <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-rose-100">
             <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center mb-3">
               <Target className="w-5 h-5 text-rose-600" />
             </div>
@@ -344,17 +385,44 @@ export default function KolPromotionForm({
         </div>
       </section>
 
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+      <section className={`max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 ${showHero ? 'pb-8' : 'pb-12'}`}>
         {submitted ? (
-          <div className="bg-white rounded-2xl shadow-sm border p-12 text-center">
+          <div className="bg-white rounded-2xl shadow-sm border p-8 sm:p-12 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-2">提交成功！</h2>
-            <p className="text-slate-600 mb-6">我們會盡快與您聯絡，為您配對合適的 KOL。</p>
-            <Button onClick={() => setSubmitted(false)} variant="outline">
-              再填寫一份
-            </Button>
+            <p className="text-slate-600 mb-6 leading-relaxed">
+              我們會盡快與您聯絡，為您配對合適的 KOL。
+              {showRegisterCta && (
+                <>
+                  <br className="hidden sm:block" />
+                  建議同時註冊商戶帳戶，方便跟進申請及管理店舖資料。
+                </>
+              )}
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              {showRegisterCta && (
+                <Link
+                  href={registerHref}
+                  className="inline-flex items-center justify-center gap-2 min-h-11 px-6 py-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold transition-colors"
+                >
+                  立即註冊商戶
+                  <ArrowRight className="w-4 h-4" aria-hidden />
+                </Link>
+              )}
+              <Button onClick={() => setSubmitted(false)} variant="outline">
+                再填寫一份
+              </Button>
+            </div>
+            {showRegisterCta && (
+              <p className="mt-4 text-xs text-slate-500">
+                亦可先瀏覽{' '}
+                <Link href={MERCHANT_REGISTER_HREF} className="text-rose-600 underline underline-offset-2">
+                  商戶註冊說明
+                </Link>
+              </p>
+            )}
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border p-8 space-y-6">

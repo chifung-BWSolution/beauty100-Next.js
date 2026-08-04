@@ -29,6 +29,22 @@ export default function UserLoginPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [pendingUser, setPendingUser] = useState<any>(null);
   const [upgrading, setUpgrading] = useState(false);
+  const [prefillSalon, setPrefillSalon] = useState('');
+
+  // Prefill signup from KOL consult / marketing query params
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    const roleParam = searchParams.get('role');
+    const emailParam = searchParams.get('email');
+    const nameParam = searchParams.get('name');
+    const salonParam = searchParams.get('salon');
+
+    if (tabParam === 'signup') setTab(TABS.signup);
+    if (roleParam === 'merchant' || roleParam === 'member') setSelectedRole(roleParam);
+    if (emailParam) setEmail(emailParam);
+    if (nameParam) setFullName(nameParam);
+    if (salonParam) setPrefillSalon(salonParam);
+  }, [searchParams]);
 
   useEffect(() => {
     const timeout = setTimeout(() => setCheckingSession(false), 3000);
@@ -272,6 +288,13 @@ export default function UserLoginPage() {
 
             {tab === TABS.signup && (
               <form onSubmit={handleSignup} className="space-y-4">
+                {prefillSalon && (
+                  <div className="rounded-xl border border-rose-100 bg-rose-50/70 px-4 py-3 text-sm text-slate-700">
+                    來自 KOL 推廣申請：<span className="font-semibold">{prefillSalon}</span>
+                    <br />
+                    註冊後請繼續完成店舖入駐資料。
+                  </div>
+                )}
                 {!selectedRole ? (
                   <div className="space-y-3">
                     <p className="text-base font-semibold text-slate-600 mb-1">請選擇您的身份</p>
