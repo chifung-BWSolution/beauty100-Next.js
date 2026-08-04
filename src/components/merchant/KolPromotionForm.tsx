@@ -570,23 +570,23 @@ export default function KolPromotionForm({
             </div>
 
             <div className="pt-4">
-              <Button
+              <button
                 type="submit"
                 disabled={submitting}
-                className="w-full h-12 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-700 hover:to-rose-600 text-white text-base font-medium"
+                className="w-full h-12 inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-base font-semibold shadow-md transition-colors disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
               >
                 {submitting ? (
-                  <span className="flex items-center gap-2">
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                  <>
+                    <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" aria-hidden />
                     提交中...
-                  </span>
+                  </>
                 ) : (
-                  <span className="flex items-center gap-2">
-                    <Send className="w-4 h-4" />
+                  <>
+                    <Send className="w-4 h-4" aria-hidden />
                     提交申請
-                  </span>
+                  </>
                 )}
-              </Button>
+              </button>
             </div>
           </form>
         )}
