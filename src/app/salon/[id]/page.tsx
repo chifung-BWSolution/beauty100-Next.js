@@ -756,7 +756,7 @@ export default function SalonDetailPage() {
             <img
               src={imgSrc}
               alt={salon.salon_name || '美容院'}
-              className={`w-full h-full object-cover ${salon.handle === 'attitude-beauty' ? 'object-top' : ''}`}
+              className="w-full h-full object-cover"
             />
           ) : (() => {
             const styleIdx = getCoverStyleIndex(salon.id || salon.salon_name || '');

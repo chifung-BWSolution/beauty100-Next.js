@@ -770,7 +770,7 @@ export default function ExploreSalonsPage() {
                         <img
                           src={imgSrc}
                           alt={salon.salon_name || '美容院'}
-                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${salon.handle === 'attitude-beauty' ? 'object-top' : ''}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           loading="lazy"
                         />
                       ) : (() => {

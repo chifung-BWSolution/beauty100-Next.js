@@ -9,12 +9,12 @@ const ATTITUDE = {
   href: '/salon/attitude-beauty',
   website: 'https://www.attitude-beauty.com/',
   whatsapp: 'https://wa.me/85259335046',
-  cover: '/images/salons/attitude-beauty/cover-wide.png',
-  treatment: '/images/salons/attitude-beauty/hero-banner.png',
-  glow: '/images/salons/attitude-beauty/glow-skin.png',
-  about: '/images/salons/attitude-beauty/about.jpg',
-  interior: '/images/salons/attitude-beauty/interior.webp',
-  result: '/images/salons/attitude-beauty/result.jpg',
+  cover: '/images/salons/attitude-beauty/01-logo-wall.jpg',
+  treatment: '/images/salons/attitude-beauty/03-treatment-room.jpg',
+  glow: '/images/salons/attitude-beauty/01-logo-wall.jpg',
+  about: '/images/salons/attitude-beauty/02-consultation.jpg',
+  interior: '/images/salons/attitude-beauty/06-lounge.jpg',
+  result: '/images/salons/attitude-beauty/04-reception.jpg',
 };
 
 /* ═══════════════════════════════════════════════════════════════

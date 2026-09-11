@@ -248,7 +248,7 @@ export function SalonCarousel({ salons }: { salons: FeaturedSalon[] }) {
             >
               <div className="relative h-36 overflow-hidden bg-gradient-to-br from-rose-100 to-pink-50">
                 {salon.image ? (
-                  <Image src={salon.image} alt={salon.name} fill loading="lazy" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className={`object-cover group-hover:scale-105 transition-transform duration-500 ${salon.handle === 'attitude-beauty' ? 'object-top' : ''}`} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <Image src={salon.image} alt={salon.name} fill loading="lazy" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 ) : (() => {
                   const styleIdx = getCoverStyleIndex(salon.id || salon.name);
                   const coverStyle = COVER_STYLES[styleIdx];
