@@ -392,7 +392,7 @@ export default async function HomePage() {
       </section>
 
       {/* ═══════════ 3. FEATURED SALONS CAROUSEL ═══════════ */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-6" style={{ minHeight: '320px' }}>
+      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-6" style={{ minHeight: '480px' }}>
         <SectionHeader title="人氣美容院" href="/explore-salons" subtitle="嚴選全港優質美容院商戶" />
         {featuredSalons.length > 0 && <SalonCarousel salons={featuredSalons} />}
         <div className="text-center mt-5">
