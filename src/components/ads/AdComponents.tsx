@@ -2,10 +2,23 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Sparkles, Star, Gift, Zap } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap } from 'lucide-react';
+
+const ATTITUDE = {
+  name: 'Attitude Beauty',
+  href: '/salon/attitude-beauty',
+  website: 'https://www.attitude-beauty.com/',
+  whatsapp: 'https://wa.me/85259335046',
+  cover: '/images/salons/attitude-beauty/cover-wide.png',
+  treatment: '/images/salons/attitude-beauty/hero-banner.png',
+  glow: '/images/salons/attitude-beauty/glow-skin.png',
+  about: '/images/salons/attitude-beauty/about.jpg',
+  interior: '/images/salons/attitude-beauty/interior.webp',
+  result: '/images/salons/attitude-beauty/result.jpg',
+};
 
 /* ═══════════════════════════════════════════════════════════════
-   AD COMPONENTS — Reusable ad placements for the website
+   AD COMPONENTS — Attitude Beauty placements
    ═══════════════════════════════════════════════════════════════ */
 
 /**
@@ -20,23 +33,23 @@ export function HorizontalBannerAd({
   if (variant === 'slim') {
     return (
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-2">
-        <div className="relative rounded-xl overflow-hidden bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50 border border-amber-100/60 px-5 py-2.5 flex items-center justify-between gap-4">
+        <div className="relative rounded-xl overflow-hidden bg-[#faf6f1] border border-[#e8dfd4] px-5 py-2.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0">
-              <Star className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-white">
+              <img src={ATTITUDE.cover} alt="" className="w-full h-full object-cover object-top" />
             </div>
             <div className="min-w-0">
               <p className="text-xs sm:text-sm font-semibold text-slate-700 truncate">
-                限時優惠：首次預約享8折
+                Attitude Beauty 新客首試 $480（原價 $1,380）
               </p>
               <p className="text-[14px] text-slate-400 hidden sm:block">
-                精選美容院 · 人氣療程推薦
+                尖沙咀 · 明碼實價 · 無硬銷 · 做完即走
               </p>
             </div>
           </div>
           <Link
-            href="/explore-salons"
-            className="shrink-0 inline-flex items-center gap-1 text-[14px] font-medium text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-full transition-colors"
+            href={ATTITUDE.href}
+            className="shrink-0 inline-flex items-center gap-1 text-[14px] font-medium text-[#8a6a4a] hover:text-[#6f5338] bg-[#efe4d6] hover:bg-[#e6d7c4] px-3 py-1.5 rounded-full transition-colors"
           >
             立即查看
             <ArrowRight className="w-3 h-3" />
@@ -52,26 +65,26 @@ export function HorizontalBannerAd({
   if (variant === 'gradient') {
     return (
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-violet-50 via-purple-50 to-fuchsia-50 border border-purple-100/50 p-5 sm:p-6">
+        <div className="relative rounded-2xl overflow-hidden bg-[#f7f1ea] border border-[#e8dfd4] p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-fuchsia-500 flex items-center justify-center shrink-0 shadow-sm">
-                <Gift className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 shadow-sm bg-white">
+                <img src={ATTITUDE.cover} alt="" className="w-full h-full object-cover object-top" />
               </div>
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-slate-800">
-                  新會員獨家禮遇
+                  Attitude Beauty 新客禮遇
                 </h3>
                 <p className="text-[12px] text-slate-500 mt-0.5">
-                  註冊即送價值 $200 美容療程優惠券 · 限時領取
+                  首試 $480 · 單次明碼實價 · 尖沙咀加連威老道
                 </p>
               </div>
             </div>
             <Link
-              href="/merchant-signup"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-600 hover:to-fuchsia-600 px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all"
+              href={ATTITUDE.href}
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white bg-[#c4a484] hover:bg-[#b3916e] px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all"
             >
-              免費領取
+              了解詳情
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -83,29 +96,28 @@ export function HorizontalBannerAd({
     );
   }
 
-  // Default variant
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div className="relative rounded-2xl overflow-hidden border border-rose-100/50 p-5 sm:p-6" style={{ background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%)' }}>
+      <div className="relative rounded-2xl overflow-hidden border border-[#e8dfd4] p-5 sm:p-6" style={{ background: 'linear-gradient(135deg, #faf6f1 0%, #f3ece3 50%, #efe4d6 100%)' }}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shrink-0 shadow-sm">
-              <Sparkles className="w-5 h-5 text-white" />
+            <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-sm bg-white">
+              <img src={ATTITUDE.treatment} alt="" className="w-full h-full object-cover" />
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-bold text-slate-800">
-                探索人氣美容療程
+                Attitude Beauty｜尖沙咀專業肌膚管理
               </h3>
               <p className="text-[12px] text-slate-500 mt-0.5">
-                嚴選全港優質美容院 · 真實用家評價 · 獨家優惠
+                暗瘡 · 眼周 · 鬆弛 · 色斑｜明碼實價、做完即走
               </p>
             </div>
           </div>
           <Link
-            href="/explore-salons"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all"
+            href={ATTITUDE.href}
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white bg-[#c4a484] hover:bg-[#b3916e] px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all"
           >
-            立即瀏覽
+            查看美容院
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -128,27 +140,27 @@ export function NativePromoCard({
 }) {
   const PROMO_DATA = {
     default: {
-      image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80',
-      tag: '推薦',
-      title: '你嘅美容院仲未上線？免費加入平台曝光',
-      description: '超過500間美容院已加入，提升曝光率，吸引更多新客人。',
-      href: '/merchant-signup',
+      image: ATTITUDE.cover,
+      tag: '精選商戶',
+      title: 'Attitude Beauty：明碼實價，做完即走',
+      description: '尖沙咀專業肌膚管理。單次收費、無硬銷，暗瘡、眼周、鬆弛、色斑都有對應方案。',
+      href: ATTITUDE.href,
       cta: '了解更多',
     },
     salon: {
-      image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80',
+      image: ATTITUDE.interior,
       tag: '精選商戶',
-      title: '人氣美容院推薦：本月精選優惠',
-      description: '多間人氣商戶推出獨家體驗優惠，把握機會試做人氣療程。',
-      href: '/explore-salons',
+      title: '人氣推薦：Attitude Beauty 尖沙咀店',
+      description: '新客首試 $480。原廠認證儀器，經驗美容師團隊，療程週期動態追蹤。',
+      href: ATTITUDE.href,
       cta: '查看優惠',
     },
     treatment: {
-      image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&q=80',
+      image: ATTITUDE.treatment,
       tag: '熱門療程',
-      title: '2025年最受歡迎療程：HIFU瘦面體驗',
-      description: '非入侵性拉提緊緻，效果持久自然，了解更多療程詳情。',
-      href: '/facial-care',
+      title: 'Attitude Beauty 皇牌：水光嫩膚 × 緊緻提拉',
+      description: '玻璃肌水光 Facial、心心面提拉、激光去斑，價錢事先講清楚。',
+      href: ATTITUDE.href,
       cta: '了解療程',
     },
   };
@@ -156,30 +168,30 @@ export function NativePromoCard({
   const promo = PROMO_DATA[variant];
 
   return (
-    <div className="relative group rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 border border-amber-100/80">
+    <div className="relative group rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 border border-[#e8dfd4]">
       <Link href={promo.href} className="block">
-        <div className="relative h-44 overflow-hidden">
+        <div className="relative h-44 overflow-hidden bg-[#f3ece3]">
           <img
             src={promo.image}
             alt={promo.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
           <div className="absolute top-2.5 left-2.5">
-            <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-[14px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+            <span className="inline-flex items-center gap-1 bg-[#c4a484] text-white text-[14px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
               <Zap className="w-2.5 h-2.5" />
               {promo.tag}
             </span>
           </div>
         </div>
         <div className="p-4">
-          <h3 className="font-bold text-slate-800 text-sm mb-1.5 line-clamp-2 group-hover:text-rose-600 transition-colors leading-snug">
+          <h3 className="font-bold text-slate-800 text-sm mb-1.5 line-clamp-2 group-hover:text-[#8a6a4a] transition-colors leading-snug">
             {promo.title}
           </h3>
           <p className="text-[12px] text-slate-400 line-clamp-2 leading-relaxed mb-3">
             {promo.description}
           </p>
-          <span className="inline-flex items-center gap-1 text-[14px] font-medium text-amber-600 hover:text-amber-700">
+          <span className="inline-flex items-center gap-1 text-[14px] font-medium text-[#8a6a4a] hover:text-[#6f5338]">
             {promo.cta}
             <ArrowRight className="w-3 h-3" />
           </span>
@@ -204,23 +216,23 @@ export function PromotionalBlock({
   if (variant === 'kol') {
     return (
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-teal-50 via-cyan-50 to-sky-50 border border-teal-100/50 p-6 sm:p-8">
+        <div className="relative rounded-2xl overflow-hidden bg-[#f7f1ea] border border-[#e8dfd4] p-6 sm:p-8">
           <div className="text-center max-w-lg mx-auto">
-            <div className="inline-flex items-center gap-2 bg-teal-100 text-teal-700 text-[14px] font-semibold px-3 py-1 rounded-full mb-3">
+            <div className="inline-flex items-center gap-2 bg-[#efe4d6] text-[#8a6a4a] text-[14px] font-semibold px-3 py-1 rounded-full mb-3">
               <Sparkles className="w-3 h-3" />
-              品牌合作
+              Attitude Beauty
             </div>
             <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-2">
-              成為品牌合作夥伴
+              想體驗真實改善、無壓力護理？
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 mb-5 leading-relaxed">
-              與我們合作推廣你的美容品牌或療程，觸達精準目標受眾。
+              尖沙咀 Attitude Beauty，單次明碼實價，WhatsApp 即時查詢預約。
             </p>
             <Link
-              href="/contact"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 px-6 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all"
+              href={ATTITUDE.href}
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white bg-[#c4a484] hover:bg-[#b3916e] px-6 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all"
             >
-              聯絡我們
+              查看美容院
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -235,25 +247,25 @@ export function PromotionalBlock({
   if (variant === 'merchant') {
     return (
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 30%, #fcd34d 100%)' }}>
+        <div className="relative rounded-2xl overflow-hidden p-6 sm:p-8" style={{ background: 'linear-gradient(135deg, #faf6f1 0%, #efe4d6 100%)' }}>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-amber-900">
-                美容院商戶招募中
+              <h3 className="text-base sm:text-lg font-bold text-[#6f5338]">
+                Attitude Beauty 新客首試 $480
               </h3>
-              <p className="text-xs text-amber-700/70 mt-1">
-                免費註冊展示你的美容院，吸引更多目標客人
+              <p className="text-xs text-[#8a6a4a]/80 mt-1">
+                原價 $1,380 · 尖沙咀 · 無硬銷 · 做完即走
               </p>
             </div>
             <Link
-              href="/merchant-signup"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all"
+              href={ATTITUDE.href}
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-white bg-[#c4a484] hover:bg-[#b3916e] px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all"
             >
-              免費註冊
+              立即了解
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <span className="absolute top-2 right-3 text-[12px] text-amber-600/40 uppercase tracking-wider">
+          <span className="absolute top-2 right-3 text-[12px] text-[#c4a484]/60 uppercase tracking-wider">
             廣告
           </span>
         </div>
@@ -261,33 +273,31 @@ export function PromotionalBlock({
     );
   }
 
-  // Default variant
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-slate-800 to-slate-900 p-6 sm:p-8">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-5 left-10 w-24 h-24 bg-rose-500 rounded-full blur-3xl" />
-          <div className="absolute bottom-5 right-10 w-32 h-32 bg-purple-500 rounded-full blur-3xl" />
+      <div className="relative rounded-2xl overflow-hidden bg-[#2c241c] p-6 sm:p-8">
+        <div className="absolute inset-0 opacity-20">
+          <img src={ATTITUDE.glow} alt="" className="w-full h-full object-cover" />
         </div>
         <div className="relative z-10 text-center max-w-lg mx-auto">
           <h3 className="text-base sm:text-lg font-bold text-white mb-2">
-            下載 Beauty 100 App
+            Attitude Beauty｜香港專業肌膚管理
           </h3>
-          <p className="text-xs text-slate-300 mb-5 leading-relaxed">
-            隨時隨地搜索美容院、查看真實評價、預約療程，美容資訊一手掌握。
+          <p className="text-xs text-white/70 mb-5 leading-relaxed">
+            暗瘡 · 眼周 · 鬆弛 · 色斑。單次收費、明碼實價，預約尖沙咀店體驗。
           </p>
           <div className="flex items-center justify-center gap-3">
             <Link
-              href="#"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 bg-white hover:bg-slate-100 px-5 py-2.5 rounded-full shadow-sm transition-all"
+              href={ATTITUDE.href}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2c241c] bg-white hover:bg-[#faf6f1] px-5 py-2.5 rounded-full shadow-sm transition-all"
             >
-              App Store
+              查看詳情
             </Link>
             <Link
-              href="#"
+              href={ATTITUDE.whatsapp}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-white border border-white/30 hover:bg-white/10 px-5 py-2.5 rounded-full transition-all"
             >
-              Google Play
+              WhatsApp
             </Link>
           </div>
         </div>
@@ -307,22 +317,22 @@ export function SidebarAdUnit({
 }: {
   variant?: 'default' | 'salon' | 'app';
 }) {
-  if (variant === 'salon') {
+  if (variant === 'salon' || variant === 'app') {
     return (
-      <div className="relative rounded-xl overflow-hidden border border-amber-100/60 bg-gradient-to-b from-amber-50 to-orange-50 p-4">
+      <div className="relative rounded-xl overflow-hidden border border-[#e8dfd4] bg-[#faf6f1] p-4">
         <img
-          src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=300&q=80"
-          alt="推薦美容院"
-          className="w-full h-24 object-cover rounded-lg mb-3"
+          src={variant === 'salon' ? ATTITUDE.cover : ATTITUDE.treatment}
+          alt="Attitude Beauty"
+          className="w-full h-24 object-cover object-top rounded-lg mb-3 bg-[#efe4d6]"
           loading="lazy"
         />
-        <h4 className="text-xs font-bold text-slate-700 mb-1">本月推薦美容院</h4>
+        <h4 className="text-xs font-bold text-slate-700 mb-1">Attitude Beauty</h4>
         <p className="text-[14px] text-slate-500 mb-3 leading-relaxed">
-          由編輯嚴選嘅優質商戶，為你提供獨家體驗優惠。
+          尖沙咀專業肌膚管理。新客首試 $480，明碼實價無硬銷。
         </p>
         <Link
-          href="/explore-salons"
-          className="inline-flex items-center gap-1 text-[14px] font-semibold text-amber-700 hover:text-amber-800 transition-colors"
+          href={ATTITUDE.href}
+          className="inline-flex items-center gap-1 text-[14px] font-semibold text-[#8a6a4a] hover:text-[#6f5338] transition-colors"
         >
           查看推薦
           <ArrowRight className="w-2.5 h-2.5" />
@@ -334,48 +344,23 @@ export function SidebarAdUnit({
     );
   }
 
-  if (variant === 'app') {
-    return (
-      <div className="relative rounded-xl overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900 p-4 text-center">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center mx-auto mb-3 shadow-sm">
-          <Sparkles className="w-5 h-5 text-white" />
-        </div>
-        <h4 className="text-xs font-bold text-white mb-1">下載 App</h4>
-        <p className="text-[14px] text-slate-400 mb-3 leading-relaxed">
-          隨時搜索、預約、查看評價
-        </p>
-        <Link
-          href="#"
-          className="inline-flex items-center gap-1 text-[14px] font-semibold text-white bg-rose-500 hover:bg-rose-600 px-3 py-1.5 rounded-full transition-colors"
-        >
-          免費下載
-          <ArrowRight className="w-2.5 h-2.5" />
-        </Link>
-        <span className="absolute top-1.5 right-2 text-[7px] text-white/30 uppercase tracking-wider">
-          廣告
-        </span>
-      </div>
-    );
-  }
-
-  // Default variant
   return (
-    <div className="relative rounded-xl overflow-hidden border border-rose-100/60 bg-gradient-to-b from-rose-50 to-pink-50 p-4">
+    <div className="relative rounded-xl overflow-hidden border border-[#e8dfd4] bg-[#faf6f1] p-4">
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shrink-0">
-          <Gift className="w-3.5 h-3.5 text-white" />
+        <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 bg-white">
+          <img src={ATTITUDE.cover} alt="" className="w-full h-full object-cover object-top" />
         </div>
-        <span className="text-[14px] font-semibold text-rose-600">限時優惠</span>
+        <span className="text-[14px] font-semibold text-[#8a6a4a]">限時優惠</span>
       </div>
-      <h4 className="text-xs font-bold text-slate-700 mb-1">新用戶專享禮遇</h4>
+      <h4 className="text-xs font-bold text-slate-700 mb-1">Attitude Beauty 新客首試</h4>
       <p className="text-[14px] text-slate-500 mb-3 leading-relaxed">
-        首次登記即享美容療程折扣優惠
+        $480 體驗專業肌膚管理，尖沙咀店即約即到
       </p>
       <Link
-        href="/merchant-signup"
-        className="inline-flex items-center gap-1 text-[14px] font-semibold text-rose-600 hover:text-rose-700 transition-colors"
+        href={ATTITUDE.href}
+        className="inline-flex items-center gap-1 text-[14px] font-semibold text-[#8a6a4a] hover:text-[#6f5338] transition-colors"
       >
-        立即領取
+        立即了解
         <ArrowRight className="w-2.5 h-2.5" />
       </Link>
       <span className="absolute top-1.5 right-2 text-[7px] text-slate-300 uppercase tracking-wider">
@@ -391,26 +376,26 @@ export function SidebarAdUnit({
  */
 export function InContentAd() {
   return (
-    <div className="my-8 py-5 px-5 rounded-xl border border-amber-100/60 bg-gradient-to-r from-amber-50/50 to-orange-50/50 relative">
+    <div className="my-8 py-5 px-5 rounded-xl border border-[#e8dfd4] bg-[#faf6f1] relative">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <img
-          src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=200&q=80"
-          alt="推薦療程"
+          src={ATTITUDE.treatment}
+          alt="Attitude Beauty 療程"
           className="w-full sm:w-24 h-20 sm:h-16 object-cover rounded-lg shrink-0"
           loading="lazy"
         />
         <div className="flex-1 min-w-0">
-          <p className="text-[14px] text-amber-600 font-semibold mb-0.5">推薦療程</p>
+          <p className="text-[14px] text-[#8a6a4a] font-semibold mb-0.5">Attitude Beauty</p>
           <h4 className="text-sm font-bold text-slate-700 mb-1 line-clamp-1">
-            HIFU 緊膚拉提療程 — 本月獨家優惠
+            新客首試 $480 — 明碼實價，做完即走
           </h4>
           <p className="text-[12px] text-slate-500 line-clamp-1">
-            非入侵性提升面部輪廓，首次體驗享特別價格
+            尖沙咀專業肌膚管理｜暗瘡 · 眼周 · 鬆弛 · 色斑
           </p>
         </div>
         <Link
-          href="/explore-salons"
-          className="shrink-0 inline-flex items-center gap-1 text-[12px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-full transition-colors"
+          href={ATTITUDE.href}
+          className="shrink-0 inline-flex items-center gap-1 text-[12px] font-semibold text-[#8a6a4a] hover:text-[#6f5338] bg-[#efe4d6] hover:bg-[#e6d7c4] px-3 py-1.5 rounded-full transition-colors"
         >
           了解更多
           <ArrowRight className="w-3 h-3" />
@@ -424,6 +409,36 @@ export function InContentAd() {
 }
 
 /**
+ * RelatedPromoAd — Compact banner used beside related-article sections
+ */
+export function RelatedPromoAd() {
+  return (
+    <div className="mb-8 relative rounded-2xl overflow-hidden bg-[#faf6f1] border border-[#e8dfd4] p-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white">
+            <img src={ATTITUDE.cover} alt="" className="w-full h-full object-cover object-top" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[14px] text-[#8a6a4a] font-semibold mb-0.5">精選商戶</p>
+            <h4 className="text-sm font-bold text-slate-700">Attitude Beauty｜尖沙咀美容院</h4>
+            <p className="text-[12px] text-slate-500 mt-0.5">新客首試 $480 · 明碼實價 · 無硬銷</p>
+          </div>
+        </div>
+        <Link
+          href={ATTITUDE.href}
+          className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-[#8a6a4a] bg-[#efe4d6] hover:bg-[#e6d7c4] px-4 py-2 rounded-full transition-colors"
+        >
+          查看詳情
+          <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
+      <span className="absolute top-1.5 right-2.5 text-[7px] text-slate-300 uppercase tracking-wider">廣告</span>
+    </div>
+  );
+}
+
+/**
  * BottomDualAd — Two side-by-side promotional ad blocks
  * Used at the bottom of the homepage before the merchant CTA
  */
@@ -431,61 +446,48 @@ export function BottomDualAd() {
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Left Ad: Download App */}
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 p-6 sm:p-8 flex flex-col justify-between">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-4 left-6 w-20 h-20 bg-rose-500 rounded-full blur-3xl" />
-            <div className="absolute bottom-4 right-6 w-24 h-24 bg-purple-500 rounded-full blur-3xl" />
-          </div>
+        <div className="relative rounded-2xl overflow-hidden bg-[#2c241c] p-6 sm:p-8 flex flex-col justify-between min-h-[220px]">
+          <img src={ATTITUDE.glow} alt="" className="absolute inset-0 w-full h-full object-cover opacity-25" />
           <div className="relative z-10">
             <div className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-[11px] font-semibold px-2.5 py-1 rounded-full mb-3">
               <Zap className="w-3 h-3" />
-              推薦下載
+              新客首試
             </div>
             <h3 className="text-base sm:text-lg font-bold text-white mb-2">
-              下載 Beauty 100 App
+              Attitude Beauty 首試 $480
             </h3>
-            <p className="text-xs text-slate-300 mb-5 leading-relaxed">
-              隨時隨地搜索美容院、查看真實評價、預約療程，美容資訊一手掌握。
+            <p className="text-xs text-white/70 mb-5 leading-relaxed">
+              原價 $1,380。尖沙咀專業肌膚管理，單次收費、明碼實價、做完即走。
             </p>
-            <div className="flex items-center gap-3">
-              <Link
-                href="#"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 bg-white hover:bg-slate-100 px-4 py-2 rounded-full shadow-sm transition-all"
-              >
-                App Store
-              </Link>
-              <Link
-                href="#"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white border border-white/30 hover:bg-white/10 px-4 py-2 rounded-full transition-all"
-              >
-                Google Play
-              </Link>
-            </div>
+            <Link
+              href={ATTITUDE.href}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2c241c] bg-white hover:bg-[#faf6f1] px-4 py-2 rounded-full shadow-sm transition-all"
+            >
+              查看優惠
+            </Link>
           </div>
           <span className="absolute top-2 right-3 text-[10px] text-white/30 uppercase tracking-wider">
             廣告
           </span>
         </div>
 
-        {/* Right Ad: Brand Partnership */}
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-teal-50 via-cyan-50 to-sky-50 border border-teal-100/50 p-6 sm:p-8 flex flex-col justify-between">
+        <div className="relative rounded-2xl overflow-hidden bg-[#f7f1ea] border border-[#e8dfd4] p-6 sm:p-8 flex flex-col justify-between">
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-1.5 bg-teal-100 text-teal-700 text-[11px] font-semibold px-2.5 py-1 rounded-full mb-3">
+            <div className="inline-flex items-center gap-1.5 bg-[#efe4d6] text-[#8a6a4a] text-[11px] font-semibold px-2.5 py-1 rounded-full mb-3">
               <Sparkles className="w-3 h-3" />
-              品牌合作
+              尖沙咀店
             </div>
             <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-2">
-              成為品牌合作夥伴
+              加連威老道愛賓商業大廈
             </h3>
             <p className="text-xs text-slate-500 mb-5 leading-relaxed">
-              與我們合作推廣你的美容品牌或療程，觸達精準目標受眾，提升品牌知名度。
+              806-807室，近尖沙咀站 B2 出口。WhatsApp 5933 5046 即時查詢。
             </p>
             <Link
-              href="/contact"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all"
+              href={ATTITUDE.whatsapp}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#c4a484] hover:bg-[#b3916e] px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all"
             >
-              聯絡我們
+              WhatsApp 查詢
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>

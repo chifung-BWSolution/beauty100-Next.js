@@ -138,13 +138,20 @@ async function fetchPageData() {
     return { featuredSalons: [], heroFeatured: null, heroSupporting: [], trendingArticles: [], editorPicks: [], popularTags: [], editorialSections: [] };
   }
 
-  // Fetch salons and articles in parallel
-  const [salonsResult, articlesResult] = await Promise.all([
+  const salonSelect = 'id, salon_name, handle, district_name, cover_photo, product_media, selected_tags, highlight_tags, tags';
+
+  // Fetch salons and articles in parallel — pin Attitude Beauty first in 人氣美容院
+  const [attitudeResult, salonsResult, articlesResult] = await Promise.all([
     supabase
       .from('salon_profiles')
-      .select('id, salon_name, handle, district_name, cover_photo, product_media, selected_tags, highlight_tags, tags')
+      .select(salonSelect)
+      .eq('handle', 'attitude-beauty')
+      .maybeSingle(),
+    supabase
+      .from('salon_profiles')
+      .select(salonSelect)
       .or('is_active.eq.true,is_active.is.null')
-      .limit(8),
+      .limit(24),
     supabase
       .from('blog_articles')
       .select('handle, title, seo_description, cover_image_url, tags, published_at, category, is_celebrity')
@@ -153,8 +160,14 @@ async function fetchPageData() {
       .limit(100),
   ]);
 
+  const otherSalons = (salonsResult.data || []).filter((s: any) => s.handle !== 'attitude-beauty');
+  const featuredSalonRows = [
+    ...(attitudeResult.data ? [attitudeResult.data] : []),
+    ...otherSalons,
+  ].slice(0, 8);
+
   // Process salons
-  const featuredSalons: FeaturedSalon[] = (salonsResult.data || []).map((s: any) => {
+  const featuredSalons: FeaturedSalon[] = featuredSalonRows.map((s: any) => {
     let image: string | null = null;
     if (s.cover_photo) {
       image = s.cover_photo;

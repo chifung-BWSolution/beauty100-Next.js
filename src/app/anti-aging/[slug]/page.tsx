@@ -32,6 +32,7 @@ import {
   HorizontalBannerAd,
   InContentAd,
   PromotionalBlock,
+  RelatedPromoAd,
   SidebarAdUnit,
 } from "@/components/ads/AdComponents";
 import { supabase } from "@/lib/supabase";
@@ -1352,35 +1353,7 @@ export default function AntiAgingArticlePage() {
             {/* ═══════════ 8. RELATED ARTICLES ═══════════ */}
             {relatedArticles.length > 0 && (
               <section className="mt-10">
-                <div
-                  className={`mb-8 relative rounded-2xl overflow-hidden bg-gradient-to-r ${theme.promoFromClass} border ${theme.promoBorderClass} p-5`}
-                >
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div>
-                      <p
-                        className={`text-[14px] ${theme.linkTextClass} font-semibold mb-0.5`}
-                      >
-                        精選推薦
-                      </p>
-                      <h4 className="text-sm font-bold text-slate-700">
-                        探索更多回復青春專題文章
-                      </h4>
-                      <p className="text-[12px] text-slate-500 mt-0.5">
-                        由編輯團隊嚴選嘅深度分析同專家觀點
-                      </p>
-                    </div>
-                    <Link
-                      href="/anti-aging"
-                      className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold ${theme.promoBtnTextClass} ${theme.promoBtnBgClass} ${theme.promoBtnHoverBgClass} px-4 py-2 rounded-full transition-colors`}
-                    >
-                      瀏覽更多
-                      <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                  <span className="absolute top-1.5 right-2.5 text-[7px] text-slate-300 uppercase tracking-wider">
-                    廣告
-                  </span>
-                </div>
+                <RelatedPromoAd />
 
                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-5">
                   <span
