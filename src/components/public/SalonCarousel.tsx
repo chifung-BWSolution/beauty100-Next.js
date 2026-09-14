@@ -254,7 +254,7 @@ export function SalonCarousel({ salons }: { salons: FeaturedSalon[] }) {
                     fill
                     loading="lazy"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className={`${salon.image.includes('attitude-beauty') ? 'object-contain bg-[#e8e4dc]' : 'object-cover group-hover:scale-105'} transition-transform duration-500`}
+                    className={`${salon.image.includes('attitude-beauty') ? 'object-cover object-left' : 'object-cover group-hover:scale-105'} transition-transform duration-500`}
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 ) : (() => {
