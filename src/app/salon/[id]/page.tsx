@@ -753,11 +753,16 @@ export default function SalonDetailPage() {
         {/* Hero Image - Full Width */}
         <div className="relative rounded-2xl overflow-hidden h-64 sm:h-80 mb-6">
           {imgSrc ? (
-            <img
-              src={imgSrc}
-              alt={salon.salon_name || '美容院'}
-              className="w-full h-full object-cover"
-            />
+            <>
+              <img
+                src={imgSrc}
+                alt={salon.salon_name || '美容院'}
+                className={`w-full h-full object-cover ${salon.handle === 'attitude-beauty' ? 'object-left contrast-[1.08] saturate-[1.12] brightness-[0.98] sepia-[0.12]' : ''}`}
+              />
+              {salon.handle === 'attitude-beauty' && (
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-100/20 via-transparent to-stone-900/15 pointer-events-none" />
+              )}
+            </>
           ) : (() => {
             const styleIdx = getCoverStyleIndex(salon.id || salon.salon_name || '');
             const coverStyle = COVER_STYLES[styleIdx];

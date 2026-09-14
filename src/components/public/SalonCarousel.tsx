@@ -248,15 +248,20 @@ export function SalonCarousel({ salons }: { salons: FeaturedSalon[] }) {
             >
               <div className="relative aspect-[5/4] overflow-hidden bg-gradient-to-br from-rose-100 to-pink-50">
                 {salon.image ? (
-                  <Image
-                    src={salon.image}
-                    alt={salon.name}
-                    fill
-                    loading="lazy"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className={`${salon.image.includes('attitude-beauty') ? 'object-cover object-left' : 'object-cover group-hover:scale-105'} transition-transform duration-500`}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
+                  <>
+                    <Image
+                      src={salon.image}
+                      alt={salon.name}
+                      fill
+                      loading="lazy"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className={`${salon.image.includes('attitude-beauty') ? 'object-cover object-left contrast-[1.08] saturate-[1.12] brightness-[0.98] sepia-[0.12]' : 'object-cover group-hover:scale-105'} transition-transform duration-500`}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                    {salon.image.includes('attitude-beauty') && (
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-100/20 via-transparent to-stone-900/15 pointer-events-none" />
+                    )}
+                  </>
                 ) : (() => {
                   const styleIdx = getCoverStyleIndex(salon.id || salon.name);
                   const coverStyle = COVER_STYLES[styleIdx];
