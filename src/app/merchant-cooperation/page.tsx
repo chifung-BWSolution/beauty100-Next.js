@@ -33,7 +33,8 @@ export default function MerchantCooperationPage() {
           .limit(1)
           .single();
         if (data?.phone_number) {
-          const phone = data.phone_number.replace(/\D/g, "");
+          let phone = data.phone_number.replace(/\D/g, "");
+          if (!phone || phone.endsWith("68589265")) phone = "85259335827";
           setWhatsappLink(`https://wa.me/${phone}`);
         }
       } catch (e) {}
@@ -419,12 +420,12 @@ export default function MerchantCooperationPage() {
                   <p>
                     Whatsapp{" "}
                     <a
-                      href="https://wa.me/85268589265"
+                      href="https://wa.me/85259335827"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-pink-400 transition-colors"
                     >
-                      +852 6858 9265
+                      (+852) 5933 5827
                     </a>
                   </p>
                   <p>
@@ -446,18 +447,18 @@ export default function MerchantCooperationPage() {
                       href="tel:+85221857377"
                       className="hover:text-pink-400 transition-colors"
                     >
-                      +852 2185 7377
+                      (+852) 2185 7377
                     </a>
                   </p>
                   <p>
                     Whatsapp{" "}
                     <a
-                      href="https://wa.me/85268589265"
+                      href="https://wa.me/85259335827"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-pink-400 transition-colors"
                     >
-                      +852 6858 9265
+                      (+852) 5933 5827
                     </a>
                   </p>
                   <p>

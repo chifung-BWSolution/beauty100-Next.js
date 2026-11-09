@@ -61,8 +61,8 @@ export default function PublicFooter() {
                 <p className="font-semibold text-slate-700 text-xs uppercase tracking-wider mb-1">廣告熱線</p>
                 <p>
                   Whatsapp{" "}
-                  <a href="https://wa.me/85268589265" target="_blank" rel="noopener noreferrer" className="hover:text-rose-500 transition-colors">
-                    +852 6858 9265
+                  <a href="https://wa.me/85259335827" target="_blank" rel="noopener noreferrer" className="hover:text-rose-500 transition-colors">
+                    (+852) 5933 5827
                   </a>
                 </p>
                 <p>
@@ -76,13 +76,13 @@ export default function PublicFooter() {
                 <p>
                   Hotline{" "}
                   <a href="tel:+85221857377" className="hover:text-rose-500 transition-colors">
-                    +852 2185 7377
+                    (+852) 2185 7377
                   </a>
                 </p>
                 <p>
                   Whatsapp{" "}
-                  <a href="https://wa.me/85268589265" target="_blank" rel="noopener noreferrer" className="hover:text-rose-500 transition-colors">
-                    +852 6858 9265
+                  <a href="https://wa.me/85259335827" target="_blank" rel="noopener noreferrer" className="hover:text-rose-500 transition-colors">
+                    (+852) 5933 5827
                   </a>
                 </p>
                 <p>

@@ -13,7 +13,7 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 export default function WhatsAppWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState({
-    phone_number: '',
+    phone_number: '85259335827',
     preset_message: '您好，請問可以如何幫助您？',
     user_preset_message: '我想了解更多關於美容服務的資訊'
   });
@@ -26,8 +26,10 @@ export default function WhatsAppWidget() {
       try {
         const { data } = await supabase.from('whatsapp_settings').select('*').limit(1).single();
         if (data) {
+          let phone = (data.phone_number || '').replace(/\D/g, '');
+          if (!phone || phone.endsWith('68589265')) phone = '85259335827';
           setSettings({
-            phone_number: data.phone_number || '',
+            phone_number: phone,
             preset_message: data.preset_message || '您好，請問可以如何幫助您？',
             user_preset_message: data.user_preset_message || '我想了解更多關於美容服務的資訊'
           });

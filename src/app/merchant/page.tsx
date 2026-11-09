@@ -28,7 +28,8 @@ export default function MerchantPage() {
           .limit(1)
           .single();
         if (data?.phone_number) {
-          const phone = data.phone_number.replace(/\D/g, "");
+          let phone = data.phone_number.replace(/\D/g, "");
+          if (!phone || phone.endsWith("68589265")) phone = "85259335827";
           setWhatsappLink(`https://wa.me/${phone}`);
         }
       } catch (e) {}
@@ -257,7 +258,7 @@ export default function MerchantPage() {
               <div className="bg-white rounded-2xl p-6 border border-gray-100 inline-flex flex-col items-center">
                 <h4 className="font-bold text-lg mb-3">想了解更多？</h4>
                 <a
-                  href={whatsappLink || "https://wa.me/85268589265"}
+                  href={whatsappLink || "https://wa.me/85259335827"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-full text-sm font-medium hover:bg-green-600 transition-colors"
@@ -350,8 +351,8 @@ export default function MerchantPage() {
                   <p className="font-semibold text-white text-xs uppercase tracking-wider mb-1">廣告熱線</p>
                   <p>
                     Whatsapp{" "}
-                    <a href="https://wa.me/85268589265" target="_blank" rel="noopener noreferrer" className="hover:text-pink-400 transition-colors">
-                      +852 6858 9265
+                    <a href="https://wa.me/85259335827" target="_blank" rel="noopener noreferrer" className="hover:text-pink-400 transition-colors">
+                      (+852) 5933 5827
                     </a>
                   </p>
                   <p>
@@ -365,13 +366,13 @@ export default function MerchantPage() {
                   <p>
                     Hotline{" "}
                     <a href="tel:+85221857377" className="hover:text-pink-400 transition-colors">
-                      +852 2185 7377
+                      (+852) 2185 7377
                     </a>
                   </p>
                   <p>
                     Whatsapp{" "}
-                    <a href="https://wa.me/85268589265" target="_blank" rel="noopener noreferrer" className="hover:text-pink-400 transition-colors">
-                      +852 6858 9265
+                    <a href="https://wa.me/85259335827" target="_blank" rel="noopener noreferrer" className="hover:text-pink-400 transition-colors">
+                      (+852) 5933 5827
                     </a>
                   </p>
                   <p>

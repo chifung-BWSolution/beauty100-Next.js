@@ -24,7 +24,7 @@ const CONTACT_METHODS = [
   {
     icon: Phone,
     title: 'WhatsApp',
-    detail: '+852 6858 9265',
+    detail: '(+852) 5933 5827',
     description: '即時對話，快速回覆',
     color: 'bg-emerald-100 text-emerald-600',
     gradient: 'from-emerald-50 to-teal-50',
