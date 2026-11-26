@@ -9,12 +9,16 @@ const getGtmId = unstable_cache(
         process.env.SUPABASE_SERVICE_KEY!
       );
 
+      // No GTM row (or it is disabled) is a normal state: with .single() PostgREST
+      // answers 406 PGRST116 on zero rows, which turned every page render into a
+      // failed request. limit(1) keeps it to one row so maybeSingle() stays quiet.
       const { data } = await supabase
         .from("tracking_codes")
         .select("code_value")
         .eq("code_type", "google_tag_manager")
         .eq("enabled", true)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       return data?.code_value || null;
     } catch {

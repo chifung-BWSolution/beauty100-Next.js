@@ -22,9 +22,13 @@ export async function generateArticleMetadata(
 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
+    // blog_articles has no `updated_at` column (see 20250110_create_blog_articles.sql).
+    // Selecting it made every article page fail with Postgres 42703 ("column
+    // blog_articles.updated_at does not exist") and silently fall back to the
+    // generic title/description below, so only select columns that really exist.
     const { data: article } = await supabase
       .from('blog_articles')
-      .select('title, seo_description, cover_image_url, published_at, updated_at, tags')
+      .select('title, seo_description, cover_image_url, published_at, tags')
       .eq('handle', slug)
       .eq('status', 'active')
       .maybeSingle();
@@ -56,7 +60,6 @@ export async function generateArticleMetadata(
           },
         ] : undefined,
         publishedTime: article.published_at || undefined,
-        modifiedTime: article.updated_at || undefined,
         tags: article.tags || undefined,
       },
       twitter: {

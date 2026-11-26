@@ -6,6 +6,35 @@ export const revalidate = 300;
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const SALON_METADATA_COLUMNS = 'salon_name, description, image_src, district_name, tags';
+
+type SalonMetadata = {
+  salon_name: string | null;
+  description: string | null;
+  image_src: string | null;
+  district_name: string | null;
+  tags: string[] | null;
+};
+
+// Next.js already gives us the decoded segment; decoding once more keeps this in
+// sync with salon/[id]/page.tsx, which does the same defensively.
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+// PostgREST receives the value as an ILIKE pattern, so escape wildcards to stop a
+// crafted slug (e.g. "%") from matching an unrelated salon.
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, '\\$&');
+}
+
 export async function generateStaticParams() {
   if (!supabaseUrl || !supabaseKey) return [];
   try {
@@ -38,11 +67,40 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { data: salon } = await supabase
-      .from('salon_profiles')
-      .select('salon_name, description, image_src, district_name, tags')
-      .eq('id', params.id)
-      .maybeSingle();
+    const identifier = safeDecode(params.id);
+    let salon: SalonMetadata | null = null;
+
+    if (identifier) {
+      if (UUID_PATTERN.test(identifier)) {
+        const { data } = await supabase
+          .from('salon_profiles')
+          .select(SALON_METADATA_COLUMNS)
+          .eq('id', identifier)
+          .maybeSingle();
+        salon = data;
+      } else {
+        // This route also serves /salon/<handle> (the featured-salon ads use that)
+        // and legacy /salon/<salon_name> links. Comparing them against the uuid `id`
+        // column made Postgres raise 22P02, so resolve them like salon/[id]/page.tsx.
+        const { data: byHandle } = await supabase
+          .from('salon_profiles')
+          .select(SALON_METADATA_COLUMNS)
+          .ilike('handle', escapeLikePattern(identifier))
+          .limit(1)
+          .maybeSingle();
+        salon = byHandle;
+
+        if (!salon) {
+          const { data: byName } = await supabase
+            .from('salon_profiles')
+            .select(SALON_METADATA_COLUMNS)
+            .eq('salon_name', identifier)
+            .limit(1)
+            .maybeSingle();
+          salon = byName;
+        }
+      }
+    }
 
     if (!salon) {
       return {
